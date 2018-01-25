@@ -1,0 +1,13 @@
+<link rel="import" href="../../bower_components/polymer-redux/polymer-redux.html">
+<script src="../../node_modules/redux/dist/redux.js"></script>
+
+<link rel="import" href="display.html">
+<link rel="import" href="player.html">
+
+<script>
+  const store = Redux.createStore(Redux.combineReducers({
+    display,
+    player
+  }));
+  const ReduxMixin = PolymerRedux(store);
+</script>

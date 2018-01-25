@@ -1,0 +1,19 @@
+<script>
+  function player(state, action) {
+    if (typeof state === 'undefined') {
+      return {
+        slots: [{ number: 0 }, { number: 1 }, { number: 2 }, { number: 3 }],
+        slot: 2
+      }
+    }
+
+    switch (action.type) {
+      case 'GET_SLOTS':
+        return Object.assign({}, state, {
+          slots: action.slots
+        });
+    }
+
+    return state
+  }
+</script>

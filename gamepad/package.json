@@ -1,0 +1,15 @@
+{
+  "name": "matrix-gamepad",
+  "scripts": {
+    "start": "polymer serve --port 4001 | node proxy.js",
+    "build": "NODE_ENV=production polymer build"
+  },
+  "devDependencies": {
+    "browser-sync": "2.18.13",
+    "http-proxy-middleware": "0.17.4"
+  },
+  "dependencies": {
+    "redux": "3.7.2",
+    "socket.io-client": "2.0.4"
+  }
+}

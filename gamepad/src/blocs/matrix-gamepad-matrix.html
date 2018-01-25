@@ -1,0 +1,73 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/dom-repeat.html">
+
+<link rel="import" href="../store/store.html">
+
+<dom-module id="matrix-gamepad-matrix">
+  <template>
+    <style>
+      :host {
+        position: relative;
+        width: 100%;
+        padding-top: 57%;
+      }
+
+      .matrix {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .line {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .pixel {
+        flex: 1;
+      }
+    </style>
+    <div class="matrix">
+      <template is="dom-repeat" items="[[lines]]" as="line">
+        <div class="line">
+          <template is="dom-repeat" items="[[line]]" as="pixel">
+            <div class="pixel" style$="background-color: rgb([[pixel.r]],[[pixel.g]],[[pixel.b]])"></div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </template>
+
+  <script>
+    class MatrixGamepadMatrix extends ReduxMixin(Polymer.Element) {
+      static get is() { return 'matrix-gamepad-matrix'; }
+      static get properties() {
+        return {
+          pixels: {
+            type: Array,
+            statePath: "display.frame",
+            observer: '_pixelsChanged'
+          }
+        };
+      }
+
+      _pixelsChanged(newValue, oldValue) {
+        let lines = [];
+        for (let i = 0; i < 9; i++) {
+          let line = [];
+          for (let j = 0; j < 16; j++) {
+            line.push(newValue[i * 16 + j])
+          }
+          lines.push(line);
+        }
+        this.lines = lines;
+      }
+    }
+
+    window.customElements.define(MatrixGamepadMatrix.is, MatrixGamepadMatrix);
+  </script>
+</dom-module>

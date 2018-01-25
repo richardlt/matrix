@@ -1,0 +1,116 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="matrix-gamepad-matrix.html">
+<link rel="import" href="../components/matrix-gamepad-left-pad.html">
+<link rel="import" href="../components/matrix-gamepad-right-pad.html">
+<link rel="import" href="matrix-gamepad-slots.html">
+<link rel="import" href="../components/matrix-gamepad-button.html">
+
+<link rel="import" href="../store/store.html">
+<link rel="import" href="../socket.html">
+
+<dom-module id="matrix-gamepad-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        background-color: #111111;
+      }
+
+      .side {
+        flex: 0.25;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-left: 12px;
+        margin-right: 12px;
+      }
+
+      .center {
+        flex: 0.50;
+        display: flex;
+        flex-direction: column;
+      }
+
+      matrix-gamepad-matrix {
+        border-radius: 5px;
+        border: 5px solid #222222;
+        width: calc(100% - 10px)!important;
+        margin-bottom: 20px;
+      }
+
+      matrix-gamepad-left-pad,
+      matrix-gamepad-right-pad {
+        margin-top: 20px;
+        margin-bottom: 20px;
+      }
+
+      matrix-gamepad-button.top {
+        width: 80%;
+        height: 30px;
+        font-size: 25px;
+        line-height: 34px;
+      }
+
+      matrix-gamepad-button.bottom {
+        width: 40%;
+        height: 19px;
+        font-size: 10px;
+        line-height: 22px;
+      }
+    </style>
+    <div class="side">
+      <matrix-gamepad-button id="l" class="top">l</matrix-gamepad-button>
+      <matrix-gamepad-left-pad on-command="handleCommand"></matrix-gamepad-left-pad>
+      <matrix-gamepad-button id="select" class="bottom">select</matrix-gamepad-button>
+    </div>
+    <div class="center">
+      <matrix-gamepad-matrix></matrix-gamepad-matrix>
+      <matrix-gamepad-slots></matrix-gamepad-slots>
+    </div>
+    <div class="side">
+      <matrix-gamepad-button id="r" class="top">r</matrix-gamepad-button>
+      <matrix-gamepad-right-pad on-command="handleCommand"></matrix-gamepad-right-pad>
+      <matrix-gamepad-button id="start" class="bottom">start</matrix-gamepad-button>
+    </div>
+    <matrix-gamepad-socket id="socket"></matrix-gamepad-socket>
+  </template>
+
+  <script>
+    class MatrixGamepadApp extends Polymer.Element {
+      static get is() { return 'matrix-gamepad-app'; }
+      static get properties() {
+        return {};
+      }
+
+      ready() {
+        super.ready();
+        this.$.l.addEventListener('mousedown', this._handleClick('l_down'));
+        this.$.l.addEventListener('mouseup', this._handleClick('l_up'));
+        this.$.select.addEventListener('pointerdown', this._handleClick('select_down'));
+        this.$.select.addEventListener('mouseup', this._handleClick('select_up'));
+        this.$.start.addEventListener('pointerdown', this._handleClick('start_down'));
+        this.$.start.addEventListener('mouseup', this._handleClick('start_up'));
+        this.$.r.addEventListener('mousedown', this._handleClick('r_down'));
+        this.$.r.addEventListener('mouseup', this._handleClick('r_up'));
+      }
+
+      _handleClick(cmd) {
+        return (e) => {
+          this.handleCommand(Object.assign({}, e, { detail: cmd }));
+        };
+      }
+
+      handleCommand(cmd) {
+        this.$.socket.command(cmd.detail);
+      }
+    }
+
+    window.customElements.define(MatrixGamepadApp.is, MatrixGamepadApp);
+  </script>
+</dom-module>
