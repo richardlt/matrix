@@ -113,8 +113,7 @@ func (g *gamepadServer) Command(gp *gamepad, cmd common.Command) {
 	}
 }
 
-func (g *gamepadServer) AskSlot(gp *gamepad, slot int) {
-}
+func (g *gamepadServer) AskSlot(gp *gamepad, slot int) {}
 
 func (g *gamepadServer) GetSlots(gp *gamepad) {}
 
