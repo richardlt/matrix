@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package common;
+
+message Color {
+  uint64 r = 1;
+  uint64 g = 2;
+  uint64 b = 3;
+  uint64 a = 4;
+}
+
+enum Command {
+  UP_UP = 0;
+  UP_DOWN = 1;
+  RIGHT_UP = 2;
+  RIGHT_DOWN = 3;
+  LEFT_UP = 4;
+  LEFT_DOWN = 5;
+  DOWN_UP = 6;
+  DOWN_DOWN = 7;
+  A_UP = 8;
+  A_DOWN = 9;
+  B_UP = 10;
+  B_DOWN = 11;
+  X_UP = 12;
+  X_DOWN = 13;
+  Y_UP = 14;
+  Y_DOWN = 15;
+  START_UP = 16;
+  START_DOWN = 17;
+  SELECT_UP = 18;
+  SELECT_DOWN = 19;
+  L_UP = 20;
+  L_DOWN = 21;
+  R_UP = 22;
+  R_DOWN = 23;
+}
+
+message Layer {
+  string uuid = 1;
+}
+
+message Coord {
+  uint64 x = 1;
+  uint64 y = 2;
+}
+
+message Frame {
+  repeated common.Color pixels = 1;	
+}

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package player;
+
+import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+
+service Player {
+  rpc Connect (stream Request) returns (stream Response);
+}
+
+message Request { 
+  enum Type {
+    PING = 0;
+    PLAYER = 1;
+  }
+  message PlayerData {
+    enum Action {
+      COMMAND = 0;
+    }
+    Action action = 1;
+    uint64 slot = 2;
+    common.Command command = 3;
+  }
+  Type type = 1;
+  PlayerData playerData = 2;
+}
+
+message Response {
+  enum Type {
+    PING = 0;
+  }
+  Type type = 1;
+}

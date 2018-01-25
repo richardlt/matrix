@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package display;
+
+import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+
+service Display {
+  rpc Connect (stream Request) returns (stream Response);
+}
+
+message Request {
+  enum Type {
+    PING = 0;
+  }
+  Type type = 1;
+}
+
+message Response {
+  enum Type {
+    PING = 0;
+    DISPLAY = 1;
+  }
+  message DisplayData {
+    enum Action {
+      FRAMES = 0;
+    }
+    Action action = 1;
+    repeated common.Frame frames = 2;	
+  }
+  Type type = 1;
+  DisplayData displayData = 2;
+}

@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package software;
+
+import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+
+service Software {
+  rpc Connect (stream ConnectRequest) returns (stream ConnectResponse);
+  rpc Create (CreateRequest) returns (CreateResponse);
+}
+
+message ConnectRequest {
+  enum Type {
+    PING = 0;
+    SOFTWARE = 1;
+    LAYER = 2;
+    DRIVER = 3;
+  }
+  message SoftwareData {
+    enum Action {
+      REGISTER = 0;
+      READY = 1;
+      PRINT = 2;
+      SET_CONFIG = 3;
+    }
+    message Config {
+      Image logo = 1;
+      uint64 minPlayerCount = 2;
+      uint64 maxPlayerCount = 3;
+    }
+    Action action = 1;
+    string UUID = 2;
+    Config config = 3;
+  }
+  message LayerData {
+    enum Action {
+      CLEAN = 0;
+      REMOVE = 1;
+      SET_WITH_COORD = 2;
+    }
+    Action action = 1;
+    string UUID = 2;
+    common.Coord coord = 3;
+    common.Color color = 4;
+  }
+  message DriverData {
+    enum Action {
+      RENDER = 0;
+    }
+    Action action = 1;
+    string UUID = 2;
+    string caracter = 3;
+    common.Color color = 4;
+    common.Color background = 5;
+    common.Coord coord = 6;
+    string text = 7;
+  }
+  Type type = 1;
+  SoftwareData softwareData = 2;
+  LayerData layerData = 3;
+  DriverData driverData = 4;
+}
+
+message ConnectResponse {
+  enum Type {
+    PING = 0;
+    SOFTWARE = 1;
+    DRIVER = 2;
+  }
+  message SoftwareData {
+    enum Action {
+      INIT = 0; 
+      START = 1;
+      CLOSE = 2;
+      PLAYER_COMMAND = 3;
+    }
+    Action action = 1;
+    string UUID = 2;
+    uint64 playerCount = 3;
+    uint64 slot = 4;
+    common.Command command = 5;
+  }
+  message DriverData {
+    enum Action {
+      END = 0;
+      STEP = 1;
+    }
+    Action action = 1;
+    string UUID = 2;
+    uint64 total = 3;
+    uint64 current = 4;
+  }
+  Type type = 1;
+  SoftwareData softwareData = 2;
+  DriverData driverData = 3;
+}
+
+message CreateRequest {
+  enum Type {
+    LAYER = 0;
+    DRIVER = 1;
+  }
+  message LayerData {
+    string softwareUUID = 1;
+  }
+  message DriverData {
+    enum Type {
+      RANDOM = 0;
+      CARACTER = 1;
+      TEXT = 2;
+    }
+    Type type = 1;
+    string softwareUUID = 2;
+    string layerUUID = 3;
+    Font font = 4;
+  }
+  Type type = 1;
+  LayerData layerData = 2;
+  DriverData driverData = 3;
+}
+
+message CreateResponse {
+  enum Type {
+    LAYER = 0;
+    DRIVER = 1;
+  }
+  message LayerData {
+    string UUID = 1;
+  }
+  message DriverData {
+    string UUID = 2;
+  }
+  Type type = 1;
+  LayerData layerData = 2;
+  DriverData driverData = 3;
+}
+
+message Image {
+	string name = 1;
+	uint64 height = 2;
+	uint64 width = 3;
+	repeated common.Color colors = 4;
+	repeated uint64 mask = 5;
+}
+
+message Theme {
+	string name = 1;
+	map<string, common.Color> colors = 2;
+}
+
+message Font {
+  message Caracter {
+    uint64 width = 1;
+    repeated uint64 mask = 2;
+  }
+	string name = 1;
+	uint64 height = 2;
+	map<string, Caracter> caracters = 3;
+}
