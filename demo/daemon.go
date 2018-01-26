@@ -73,11 +73,7 @@ func (d *demo) Init(a software.API) (err error) {
 
 func (d *demo) Start() { d.play() }
 
-func (d *demo) Close() {
-	if d.cancel != nil {
-		d.cancel()
-	}
-}
+func (d *demo) Close() { d.reset() }
 
 func (d *demo) ActionReceived(slot int, cmd common.Command) {
 	switch cmd {
@@ -97,10 +93,17 @@ func (d *demo) ActionReceived(slot int, cmd common.Command) {
 	d.play()
 }
 
-func (d *demo) play() {
+func (d *demo) reset() {
 	if d.cancel != nil {
 		d.cancel()
 	}
+	if d.textDriver != nil {
+		d.textDriver.Stop()
+	}
+}
+
+func (d *demo) play() {
+	d.reset()
 
 	d.layer.Clean()
 	d.api.Print()
@@ -152,6 +155,7 @@ func (d *demo) playText() {
 		d.textDriver.OnEnd(func() {
 			time.Sleep(500 * time.Millisecond)
 			d.layer.Clean()
+			d.playText()
 		})
 		d.textDriver.Render("SOFTWARE", common.Coord{X: 0, Y: 6},
 			d.api.GetColorFromThemeByName("flat", "green_2"),
@@ -160,8 +164,8 @@ func (d *demo) playText() {
 	d.textDriver.Render("EXAMPLE", common.Coord{X: 0, Y: 2},
 		d.api.GetColorFromThemeByName("flat", "red_2"),
 		common.Color{})
-
 }
+
 func (d *demo) playImage() {}
 
 func (d *demo) playBar() {}

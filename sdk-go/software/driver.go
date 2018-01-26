@@ -115,3 +115,13 @@ func (t *TextDriver) Render(text string, coord common.Coord, color, background c
 		},
 	})
 }
+
+func (t *TextDriver) Stop() error {
+	return t.ctx.SendConnectRequest(ConnectRequest{
+		Type: ConnectRequest_DRIVER,
+		DriverData: &ConnectRequest_DriverData{
+			Action: ConnectRequest_DriverData_STOP,
+			UUID:   t.uuid,
+		},
+	})
+}

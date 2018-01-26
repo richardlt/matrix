@@ -5,6 +5,7 @@ import (
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/core/system"
 	"github.com/richardlt/matrix/sdk-go/common"
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
 // NewSoftware returns a new sotware menu.
@@ -40,7 +41,7 @@ func (s Software) Print() {
 
 	id := drivers.NewImage(s.frame)
 
-	var i render.Image
+	var i software.Image
 	if len(s.softwaresMeta) == 0 {
 		i = render.GetImageByName("empty")
 	} else {

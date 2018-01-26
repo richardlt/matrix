@@ -1,43 +1,37 @@
 package render
 
 import (
-	"image/color"
-	"math/rand"
-
 	"github.com/richardlt/matrix/sdk-go/common"
 )
 
 // NewFrame returns a clean transparent frame.
 func NewFrame(w, h uint64) Frame {
-	return Frame{Width: w, Height: h, Pixels: make([]color.RGBA, w*h)}
-}
-
-// NewFrameRandom returns a frame with random colors.
-func NewFrameRandom(w, h uint64) Frame {
-	ps := make([]color.RGBA, w*h)
-	for i := uint64(0); i < w*h; i++ {
-		ps[i].R = uint8(rand.Intn(255))
-		ps[i].G = uint8(rand.Intn(255))
-		ps[i].B = uint8(rand.Intn(255))
-		ps[i].A = 1
-	}
-	return Frame{Width: w, Height: h, Pixels: ps}
+	f := Frame{Width: w, Height: h}
+	f.Clean()
+	return f
 }
 
 // Frame is a rectangle with given width
 // and height that contains pixels.
 type Frame struct {
+	common.Frame
 	Width, Height uint64
-	Pixels        []color.RGBA
 }
 
 // SetWithCoord allows to set a pixel by coord.
-func (f *Frame) SetWithCoord(coo common.Coord, col color.RGBA) {
-	i := int(coo.X + coo.Y*f.Width)
-	if i < len(f.Pixels) {
-		f.Pixels[i] = col
+func (f *Frame) SetWithCoord(coo common.Coord, col common.Color) {
+	if coo.X >= 0 && coo.Y >= 0 {
+		i := int(coo.X) + int(coo.Y)*int(f.Width)
+		if 0 <= i && i < len(f.Pixels) {
+			f.Pixels[i] = &col
+		}
 	}
 }
 
 // Clean set all pixels to transparent.
-func (f *Frame) Clean() { f.Pixels = make([]color.RGBA, f.Width*f.Height) }
+func (f *Frame) Clean() {
+	f.Pixels = make([]*common.Color, f.Width*f.Height)
+	for i := 0; i < len(f.Pixels); i++ {
+		f.Pixels[i] = &common.Color{}
+	}
+}

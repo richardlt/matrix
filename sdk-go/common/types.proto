@@ -41,8 +41,8 @@ message Layer {
 }
 
 message Coord {
-  uint64 x = 1;
-  uint64 y = 2;
+  int64 x = 1;
+  int64 y = 2;
 }
 
 message Frame {

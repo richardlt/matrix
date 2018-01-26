@@ -2,7 +2,6 @@ package system
 
 import (
 	"context"
-	"image/color"
 	"sync"
 	"time"
 
@@ -228,33 +227,15 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 			}
 			if cd, ok := so.caracterDrivers[req.DriverData.UUID]; ok {
 				cd.Render([]rune(req.DriverData.Caracter)[0], *req.DriverData.Coord,
-					color.RGBA{
-						R: uint8(req.DriverData.Color.R),
-						G: uint8(req.DriverData.Color.G),
-						B: uint8(req.DriverData.Color.B),
-						A: uint8(req.DriverData.Color.A),
-					},
-					color.RGBA{
-						R: uint8(req.DriverData.Background.R),
-						G: uint8(req.DriverData.Background.G),
-						B: uint8(req.DriverData.Background.B),
-						A: uint8(req.DriverData.Background.A),
-					})
+					*req.DriverData.Color, *req.DriverData.Background)
 			}
 			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
 				td.Render(req.DriverData.Text, *req.DriverData.Coord,
-					color.RGBA{
-						R: uint8(req.DriverData.Color.R),
-						G: uint8(req.DriverData.Color.G),
-						B: uint8(req.DriverData.Color.B),
-						A: uint8(req.DriverData.Color.A),
-					},
-					color.RGBA{
-						R: uint8(req.DriverData.Background.R),
-						G: uint8(req.DriverData.Background.G),
-						B: uint8(req.DriverData.Background.B),
-						A: uint8(req.DriverData.Background.A),
-					})
+					*req.DriverData.Color, *req.DriverData.Background)
+			}
+		case softwareSDK.ConnectRequest_DriverData_STOP:
+			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
+				td.Stop()
 			}
 		}
 	}
@@ -314,7 +295,7 @@ func newSoftware(connectResponseChannel chan softwareSDK.ConnectResponse) *softw
 
 type software struct {
 	UUID                           string
-	Logo                           render.Image
+	Logo                           softwareSDK.Image
 	MinPlayerCount, MaxPlayerCount uint64
 	connectResponseChannel         chan softwareSDK.ConnectResponse
 	Ready                          bool
@@ -341,12 +322,7 @@ func (s software) GetTopFrame() render.Frame {
 
 func (s *software) LayerSetWithCoord(layerUUID string, coord common.Coord, col common.Color) {
 	if l, ok := s.layers[layerUUID]; ok {
-		l.SetWithCoord(coord, color.RGBA{
-			R: uint8(col.R),
-			G: uint8(col.G),
-			B: uint8(col.B),
-			A: uint8(col.A),
-		})
+		l.SetWithCoord(coord, col)
 	}
 }
 
@@ -364,22 +340,7 @@ func (s *software) LayerRemove(layerUUID string) {
 
 func (s *software) SetConfig(c softwareSDK.ConnectRequest_SoftwareData_Config) {
 	if c.Logo != nil {
-		colors := make([]color.RGBA, len(c.Logo.Colors))
-		for i, p := range c.Logo.Colors {
-			colors[i] = color.RGBA{
-				R: uint8(p.R),
-				G: uint8(p.G),
-				B: uint8(p.B),
-				A: uint8(p.A),
-			}
-		}
-		s.Logo = render.Image{
-			Name:   c.Logo.Name,
-			Height: c.Logo.Height,
-			Width:  c.Logo.Width,
-			Colors: colors,
-			Mask:   c.Logo.Mask,
-		}
+		s.Logo = *c.Logo
 		s.MinPlayerCount = c.MinPlayerCount
 		s.MaxPlayerCount = c.MaxPlayerCount
 	}
@@ -438,18 +399,7 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 		})
 		s.randomDrivers[uuid] = rd
 	case softwareSDK.CreateRequest_DriverData_CARACTER:
-		f := render.Font{
-			Name:      driverData.Font.Name,
-			Height:    driverData.Font.Height,
-			Caracters: make(map[string]render.Caracter, len(driverData.Font.Caracters)),
-		}
-		for i, c := range driverData.Font.Caracters {
-			f.Caracters[i] = render.Caracter{
-				Width: c.Width,
-				Mask:  c.Mask,
-			}
-		}
-		cd := drivers.NewCaracter(l, f)
+		cd := drivers.NewCaracter(l, *driverData.Font)
 		cd.OnEnd(func() {
 			s.connectResponseChannel <- softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
@@ -461,18 +411,7 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 		})
 		s.caracterDrivers[uuid] = cd
 	case softwareSDK.CreateRequest_DriverData_TEXT:
-		f := render.Font{
-			Name:      driverData.Font.Name,
-			Height:    driverData.Font.Height,
-			Caracters: make(map[string]render.Caracter, len(driverData.Font.Caracters)),
-		}
-		for i, c := range driverData.Font.Caracters {
-			f.Caracters[i] = render.Caracter{
-				Width: c.Width,
-				Mask:  c.Mask,
-			}
-		}
-		td := drivers.NewText(l, f)
+		td := drivers.NewText(l, *driverData.Font)
 		td.OnEnd(func() {
 			s.connectResponseChannel <- softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
@@ -510,6 +449,6 @@ func (s *software) GetLayerByUUID(uuid string) *render.Frame {
 // SoftwareMeta contains metadata for a software.
 type SoftwareMeta struct {
 	UUID                           string
-	Logo                           render.Image
+	Logo                           softwareSDK.Image
 	MinPlayerCount, MaxPlayerCount uint64
 }

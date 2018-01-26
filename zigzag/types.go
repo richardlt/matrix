@@ -40,7 +40,7 @@ func (c coord) GetNear(direction string, maxWidth, maxHeight uint64) coord {
 	return c
 }
 
-func (c coord) Convert() common.Coord { return common.Coord{X: c.X, Y: c.Y} }
+func (c coord) Convert() common.Coord { return common.Coord{X: int64(c.X), Y: int64(c.Y)} }
 
 func newCandy(c coord) *candy {
 	return &candy{

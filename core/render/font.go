@@ -4,47 +4,33 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/richardlt/matrix/sdk-go/software"
+
 	"github.com/pkg/errors"
 )
 
-// Caracter is a pixel template for a given caracter.
-type Caracter struct {
-	Width uint64   `json:"width"`
-	Mask  []uint64 `json:"mask"`
-}
-
-// NewFont returns a new font.
-func NewFont() Font { return Font{} }
-
-// Font contains pixel templates for caracters.
-type Font struct {
-	Name      string              `json:"name"`
-	Height    uint64              `json:"height"`
-	Caracters map[string]Caracter `json:"caracters"`
-}
-
-// GetCaracterByValue returns a caracter from given value.
-func (f *Font) GetCaracterByValue(value rune) Caracter {
+// GetFontCaracterByValue returns a font's caracter from given value.
+func GetFontCaracterByValue(f software.Font, value rune) software.Font_Caracter {
 	for k, c := range f.Caracters {
 		if []rune(k)[0] == value {
-			return c
+			return *c
 		}
 	}
 
-	return Caracter{}
+	return software.Font_Caracter{}
 }
 
 // GetFontByName returns an loaded font in memory.
-func GetFontByName(name string) Font {
+func GetFontByName(name string) software.Font {
 	for _, f := range fs {
 		if f.Name == name {
 			return f
 		}
 	}
-	return Font{}
+	return software.Font{}
 }
 
-var fs []Font
+var fs []software.Font
 
 func loadFonts() error {
 	files, err := ioutil.ReadDir("./fonts")
@@ -58,7 +44,7 @@ func loadFonts() error {
 			return errors.WithStack(err)
 		}
 
-		var f Font
+		var f software.Font
 		if err := json.Unmarshal(file, &f); err != nil {
 			return errors.WithStack(err)
 		}

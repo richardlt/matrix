@@ -2,16 +2,16 @@ package drivers
 
 import (
 	"fmt"
-	"image/color"
 	"strings"
 	"time"
 
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/sdk-go/common"
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
 // NewText returns a new text driver.
-func NewText(fr *render.Frame, fo render.Font) *Text {
+func NewText(fr *render.Frame, fo software.Font) *Text {
 	return &Text{
 		frame:          fr,
 		font:           fo,
@@ -22,7 +22,7 @@ func NewText(fr *render.Frame, fo render.Font) *Text {
 // Text allows to render a given text in frame.
 type Text struct {
 	frame          *render.Frame
-	font           render.Font
+	font           software.Font
 	caracterDriver *Caracter
 	ticker         *time.Ticker
 	endCallback    func()
@@ -30,7 +30,7 @@ type Text struct {
 }
 
 // Render displays given text from left to right with scroll effect if too long.
-func (t *Text) Render(text string, center common.Coord, color, background color.RGBA) {
+func (t *Text) Render(text string, center common.Coord, color, background common.Color) {
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -39,19 +39,19 @@ func (t *Text) Render(text string, center common.Coord, color, background color.
 
 	spacesText := fmt.Sprintf("   %s  ", strings.Join(strings.Split(text, ""), " "))
 
-	textLength := uint64(0)
+	textLength := 0
 	for _, c := range spacesText {
-		textLength += t.font.GetCaracterByValue(c).Width
+		textLength += int(render.GetFontCaracterByValue(t.font, c).Width)
 	}
 
-	stepCount := textLength - t.frame.Width
+	stepCount := textLength - int(t.frame.Width)
 	if stepCount < 0 {
 		stepCount = 0
 	} else {
 		stepCount++
 	}
 
-	step := uint64(0)
+	step := 0
 
 	go func() {
 		for _ = range t.ticker.C {
@@ -62,16 +62,16 @@ func (t *Text) Render(text string, center common.Coord, color, background color.
 				}
 			} else {
 				if t.stepCallback != nil {
-					go t.stepCallback(stepCount, step)
+					go t.stepCallback(uint64(stepCount), uint64(step))
 				}
-				beginX := uint64(0) - step
+				beginX := 0 - step
 				for _, c := range spacesText {
-					caracterWidth := t.font.GetCaracterByValue(c).Width
+					caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
 					t.caracterDriver.Render(c, common.Coord{
-						X: beginX + caracterWidth - uint64(caracterWidth/2) - 1,
+						X: int64(beginX) + int64(caracterWidth) - int64(caracterWidth/2) - 1,
 						Y: center.Y,
 					}, color, background)
-					beginX += caracterWidth
+					beginX += int(caracterWidth)
 				}
 				step++
 			}
@@ -86,4 +86,8 @@ func (t *Text) OnEnd(c func()) { t.endCallback = c }
 func (t *Text) OnStep(c func(total, current uint64)) { t.stepCallback = c }
 
 // Stop the rendering process if not ended.
-func (t *Text) Stop() { t.ticker.Stop() }
+func (t *Text) Stop() {
+	if t.ticker != nil {
+		t.ticker.Stop()
+	}
+}

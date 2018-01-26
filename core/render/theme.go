@@ -2,34 +2,29 @@ package render
 
 import (
 	"encoding/json"
-	"image/color"
 	"io/ioutil"
 
 	"github.com/pkg/errors"
+	"github.com/richardlt/matrix/sdk-go/common"
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
-// Theme contains a set of colors.
-type Theme struct {
-	Name   string                `json:"name"`
-	Colors map[string]color.RGBA `json:"colors"`
-}
-
 // GetColorFromThemeByName returns an loaded theme's color in memory.
-func GetColorFromThemeByName(themeName, colorName string) color.RGBA {
+func GetColorFromThemeByName(themeName, colorName string) common.Color {
 	for _, t := range ts {
 		if t.Name == themeName {
 			for k, c := range t.Colors {
 				if k == colorName {
-					return c
+					return *c
 				}
 			}
 		}
 	}
 
-	return color.RGBA{}
+	return common.Color{}
 }
 
-var ts []Theme
+var ts []software.Theme
 
 func loadThemes() error {
 	files, err := ioutil.ReadDir("./themes")
@@ -43,7 +38,7 @@ func loadThemes() error {
 			return errors.WithStack(err)
 		}
 
-		var t Theme
+		var t software.Theme
 		if err := json.Unmarshal(file, &t); err != nil {
 			return errors.WithStack(err)
 		}

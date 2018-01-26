@@ -1,7 +1,7 @@
 package render
 
 import (
-	"image/color"
+	"github.com/richardlt/matrix/sdk-go/common"
 )
 
 // NewMatrix returns a new matrix with given size.
@@ -20,26 +20,27 @@ type Matrix struct {
 	width, height uint64
 }
 
-func (m *Matrix) getTopPixelAtIndex(idx uint64) color.RGBA {
+func (m *Matrix) getTopPixelAtIndex(idx uint64) common.Color {
 	if m.width*m.height <= idx {
-		return color.RGBA{}
+		return common.Color{}
 	}
 
 	for i := len(m.frames) - 1; i >= 0; i-- {
 		c := m.frames[i].Pixels[idx]
 		if c.A > 0 {
-			return c
+			return *c
 		}
 	}
 
-	return color.RGBA{}
+	return common.Color{}
 }
 
 // PrintFrame renders the top frame of the matrix.
 func (m *Matrix) PrintFrame() {
 	f := NewFrame(m.width, m.height)
 	for i := uint64(0); i < m.width*m.height; i++ {
-		f.Pixels[i] = m.getTopPixelAtIndex(i)
+		top := m.getTopPixelAtIndex(i)
+		f.Pixels[i] = &top
 	}
 	m.topFrame = f
 }
