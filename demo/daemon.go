@@ -83,14 +83,15 @@ func (d *demo) ActionReceived(slot int, cmd common.Command) {
 		} else {
 			d.step--
 		}
+		d.play()
 	case common.Command_RIGHT_UP:
 		if 3 < d.step {
 			d.step = 0
 		} else {
 			d.step++
 		}
+		d.play()
 	}
-	d.play()
 }
 
 func (d *demo) reset() {

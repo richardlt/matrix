@@ -84,12 +84,11 @@
   <script>
     class MatrixGamepadApp extends Polymer.Element {
       static get is() { return 'matrix-gamepad-app'; }
-      static get properties() {
-        return {};
-      }
+      static get properties() { return {}; }
 
       ready() {
         super.ready();
+
         this.$.l.addEventListener('mousedown', this._handleClick('l_down'));
         this.$.l.addEventListener('mouseup', this._handleClick('l_up'));
         this.$.select.addEventListener('pointerdown', this._handleClick('select_down'));
@@ -98,6 +97,50 @@
         this.$.start.addEventListener('mouseup', this._handleClick('start_up'));
         this.$.r.addEventListener('mousedown', this._handleClick('r_down'));
         this.$.r.addEventListener('mouseup', this._handleClick('r_up'));
+
+        document.addEventListener('keydown', this._handleKey('down'));
+        document.addEventListener('keyup', this._handleKey('up'));
+      }
+
+      _convertKeyToCmd(key) {
+        switch (key) {
+          case 'z':
+            return 'up';
+          case 'd':
+            return 'right';
+          case 's':
+            return 'down';
+          case 'q':
+            return 'left';
+          case 'o':
+            return 'x';
+          case 'p':
+            return 'a';
+          case 'l':
+            return 'b';
+          case 'k':
+            return 'y';
+          case 'f':
+            return 'l';
+          case 'j':
+            return 'r';
+          case 'g':
+            return 'select';
+          case 'h':
+            return 'start';
+          default:
+            return null;
+        }
+        return null
+      }
+
+      _handleKey(type) {
+        return (e) => {
+          const cmd = this._convertKeyToCmd(e.key);
+          if (cmd) {
+            this.handleCommand(Object.assign({}, e, { detail: cmd + '_' + type }));
+          }
+        };
       }
 
       _handleClick(cmd) {
@@ -106,9 +149,7 @@
         };
       }
 
-      handleCommand(cmd) {
-        this.$.socket.command(cmd.detail);
-      }
+      handleCommand(cmd) { this.$.socket.command(cmd.detail); }
     }
 
     window.customElements.define(MatrixGamepadApp.is, MatrixGamepadApp);

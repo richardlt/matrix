@@ -25,6 +25,7 @@ type pixel struct {
 	B int `json:"b"`
 }
 
+// Start the gamepad server.
 func Start(port, corePort int) error {
 	frameChannel := make(chan frame)
 	defer close(frameChannel)
@@ -126,18 +127,10 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	if err := s.On("connection", func(so socketio.Socket) {
 		g := newGamepad(so)
 		so.Join("display")
-		so.On("ask_slot", func(slot int) {
-			gs.AskSlot(g, slot)
-		})
-		so.On("get_slots", func() {
-			gs.GetSlots(g)
-		})
-		so.On("command", func(cmd string) {
-			gs.Command(g, commandFromString(cmd))
-		})
-		so.On("disconnection", func() {
-			gs.RemoveGamepad(g)
-		})
+		so.On("ask_slot", func(slot int) { gs.AskSlot(g, slot) })
+		so.On("get_slots", func() { gs.GetSlots(g) })
+		so.On("command", func(cmd string) { gs.Command(g, commandFromString(cmd)) })
+		so.On("disconnection", func() { gs.RemoveGamepad(g) })
 		gs.AddGamepad(g)
 	}); err != nil {
 		return nil, errors.WithStack(err)
@@ -152,9 +145,7 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	return s, nil
 }
 
-func newGamepad(so socketio.Socket) *gamepad {
-	return &gamepad{so, 2}
-}
+func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, 2} }
 
 type gamepad struct {
 	so   socketio.Socket
