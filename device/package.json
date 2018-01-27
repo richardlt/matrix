@@ -1,0 +1,9 @@
+{
+  "name": "matrix-device",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "serialport": "6.0.4"
+  }
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/richardlt/matrix/core"
 	"github.com/richardlt/matrix/demo"
+	"github.com/richardlt/matrix/device"
 	"github.com/richardlt/matrix/emulator"
 	"github.com/richardlt/matrix/gamepad"
 	"github.com/richardlt/matrix/yumyum"
@@ -31,6 +32,10 @@ func main() {
 		Name:   "gamepad",
 		Usage:  "start the matrix gamepad",
 		Action: func(c *cli.Context) error { return gamepad.Start(4000, 8080) },
+	}, {
+		Name:   "device",
+		Usage:  "start the matrix device",
+		Action: func(c *cli.Context) error { return device.Start(8080) },
 	}, {
 		Name:   "zigzag",
 		Usage:  "start zigzag game",
