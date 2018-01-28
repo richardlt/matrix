@@ -1,22 +1,24 @@
-const Matrix = require("./matrix");
+const IO = require('socket.io-client'),
+  argv = require('minimist')(process.argv.slice(2));
+
+const Matrix = require('./matrix/matrix'),
+  Gamepad = require('./gamepad/gamepad');
 
 const start = async () => {
   const matrix = new Matrix(144);
   await matrix.loadPorts();
   matrix.openPorts();
 
-  setInterval(_ => {
-    let frame = [];
-    for (let i = 0; i < 144; i++) {
-      frame.push({
-        r: Math.floor(Math.random() * 255),
-        g: Math.floor(Math.random() * 255),
-        b: Math.floor(Math.random() * 255),
-        a: 1
-      });
-    }
-    matrix.setFrame(frame);
-  }, 10);
+  const gamepad = new Gamepad();
+  gamepad.loadDevices();
+  gamepad.openDevices();
+
+  const socket = IO(argv.uri ? argv.uri : 'http://localhost:5000');
+  socket.on('connect', _ => { console.log('connect socket'); });
+  socket.on('frame', data => { matrix.setFrame(data.pixels); });
+  socket.on('disconnect', _ => { console.log('disconnect socket') });
+
+  gamepad.on('event', event => { socket.emit('command', event); });
 };
 
 start();

@@ -9,19 +9,21 @@ Video game console operating system that displays on a 16*9 RGB LED matrix. WIP.
 
 ## Development setup
 
-1. Requirements
+1. Requirements.
 * [Go](https://golang.org/dl/) (version 1.9+)
 * [Node.js](https://nodejs.org/en/download/) (with npm, version 8+)
 * [Bower](https://bower.io/) (latest)
 
-2. Install JS projects dependencies
+2. Install JS projects dependencies.
 ```sh
 $ make install
 ```
 
-3. Run it
+3. Run it.
 ```sh
 $ go run main.go all
 $ (cd $GOPATH/src/github.com/richardlt/matrix/emulator && npm start)
 $ (cd $GOPATH/src/github.com/richardlt/matrix/gamepad && npm start)
 ```
+
+4. Open emulator at http://localhost:3001 and/or gamepad at http://localhost:4002.

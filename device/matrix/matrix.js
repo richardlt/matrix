@@ -52,7 +52,6 @@ module.exports = class Matrix {
 
             port.open(err => { if (err) { console.log('opening', err); } });
         });
-        return this;
     }
 
     setFrame(frame) { this._frame = frame; this._updateBuffer(frame); }

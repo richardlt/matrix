@@ -35,7 +35,7 @@ func main() {
 	}, {
 		Name:   "device",
 		Usage:  "start the matrix device",
-		Action: func(c *cli.Context) error { return device.Start(8080) },
+		Action: func(c *cli.Context) error { return device.Start(5000, 8080) },
 	}, {
 		Name:   "zigzag",
 		Usage:  "start zigzag game",
@@ -54,6 +54,11 @@ func main() {
 		Action: func(c *cli.Context) error {
 			go func() {
 				if err := gamepad.Start(4000, 8080); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
+				if err := emulator.Start(3000, 8080); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
