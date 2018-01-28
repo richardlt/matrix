@@ -2,25 +2,43 @@
   {
     "vendorID": 121,
     "productID": 17,
+    "pins": [
+      {
+        "number": 3,
+        "multi": false
+      },
+      {
+        "number": 4,
+        "multi": false
+      },
+      {
+        "number": 5,
+        "multi": true
+      },
+      {
+        "number": 6,
+        "multi": true
+      }
+    ],
     "buttons": [
       {
         "pin": 5,
-        "value": 47,
+        "value": 32,
         "name": "a"
       },
       {
         "pin": 5,
-        "value": 79,
+        "value": 64,
         "name": "b"
       },
       {
         "pin": 5,
-        "value": 143,
+        "value": 128,
         "name": "y"
       },
       {
         "pin": 5,
-        "value": 31,
+        "value": 16,
         "name": "x"
       },
       {
