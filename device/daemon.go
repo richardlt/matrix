@@ -2,7 +2,6 @@ package device
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/googollee/go-socket.io"
 	"github.com/labstack/echo"
@@ -46,7 +45,7 @@ func Start(port, corePort int) error {
 	e := echo.New()
 	e.Any("/socket.io/", echo.WrapHandler(s))
 
-	log.Printf("Start device on port %d\n", port)
+	logrus.Infof("Start device on port %d\n", port)
 	return e.Start(fmt.Sprintf(":%d", port))
 }
 
@@ -57,18 +56,15 @@ func newSocketIOServer(d *device) (*socketio.Server, error) {
 	}
 
 	if err := s.On("connection", func(so socketio.Socket) {
-		log.Println("on connection")
 		so.Join("display")
 		so.On("command", func(cmd string) { d.Command(commandFromString(cmd)) })
-		so.On("disconnection", func() {
-			log.Println("on disconnect")
-		})
+		so.On("disconnection", func() {})
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	if err := s.On("error", func(so socketio.Socket, err error) {
-		log.Println("error:", err)
+		logrus.Errorf("%+v", errors.WithStack(err))
 	}); err != nil {
 		return nil, err
 	}

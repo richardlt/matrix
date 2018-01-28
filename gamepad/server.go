@@ -2,7 +2,6 @@ package gamepad
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/googollee/go-socket.io"
@@ -59,7 +58,7 @@ func Start(port, corePort int) error {
 	e.Any("/socket.io/", echo.WrapHandler(s))
 	e.Static("/", "./gamepad/client/dist")
 
-	log.Printf("Start gamepad on port %d\n", port)
+	logrus.Infof("Start gamepad on port %d\n", port)
 	return errors.WithStack(e.Start(fmt.Sprintf(":%d", port)))
 }
 
@@ -137,7 +136,7 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	}
 
 	if err := s.On("error", func(so socketio.Socket, err error) {
-		log.Println("error:", err)
+		logrus.Errorf("%+v", errors.WithStack(err))
 	}); err != nil {
 		return nil, err
 	}

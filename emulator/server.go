@@ -2,7 +2,6 @@ package emulator
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/sirupsen/logrus"
 
@@ -49,7 +48,7 @@ func Start(port, corePort int) error {
 	e.Any("/socket.io/", echo.WrapHandler(s))
 	e.Static("/", "./emulator/client/dist")
 
-	log.Printf("Start emulator on port %d\n", port)
+	logrus.Infof("Start emulator on port %d\n", port)
 	return e.Start(fmt.Sprintf(":%d", port))
 }
 
@@ -77,17 +76,14 @@ func newSocketIOServer() (*socketio.Server, error) {
 	}
 
 	if err := s.On("connection", func(so socketio.Socket) {
-		log.Println("on connection")
 		so.Join("display")
-		so.On("disconnection", func() {
-			log.Println("on disconnect")
-		})
+		so.On("disconnection", func() {})
 	}); err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	if err := s.On("error", func(so socketio.Socket, err error) {
-		log.Println("error:", err)
+		logrus.Errorf("%+v", errors.WithStack(err))
 	}); err != nil {
 		return nil, err
 	}

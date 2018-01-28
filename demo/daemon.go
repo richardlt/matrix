@@ -2,7 +2,6 @@ package demo
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/richardlt/matrix/sdk-go/common"
@@ -12,7 +11,7 @@ import (
 
 // Start the demo software.
 func Start(uri string) error {
-	log.Printf("Start demo for uri %s\n", uri)
+	logrus.Infof("Start demo for uri %s\n", uri)
 
 	d := &demo{}
 

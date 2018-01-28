@@ -2,7 +2,6 @@ package zigzag
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
@@ -11,7 +10,7 @@ import (
 
 // Start the zigzag software.
 func Start(uri string) error {
-	log.Printf("Start zigzag for uri %s\n", uri)
+	logrus.Infof("Start zigzag for uri %s\n", uri)
 
 	z := &zigzag{}
 

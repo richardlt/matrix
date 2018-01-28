@@ -1,8 +1,6 @@
 package yumyum
 
 import (
-	"log"
-
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 	"github.com/sirupsen/logrus"
@@ -10,7 +8,7 @@ import (
 
 // Start the zigzag software.
 func Start(uri string) error {
-	log.Printf("Start yumyum for uri %s\n", uri)
+	logrus.Infof("Start yumyum for uri %s\n", uri)
 
 	y := &yumyum{}
 

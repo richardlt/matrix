@@ -5,9 +5,11 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/clock"
 	"github.com/richardlt/matrix/core"
 	"github.com/richardlt/matrix/demo"
 	"github.com/richardlt/matrix/device"
+	"github.com/richardlt/matrix/draw"
 	"github.com/richardlt/matrix/emulator"
 	"github.com/richardlt/matrix/gamepad"
 	"github.com/richardlt/matrix/yumyum"
@@ -46,8 +48,16 @@ func main() {
 		Action: func(c *cli.Context) error { return yumyum.Start("localhost:8080") },
 	}, {
 		Name:   "demo",
-		Usage:  "start demo game",
+		Usage:  "start demo software",
 		Action: func(c *cli.Context) error { return demo.Start("localhost:8080") },
+	}, {
+		Name:   "clock",
+		Usage:  "start clock software",
+		Action: func(c *cli.Context) error { return clock.Start("localhost:8080") },
+	}, {
+		Name:   "draw",
+		Usage:  "start draw software",
+		Action: func(c *cli.Context) error { return draw.Start("localhost:8080") },
 	}, {
 		Name:  "all",
 		Usage: "start all",
@@ -74,6 +84,16 @@ func main() {
 			}()
 			go func() {
 				if err := demo.Start("localhost:8080"); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
+				if err := clock.Start("localhost:8080"); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
+				if err := draw.Start("localhost:8080"); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
