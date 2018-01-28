@@ -12,7 +12,7 @@ import (
 
 type Software interface {
 	Init(API) error
-	Start()
+	Start(uint64)
 	Close()
 	ActionReceived(int, common.Command)
 }
@@ -132,7 +132,7 @@ func processResponse(s Software, res *ConnectResponse) {
 	case ConnectResponse_SOFTWARE:
 		switch res.SoftwareData.Action {
 		case ConnectResponse_SoftwareData_START:
-			go s.Start()
+			go s.Start(res.SoftwareData.PlayerCount)
 		case ConnectResponse_SoftwareData_CLOSE:
 			go s.Close()
 		case ConnectResponse_SoftwareData_PLAYER_COMMAND:

@@ -20,6 +20,7 @@ type draw struct {
 	layerDraw, layerPlayer software.Layer
 	colors                 []common.Color
 	players                []*player
+	playerCount            uint64
 }
 
 func (d *draw) Init(a software.API) (err error) {
@@ -61,9 +62,11 @@ func (d *draw) Init(a software.API) (err error) {
 	return nil
 }
 
-func (d *draw) Start() {
-	d.players = make([]*player, 4)
-	for i := 0; i < 4; i++ {
+func (d *draw) Start(playerCount uint64) {
+	d.playerCount = playerCount
+
+	d.players = make([]*player, d.playerCount)
+	for i := 0; i < int(d.playerCount); i++ {
 		var x, y int64
 		if i == 0 || i == 3 {
 			x = 0

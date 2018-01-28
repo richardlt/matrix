@@ -25,8 +25,6 @@ type zigzag struct {
 func (z *zigzag) Init(a software.API) (err error) {
 	logrus.Debug("Init zigzag")
 
-	z.engine = newEngine(4, 16, 9)
-
 	z.renderer, err = newRenderer(a)
 	if err != nil {
 		return err
@@ -44,7 +42,10 @@ func (z *zigzag) Init(a software.API) (err error) {
 	return nil
 }
 
-func (z *zigzag) Start() { z.print() }
+func (z *zigzag) Start(playerCount uint64) {
+	z.engine = newEngine(playerCount, 16, 9)
+	z.print()
+}
 
 func (z zigzag) Close() { fmt.Println("close") }
 

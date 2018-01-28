@@ -32,7 +32,7 @@ func (y yumyum) Init(a software.API) (err error) {
 	return nil
 }
 
-func (y yumyum) Start() {}
+func (y yumyum) Start(playerCount uint64) {}
 
 func (y yumyum) Close() {}
 

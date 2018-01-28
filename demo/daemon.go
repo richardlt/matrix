@@ -70,7 +70,7 @@ func (d *demo) Init(a software.API) (err error) {
 	return nil
 }
 
-func (d *demo) Start() { d.play() }
+func (d *demo) Start(playerCount uint64) { d.play() }
 
 func (d *demo) Close() { d.reset() }
 

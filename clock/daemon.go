@@ -65,7 +65,7 @@ func (c *clock) Init(a software.API) (err error) {
 	return nil
 }
 
-func (c *clock) Start() {
+func (c *clock) Start(playerCount uint64) {
 	ctx, cancel := context.WithCancel(context.Background())
 	c.cancel = cancel
 

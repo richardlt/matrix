@@ -29,7 +29,11 @@ func (s *softMenuState) Init(ctx *Context) {
 	s.sm.OnPrint(func() { ctx.displayServer.Print([]render.Frame{*s.f}) })
 
 	s.sm.OnSelectSoftware(func(meta system.SoftwareMeta) {
-		ctx.SetState(newPlayerMenuState(meta))
+		if meta.MinPlayerCount == meta.MaxPlayerCount {
+			ctx.SetState(newSoftwareState(meta, meta.MinPlayerCount))
+		} else {
+			ctx.SetState(newPlayerMenuState(meta))
+		}
 	})
 
 	s.sm.Print()
@@ -106,7 +110,7 @@ func (s *softwareState) Init(ctx *Context) {
 
 		if s.selectPressed && s.startPressed {
 			ctx.softwareServer.CloseSoftware()
-			ctx.SetState(newPlayerMenuState(s.meta))
+			ctx.SetState(newSoftMenuState(ctx.GetSoftwareMeta()))
 		} else {
 			ctx.softwareServer.Command(a.Slot, a.Command)
 		}
