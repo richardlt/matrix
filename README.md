@@ -1,5 +1,7 @@
 # <img src="https://raw.githubusercontent.com/richardlt/matrix/master/logo.png" width="30"/>&#8239;Matrix
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/richardlt/matrix)](https://goreportcard.com/report/github.com/richardlt/matrix)
+
 Video game console operating system that displays on a 16*9 RGB LED matrix. WIP.
 
 <p align="center">
