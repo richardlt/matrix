@@ -56,7 +56,7 @@ func Start(port, corePort int) error {
 
 	e := echo.New()
 	e.Any("/socket.io/", echo.WrapHandler(s))
-	e.Static("/", "./gamepad/client/dist")
+	e.Static("/", "./gamepad/public")
 
 	logrus.Infof("Start gamepad on port %d\n", port)
 	return errors.WithStack(e.Start(fmt.Sprintf(":%d", port)))

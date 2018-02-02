@@ -46,7 +46,7 @@ func Start(port, corePort int) error {
 
 	e := echo.New()
 	e.Any("/socket.io/", echo.WrapHandler(s))
-	e.Static("/", "./emulator/client/dist")
+	e.Static("/", "./emulator/public")
 
 	logrus.Infof("Start emulator on port %d\n", port)
 	return e.Start(fmt.Sprintf(":%d", port))
