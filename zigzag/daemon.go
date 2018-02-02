@@ -1,7 +1,8 @@
 package zigzag
 
 import (
-	"fmt"
+	"context"
+	"time"
 
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
@@ -20,6 +21,7 @@ func Start(uri string) error {
 type zigzag struct {
 	engine   *engine
 	renderer *renderer
+	cancel   func()
 }
 
 func (z *zigzag) Init(a software.API) (err error) {
@@ -45,20 +47,41 @@ func (z *zigzag) Init(a software.API) (err error) {
 func (z *zigzag) Start(playerCount uint64) {
 	z.engine = newEngine(playerCount, 16, 9)
 	z.print()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	z.cancel = cancel
+
+	go func() {
+		t := time.NewTicker(time.Millisecond * 300)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				z.engine.MovePlayers()
+				z.print()
+			}
+		}
+	}()
 }
 
-func (z zigzag) Close() { fmt.Println("close") }
+func (z *zigzag) Close() {
+	if z.cancel != nil {
+		z.cancel()
+	}
+}
 
 func (z *zigzag) ActionReceived(slot int, cmd common.Command) {
 	switch cmd {
 	case common.Command_LEFT_UP:
-		z.engine.MovePlayer(slot, "left")
+		z.engine.ChangePlayerDirection(slot, "left")
 	case common.Command_UP_UP:
-		z.engine.MovePlayer(slot, "up")
+		z.engine.ChangePlayerDirection(slot, "up")
 	case common.Command_RIGHT_UP:
-		z.engine.MovePlayer(slot, "right")
+		z.engine.ChangePlayerDirection(slot, "right")
 	case common.Command_DOWN_UP:
-		z.engine.MovePlayer(slot, "down")
+		z.engine.ChangePlayerDirection(slot, "down")
 	}
 	z.print()
 }

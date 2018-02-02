@@ -144,7 +144,7 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	return s, nil
 }
 
-func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, 2} }
+func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, 0} }
 
 type gamepad struct {
 	so   socketio.Socket

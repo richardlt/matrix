@@ -1,6 +1,8 @@
 package zigzag
 
-import "math/rand"
+import (
+	"math/rand"
+)
 
 func newEngine(sc, w, h uint64) *engine {
 	// prepare snakes
@@ -31,7 +33,7 @@ func newEngine(sc, w, h uint64) *engine {
 		cs = append(cs, newCandy(co))
 	}
 
-	return &engine{ss, cs, h, w}
+	return &engine{snakes: ss, candies: cs, gridHeight: h, gridWidth: w}
 }
 
 type engine struct {
@@ -40,15 +42,24 @@ type engine struct {
 	gridHeight, gridWidth uint64
 }
 
-func (e *engine) MovePlayer(playerSlot int, direction string) {
+func (e *engine) ChangePlayerDirection(playerSlot int, direction string) {
 	if playerSlot < 0 || len(e.snakes) <= playerSlot {
 		return
 	}
 
-	s := e.snakes[playerSlot]
+	e.snakes[playerSlot].Direction = direction
+}
+
+func (e *engine) MovePlayers() {
+	for playerSlot, s := range e.snakes {
+		e.movePlayer(playerSlot, s)
+	}
+}
+
+func (e *engine) movePlayer(playerSlot int, s *snake) {
 	if s.Length() > 0 {
 		s.Body = append(
-			[]coord{s.Body[0].GetNear(direction, e.gridWidth-1, e.gridHeight-1)},
+			[]coord{s.Body[0].GetNear(s.Direction, e.gridWidth-1, e.gridHeight-1)},
 			s.Body[:len(s.Body)-1]...,
 		)
 
