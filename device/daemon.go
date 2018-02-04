@@ -12,6 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type action struct {
+	Slot    uint64 `json:"slot"`
+	Command string `json:"command"`
+}
+
 // Start device deamon.
 func Start(port, corePort int) error {
 	frameChannel := make(chan common.Frame)
@@ -57,7 +62,7 @@ func newSocketIOServer(d *device) (*socketio.Server, error) {
 
 	if err := s.On("connection", func(so socketio.Socket) {
 		so.Join("display")
-		so.On("command", func(cmd string) { d.Command(commandFromString(cmd)) })
+		so.On("command", func(a action) { d.Action(a) })
 		so.On("disconnection", func() {})
 	}); err != nil {
 		return nil, errors.WithStack(err)
@@ -88,8 +93,8 @@ func (d *device) Init(api *player.API) error {
 	return nil
 }
 
-func (d *device) Command(cmd common.Command) {
+func (d *device) Action(a action) {
 	if d.playerAPI != nil {
-		d.playerAPI.Command(uint64(0), cmd)
+		d.playerAPI.Command(a.Slot, commandFromString(a.Command))
 	}
 }

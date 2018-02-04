@@ -63,6 +63,11 @@ func main() {
 		Usage: "start all",
 		Action: func(c *cli.Context) error {
 			go func() {
+				if err := device.Start(5000, 8080); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
 				if err := gamepad.Start(4000, 8080); err != nil {
 					logrus.Errorf("%+v", err)
 				}

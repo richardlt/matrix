@@ -30,13 +30,13 @@ module.exports = class Gamepad extends EventEmitter {
   }
 
   openDevices() {
-    this._devices.forEach(device => {
-      device.hid.on('data', this._handleData(device));
+    this._devices.forEach((device, i) => {
+      device.hid.on('data', this._handleData(device, i));
       device.hid.on('error', error => { console.log('error', error) });
     });
   }
 
-  _handleData(device) {
+  _handleData(device, i) {
     const mapPins = {};
     device.config.pins.forEach(pin => { mapPins[pin.number] = pin; });
 
@@ -56,9 +56,9 @@ module.exports = class Gamepad extends EventEmitter {
         const currentState = device.states[button.name];
 
         if (isPressed && !currentState) {
-          this.emit('event', button.name + ':press');
+          this.emit('event', { command: button.name + ':press', slot: i });
         } else if (!isPressed && currentState) {
-          this.emit('event', button.name + ':release');
+          this.emit('event', { command: button.name + ':release', slot: i });
         }
 
         device.states[button.name] = isPressed;

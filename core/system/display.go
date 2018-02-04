@@ -65,8 +65,7 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 	di.Print(d.lastFrames)
 
 	for {
-		_, err := stream.Recv()
-		if err != nil {
+		if _, err := stream.Recv(); err != nil {
 			return errors.WithStack(err)
 		}
 	}
