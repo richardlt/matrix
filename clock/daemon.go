@@ -58,8 +58,8 @@ func (c *clock) Init(a software.API) (err error) {
 		return err
 	}
 
-	c.green1 = c.api.GetColorFromThemeByName("flat", "green_1")
-	c.green2 = c.api.GetColorFromThemeByName("flat", "green_2")
+	c.green1 = c.api.GetColorFromLocalThemeByName("flat", "green_1")
+	c.green2 = c.api.GetColorFromLocalThemeByName("flat", "green_2")
 
 	a.Ready()
 	return nil

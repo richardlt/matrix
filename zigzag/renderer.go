@@ -15,14 +15,14 @@ func newRenderer(a software.API) (*renderer, error) {
 		api:   a,
 		layer: l,
 		snakesColor: []common.Color{
-			a.GetColorFromThemeByName("zigzag", "player1"),
-			a.GetColorFromThemeByName("zigzag", "player2"),
-			a.GetColorFromThemeByName("zigzag", "player3"),
-			a.GetColorFromThemeByName("zigzag", "player4"),
+			a.GetColorFromLocalThemeByName("zigzag", "player1"),
+			a.GetColorFromLocalThemeByName("zigzag", "player2"),
+			a.GetColorFromLocalThemeByName("zigzag", "player3"),
+			a.GetColorFromLocalThemeByName("zigzag", "player4"),
 		},
 		candiesColor: []common.Color{
-			a.GetColorFromThemeByName("zigzag", "candy1"),
-			a.GetColorFromThemeByName("zigzag", "candy2"),
+			a.GetColorFromLocalThemeByName("zigzag", "candy1"),
+			a.GetColorFromLocalThemeByName("zigzag", "candy2"),
 		},
 	}, nil
 }

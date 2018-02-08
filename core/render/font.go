@@ -2,7 +2,7 @@ package render
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 
 	"github.com/richardlt/matrix/sdk-go/software"
 
@@ -33,22 +33,16 @@ func GetFontByName(name string) software.Font {
 var fs []software.Font
 
 func loadFonts() error {
-	files, err := ioutil.ReadDir("./fonts")
+	files, err := loadFiles("fonts")
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	for _, file := range files {
-		file, err := ioutil.ReadFile("./fonts/" + file.Name())
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
 		var f software.Font
-		if err := json.Unmarshal(file, &f); err != nil {
-			return errors.WithStack(err)
+		if err := json.Unmarshal(file.Data, &f); err != nil {
+			return fmt.Errorf("Can't unmarshal %s font file", file.Name)
 		}
-
 		fs = append(fs, f)
 	}
 

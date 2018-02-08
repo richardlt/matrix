@@ -67,7 +67,7 @@ func (l *layer) NewRandomDriver() (*RandomDriver, error) {
 		return nil, err
 	}
 
-	rd := &RandomDriver{ctx: l.ctx, uuid: res.DriverData.UUID}
+	rd := &RandomDriver{ctx: l.ctx, uuid: res.UUID}
 	l.ctx.AddDriver(rd.uuid, rd)
 
 	return rd, nil
@@ -87,7 +87,7 @@ func (l *layer) NewCaracterDriver(font Font) (*CaracterDriver, error) {
 		return nil, err
 	}
 
-	cd := &CaracterDriver{ctx: l.ctx, uuid: res.DriverData.UUID}
+	cd := &CaracterDriver{ctx: l.ctx, uuid: res.UUID}
 	l.ctx.AddDriver(cd.uuid, cd)
 
 	return cd, nil
@@ -107,7 +107,7 @@ func (l *layer) NewTextDriver(font Font) (*TextDriver, error) {
 		return nil, err
 	}
 
-	td := &TextDriver{ctx: l.ctx, uuid: res.DriverData.UUID}
+	td := &TextDriver{ctx: l.ctx, uuid: res.UUID}
 	l.ctx.AddDriver(td.uuid, td)
 
 	return td, nil

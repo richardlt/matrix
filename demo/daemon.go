@@ -141,11 +141,11 @@ func (d *demo) playRandom(ctx context.Context) {
 
 func (d *demo) playCaracter() {
 	d.caracterDriver.Render('A', common.Coord{X: 5, Y: 3},
-		d.api.GetColorFromThemeByName("flat", "red_2"), common.Color{})
+		d.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{})
 	d.caracterDriver.Render('B', common.Coord{X: 8, Y: 4},
-		d.api.GetColorFromThemeByName("flat", "orange_2"), common.Color{})
+		d.api.GetColorFromLocalThemeByName("flat", "orange_2"), common.Color{})
 	d.caracterDriver.Render('C', common.Coord{X: 10, Y: 5},
-		d.api.GetColorFromThemeByName("flat", "green_2"), common.Color{})
+		d.api.GetColorFromLocalThemeByName("flat", "green_2"), common.Color{})
 }
 
 func (d *demo) playText() {
@@ -158,11 +158,11 @@ func (d *demo) playText() {
 			d.playText()
 		})
 		d.textDriver.Render("SOFTWARE", common.Coord{X: 0, Y: 6},
-			d.api.GetColorFromThemeByName("flat", "green_2"),
+			d.api.GetColorFromLocalThemeByName("flat", "green_2"),
 			common.Color{})
 	})
 	d.textDriver.Render("EXAMPLE", common.Coord{X: 0, Y: 2},
-		d.api.GetColorFromThemeByName("flat", "red_2"),
+		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		common.Color{})
 }
 

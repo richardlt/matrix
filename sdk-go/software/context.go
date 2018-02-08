@@ -60,6 +60,19 @@ func (c *ctx) SendCreateRequest(req CreateRequest) (*CreateResponse, error) {
 	return res, nil
 }
 
+func (c *ctx) SendLoadRequest(req LoadRequest) (*LoadResponse, error) {
+	if c.client == nil {
+		return nil, errors.New("API is closed")
+	}
+
+	res, err := c.client.Load(context.Background(), &req)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return res, nil
+}
+
 func (c *ctx) Close() {
 	c.connectRequestChannel = nil
 	c.client = nil

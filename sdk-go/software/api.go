@@ -11,8 +11,11 @@ type API interface {
 	Print() error
 	SetConfig(ConnectRequest_SoftwareData_Config) error
 	GetImageFromLocal(name string) Image
-	GetColorFromThemeByName(themeName string, colorName string) common.Color
+	GetImageFromRemote(name string) (Image, error)
+	GetColorFromLocalThemeByName(themeName string, colorName string) common.Color
+	GetColorFromRemoteThemeByName(themeName string, colorName string) (common.Color, error)
 	GetFontFromLocal(name string) Font
+	GetFontFromRemote(name string) (Font, error)
 }
 
 // API allow the software to send events to the matrix core.
@@ -63,6 +66,19 @@ func (a *api) GetImageFromLocal(name string) Image {
 	return Image{}
 }
 
+// GetImageFromRemote retrieve an image from core, if not found returns
+// a zero image.
+func (a *api) GetImageFromRemote(name string) (Image, error) {
+	res, err := a.ctx.SendLoadRequest(LoadRequest{
+		Type:      LoadRequest_IMAGE,
+		ImageData: &LoadRequest_ImageData{Name: name},
+	})
+	if err != nil {
+		return Image{}, errors.WithStack(err)
+	}
+	return *res.Image, nil
+}
+
 // GetFontFromLocal retrieve a font from local file, if not found returns a
 // zero font.
 func (a *api) GetFontFromLocal(name string) Font {
@@ -74,13 +90,26 @@ func (a *api) GetFontFromLocal(name string) Font {
 	return Font{}
 }
 
-// GetColorFromThemeByName retrieve an loaded theme's color in memory, if theme
-// or color not found returns a zero color.
-func (a *api) GetColorFromThemeByName(themeName, colorName string) common.Color {
+// GetFontFromRemote retrieve a font from core, if not found returns
+// a zero font.
+func (a *api) GetFontFromRemote(name string) (Font, error) {
+	res, err := a.ctx.SendLoadRequest(LoadRequest{
+		Type:     LoadRequest_FONT,
+		FontData: &LoadRequest_FontData{Name: name},
+	})
+	if err != nil {
+		return Font{}, errors.WithStack(err)
+	}
+	return *res.Font, nil
+}
+
+// GetColorFromLocalThemeByName retrieve a loaded theme's color in memory, if
+// theme or color not found returns a zero color.
+func (a *api) GetColorFromLocalThemeByName(themeName, name string) common.Color {
 	for _, t := range ts {
 		if t.Name == themeName {
 			for k, c := range t.Colors {
-				if k == colorName {
+				if k == name {
 					return *c
 				}
 			}
@@ -89,13 +118,24 @@ func (a *api) GetColorFromThemeByName(themeName, colorName string) common.Color 
 	return common.Color{}
 }
 
+// GetColorFromRemoteThemeByName retrieve a loaded theme's color from core, if
+// theme or color not found returns a zero color.
+func (a *api) GetColorFromRemoteThemeByName(themeName, name string) (common.Color, error) {
+	res, err := a.ctx.SendLoadRequest(LoadRequest{
+		Type:      LoadRequest_COLOR,
+		ColorData: &LoadRequest_ColorData{Name: name, ThemeName: themeName},
+	})
+	if err != nil {
+		return common.Color{}, errors.WithStack(err)
+	}
+	return *res.Color, nil
+}
+
 // NewLayer ask for a layer creation and returns its uuid.
 func (a *api) NewLayer() (Layer, error) {
 	res, err := a.ctx.SendCreateRequest(CreateRequest{
-		Type: CreateRequest_LAYER,
-		LayerData: &CreateRequest_LayerData{
-			SoftwareUUID: a.softwareUUID,
-		},
+		Type:      CreateRequest_LAYER,
+		LayerData: &CreateRequest_LayerData{SoftwareUUID: a.softwareUUID},
 	})
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -104,7 +144,7 @@ func (a *api) NewLayer() (Layer, error) {
 	l := &layer{
 		ctx:          a.ctx,
 		softwareUUID: a.softwareUUID,
-		uuid:         res.LayerData.UUID,
+		uuid:         res.UUID,
 	}
 	a.ctx.AddLayer(l.uuid, l)
 

@@ -2,7 +2,7 @@ package render
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
@@ -25,22 +25,16 @@ func GetImageByName(name string) software.Image {
 var is []software.Image
 
 func loadImages() error {
-	files, err := ioutil.ReadDir("./images")
+	files, err := loadFiles("images")
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	for _, file := range files {
-		file, err := ioutil.ReadFile("./images/" + file.Name())
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
 		var i software.Image
-		if err := json.Unmarshal(file, &i); err != nil {
-			return errors.WithStack(err)
+		if err := json.Unmarshal(file.Data, &i); err != nil {
+			return fmt.Errorf("Can't unmarshal %s image file", file.Name)
 		}
-
 		is = append(is, i)
 	}
 

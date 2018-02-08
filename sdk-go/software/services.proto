@@ -7,6 +7,7 @@ import "github.com/richardlt/matrix/sdk-go/common/types.proto";
 service Software {
   rpc Connect (stream ConnectRequest) returns (stream ConnectResponse);
   rpc Create (CreateRequest) returns (CreateResponse);
+  rpc Load(LoadRequest) returns (LoadResponse);
 }
 
 message ConnectRequest {
@@ -125,15 +126,42 @@ message CreateResponse {
     LAYER = 0;
     DRIVER = 1;
   }
-  message LayerData {
-    string UUID = 1;
+  Type type = 1;
+  string UUID = 2;
+}
+
+message LoadRequest {
+  enum Type {
+    IMAGE = 0;
+    COLOR = 1;
+    FONT = 2;
   }
-  message DriverData {
-    string UUID = 2;
+  message ImageData {
+    string name = 1;
+  }
+  message ColorData {
+    string name = 1;
+    string themeName = 2;
+  }
+  message FontData {
+    string name = 1;
   }
   Type type = 1;
-  LayerData layerData = 2;
-  DriverData driverData = 3;
+  ImageData imageData = 2;
+  ColorData colorData = 3;
+  FontData fontData = 4;
+}
+
+message LoadResponse {
+  enum Type {
+    IMAGE = 0;
+    COLOR = 1;
+    FONT = 2;
+  }
+  Type type = 1;
+  Image image = 2;
+  common.Color color = 3;
+  Font font = 4;
 }
 
 message Image {

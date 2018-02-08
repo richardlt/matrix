@@ -46,16 +46,16 @@ func (d *draw) Init(a software.API) (err error) {
 	}
 
 	d.colors = []common.Color{
-		d.api.GetColorFromThemeByName("flat", "turquoise_1"),
-		d.api.GetColorFromThemeByName("flat", "green_1"),
-		d.api.GetColorFromThemeByName("flat", "blue_1"),
-		d.api.GetColorFromThemeByName("flat", "violet_1"),
-		d.api.GetColorFromThemeByName("flat", "dark_grey_1"),
-		d.api.GetColorFromThemeByName("flat", "grey_1"),
-		d.api.GetColorFromThemeByName("flat", "white_1"),
-		d.api.GetColorFromThemeByName("flat", "red_1"),
-		d.api.GetColorFromThemeByName("flat", "orange_1"),
-		d.api.GetColorFromThemeByName("flat", "yellow_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "turquoise_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "green_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "blue_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "violet_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "dark_grey_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "grey_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "white_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "red_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "orange_1"),
+		d.api.GetColorFromLocalThemeByName("flat", "yellow_1"),
 	}
 
 	a.Ready()

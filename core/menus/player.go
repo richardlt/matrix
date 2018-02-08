@@ -27,7 +27,7 @@ type Player struct {
 func (p *Player) Print() {
 	p.frame.Clean()
 
-	green := render.GetColorFromThemeByName("flat", "green_2")
+	green := render.GetColorFromLocalThemeByName("flat", "green_2")
 
 	cdTBT := drivers.NewCaracter(p.frame, render.GetFontByName("ThreeByThree"))
 	cdTBT.Render('P', common.Coord{X: 11, Y: 5}, green, common.Color{})

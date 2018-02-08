@@ -242,15 +242,14 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 }
 
 // Create software action.
-func (s *SoftwareServer) Create(ctx context.Context, req *softwareSDK.CreateRequest) (res *softwareSDK.CreateResponse, err error) {
+func (s *SoftwareServer) Create(ctx context.Context,
+	req *softwareSDK.CreateRequest) (res *softwareSDK.CreateResponse, err error) {
 	switch req.Type {
 	case softwareSDK.CreateRequest_LAYER:
 		if so := s.getSoftwareByUUID(req.LayerData.SoftwareUUID); so != nil {
 			res = &softwareSDK.CreateResponse{
 				Type: softwareSDK.CreateResponse_LAYER,
-				LayerData: &softwareSDK.CreateResponse_LayerData{
-					UUID: so.CreateLayer(),
-				},
+				UUID: so.CreateLayer(),
 			}
 		}
 	case softwareSDK.CreateRequest_DRIVER:
@@ -258,14 +257,38 @@ func (s *SoftwareServer) Create(ctx context.Context, req *softwareSDK.CreateRequ
 			if l := so.GetLayerByUUID(req.DriverData.LayerUUID); l != nil {
 				res = &softwareSDK.CreateResponse{
 					Type: softwareSDK.CreateResponse_DRIVER,
-					DriverData: &softwareSDK.CreateResponse_DriverData{
-						UUID: so.CreateDriver(l, *req.DriverData),
-					},
+					UUID: so.CreateDriver(l, *req.DriverData),
 				}
 			}
 		}
 	}
+	return
+}
 
+// Load software action.
+func (s *SoftwareServer) Load(ctx context.Context,
+	req *softwareSDK.LoadRequest) (res *softwareSDK.LoadResponse, err error) {
+	switch req.Type {
+	case softwareSDK.LoadRequest_IMAGE:
+		i := render.GetImageByName(req.ImageData.Name)
+		res = &softwareSDK.LoadResponse{
+			Type:  softwareSDK.LoadResponse_IMAGE,
+			Image: &i,
+		}
+	case softwareSDK.LoadRequest_COLOR:
+		c := render.GetColorFromLocalThemeByName(req.ColorData.ThemeName,
+			req.ColorData.Name)
+		res = &softwareSDK.LoadResponse{
+			Type:  softwareSDK.LoadResponse_COLOR,
+			Color: &c,
+		}
+	case softwareSDK.LoadRequest_FONT:
+		f := render.GetFontByName(req.FontData.Name)
+		res = &softwareSDK.LoadResponse{
+			Type: softwareSDK.LoadResponse_FONT,
+			Font: &f,
+		}
+	}
 	return
 }
 
