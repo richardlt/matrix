@@ -52,7 +52,8 @@ func (a *api) SetConfig(c ConnectRequest_SoftwareData_Config) error {
 	})
 }
 
-// GetImageFromLocal retrieve an image from local file.
+// GetImageFromLocal retrieve an image from local file, if not found returns
+// a zero image.
 func (a *api) GetImageFromLocal(name string) Image {
 	for _, i := range is {
 		if i.Name == name {
@@ -62,7 +63,8 @@ func (a *api) GetImageFromLocal(name string) Image {
 	return Image{}
 }
 
-// GetFontFromLocal retrieve a font from local file.
+// GetFontFromLocal retrieve a font from local file, if not found returns a
+// zero font.
 func (a *api) GetFontFromLocal(name string) Font {
 	for _, f := range fs {
 		if f.Name == name {
@@ -72,7 +74,8 @@ func (a *api) GetFontFromLocal(name string) Font {
 	return Font{}
 }
 
-// GetColorFromThemeByName retrieve an loaded theme's color in memory.
+// GetColorFromThemeByName retrieve an loaded theme's color in memory, if theme
+// or color not found returns a zero color.
 func (a *api) GetColorFromThemeByName(themeName, colorName string) common.Color {
 	for _, t := range ts {
 		if t.Name == themeName {
@@ -83,11 +86,10 @@ func (a *api) GetColorFromThemeByName(themeName, colorName string) common.Color 
 			}
 		}
 	}
-
 	return common.Color{}
 }
 
-// NewLayer ask for a layer creation and return its uuid.
+// NewLayer ask for a layer creation and returns its uuid.
 func (a *api) NewLayer() (Layer, error) {
 	res, err := a.ctx.SendCreateRequest(CreateRequest{
 		Type: CreateRequest_LAYER,
