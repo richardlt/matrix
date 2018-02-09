@@ -7,10 +7,11 @@ import (
 type Layer interface {
 	Clean() error
 	Remove() error
-	SetWithCoord(coord common.Coord, color common.Color) error
+	SetWithCoord(common.Coord, common.Color) error
 	NewRandomDriver() (*RandomDriver, error)
-	NewCaracterDriver(font Font) (*CaracterDriver, error)
-	NewTextDriver(font Font) (*TextDriver, error)
+	NewCaracterDriver(Font) (*CaracterDriver, error)
+	NewTextDriver(Font) (*TextDriver, error)
+	NewImageDriver() (*ImageDriver, error)
 }
 
 type layer struct {
@@ -111,4 +112,23 @@ func (l *layer) NewTextDriver(font Font) (*TextDriver, error) {
 	l.ctx.AddDriver(td.uuid, td)
 
 	return td, nil
+}
+
+func (l *layer) NewImageDriver() (*ImageDriver, error) {
+	res, err := l.ctx.SendCreateRequest(CreateRequest{
+		Type: CreateRequest_DRIVER,
+		DriverData: &CreateRequest_DriverData{
+			Type:         CreateRequest_DriverData_IMAGE,
+			LayerUUID:    l.uuid,
+			SoftwareUUID: l.softwareUUID,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	id := &ImageDriver{ctx: l.ctx, uuid: res.UUID}
+	l.ctx.AddDriver(id.uuid, id)
+
+	return id, nil
 }

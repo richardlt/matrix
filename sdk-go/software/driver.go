@@ -125,3 +125,39 @@ func (t *TextDriver) Stop() error {
 		},
 	})
 }
+
+type ImageDriver struct {
+	ctx            *ctx
+	uuid           string
+	endCallback    func()
+	renderCallback func() error
+	stepCallback   func(total, current uint64)
+}
+
+func (i *ImageDriver) OnEnd(f func()) { i.endCallback = f }
+
+func (i *ImageDriver) End() {
+	if i.endCallback != nil {
+		i.endCallback()
+	}
+}
+
+func (i *ImageDriver) OnStep(f func(total, current uint64)) { i.stepCallback = f }
+
+func (i *ImageDriver) Step(total, current uint64) {
+	if i.stepCallback != nil {
+		i.stepCallback(total, current)
+	}
+}
+
+func (c *ImageDriver) Render(image Image, coord common.Coord) error {
+	return c.ctx.SendConnectRequest(ConnectRequest{
+		Type: ConnectRequest_DRIVER,
+		DriverData: &ConnectRequest_DriverData{
+			Action: ConnectRequest_DriverData_RENDER,
+			UUID:   c.uuid,
+			Image:  &image,
+			Coord:  &coord,
+		},
+	})
+}

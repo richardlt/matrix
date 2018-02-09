@@ -24,6 +24,7 @@ type demo struct {
 	randomDriver   *software.RandomDriver
 	caracterDriver *software.CaracterDriver
 	textDriver     *software.TextDriver
+	imageDriver    *software.ImageDriver
 	step           int
 	cancel         context.CancelFunc
 }
@@ -65,6 +66,12 @@ func (d *demo) Init(a software.API) (err error) {
 	d.textDriver.OnStep(func(total, current uint64) {
 		d.api.Print()
 	})
+
+	d.imageDriver, err = d.layer.NewImageDriver()
+	if err != nil {
+		return err
+	}
+	d.imageDriver.OnEnd(func() { d.api.Print() })
 
 	a.Ready()
 	return nil
@@ -119,7 +126,7 @@ func (d *demo) play() {
 	case 2:
 		d.playText()
 	case 3:
-		d.playImage()
+		d.playImage(ctx)
 	case 4:
 		d.playBar()
 	}
@@ -166,6 +173,35 @@ func (d *demo) playText() {
 		common.Color{})
 }
 
-func (d *demo) playImage() {}
+func (d *demo) playImage(ctx context.Context) {
+	exec := func(nb int) {
+		d.layer.Clean()
+		if nb == 0 {
+			d.imageDriver.Render(d.api.GetImageFromLocal("monster-one"),
+				common.Coord{X: 6, Y: 4})
+		} else {
+			d.imageDriver.Render(d.api.GetImageFromLocal("monster-two"),
+				common.Coord{X: 11, Y: 5})
+		}
+	}
+
+	var nb int
+	exec(nb)
+
+	t := time.NewTicker(time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			t.Stop()
+			return
+		case <-t.C:
+			nb++
+			if 1 < nb {
+				nb = 0
+			}
+			exec(nb)
+		}
+	}
+}
 
 func (d *demo) playBar() {}

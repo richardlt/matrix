@@ -233,6 +233,9 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 				td.Render(req.DriverData.Text, *req.DriverData.Coord,
 					*req.DriverData.Color, *req.DriverData.Background)
 			}
+			if id, ok := so.imageDrivers[req.DriverData.UUID]; ok {
+				id.Render(*req.DriverData.Image, *req.DriverData.Coord)
+			}
 		case softwareSDK.ConnectRequest_DriverData_STOP:
 			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
 				td.Stop()
@@ -313,6 +316,7 @@ func newSoftware(connectResponseChannel chan softwareSDK.ConnectResponse) *softw
 		randomDrivers:          make(map[string]*drivers.Random),
 		caracterDrivers:        make(map[string]*drivers.Caracter),
 		textDrivers:            make(map[string]*drivers.Text),
+		imageDrivers:           make(map[string]*drivers.Image),
 	}
 }
 
@@ -327,6 +331,7 @@ type software struct {
 	randomDrivers                  map[string]*drivers.Random
 	caracterDrivers                map[string]*drivers.Caracter
 	textDrivers                    map[string]*drivers.Text
+	imageDrivers                   map[string]*drivers.Image
 }
 
 func (s software) GetMeta() SoftwareMeta {
@@ -456,6 +461,18 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 			}
 		})
 		s.textDrivers[uuid] = td
+	case softwareSDK.CreateRequest_DriverData_IMAGE:
+		id := drivers.NewImage(l)
+		id.OnEnd(func() {
+			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+				Type: softwareSDK.ConnectResponse_DRIVER,
+				DriverData: &softwareSDK.ConnectResponse_DriverData{
+					Action: softwareSDK.ConnectResponse_DriverData_END,
+					UUID:   uuid,
+				},
+			}
+		})
+		s.imageDrivers[uuid] = id
 	}
 
 	return uuid

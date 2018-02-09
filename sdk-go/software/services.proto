@@ -56,6 +56,7 @@ message ConnectRequest {
     common.Color background = 5;
     common.Coord coord = 6;
     string text = 7;
+    Image image = 8;
   }
   Type type = 1;
   SoftwareData softwareData = 2;
@@ -110,6 +111,7 @@ message CreateRequest {
       RANDOM = 0;
       CARACTER = 1;
       TEXT = 2;
+      IMAGE = 3;
     }
     Type type = 1;
     string softwareUUID = 2;
