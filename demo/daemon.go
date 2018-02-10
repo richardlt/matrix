@@ -73,8 +73,7 @@ func (d *demo) Init(a software.API) (err error) {
 	}
 	d.imageDriver.OnEnd(func() { d.api.Print() })
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (d *demo) Start(playerCount uint64) { d.play() }
@@ -134,11 +133,11 @@ func (d *demo) play() {
 
 func (d *demo) playRandom(ctx context.Context) {
 	ticker := time.NewTicker(time.Millisecond * 50)
+	defer ticker.Stop()
 	d.randomDriver.Render()
 	for {
 		select {
 		case <-ctx.Done():
-			ticker.Stop()
 			return
 		case <-ticker.C:
 			d.randomDriver.Render()
@@ -189,10 +188,10 @@ func (d *demo) playImage(ctx context.Context) {
 	exec(nb)
 
 	t := time.NewTicker(time.Second)
+	defer t.Stop()
 	for {
 		select {
 		case <-ctx.Done():
-			t.Stop()
 			return
 		case <-t.C:
 			nb++

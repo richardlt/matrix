@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/creack/goselect"
+  packages = ["."]
+  revision = "528c74964609a58f7c17471525659c9b71cd499b"
+
+[[projects]]
+  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -12,6 +18,12 @@
     "ptypes/timestamp"
   ]
   revision = "c65a0412e71e8b9b3bfd22925720d23c0f054237"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/google/gousb"
+  packages = ["."]
+  revision = "d0366361a25268248b2e53405b91eaa0deadf761"
 
 [[projects]]
   branch = "master"
@@ -94,6 +106,15 @@
   name = "github.com/valyala/fasttemplate"
   packages = ["."]
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
+  branch = "master"
+  name = "go.bug.st/serial.v1"
+  packages = [
+    ".",
+    "unixutils"
+  ]
+  revision = "eae1344f9f90101f887b08d13391c34399f97873"
 
 [[projects]]
   branch = "master"
@@ -193,6 +214,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "050de8575ed4ebdb581a97f1f7a3ebfc07a07305d148729e55c476f9a05a4143"
+  inputs-digest = "87e4104806216a99abde9ca0f4454578c011d316a22ff455a6148d9bc8cd5c1a"
   solver-name = "gps-cdcl"
   solver-version = 1

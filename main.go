@@ -22,6 +22,11 @@ func main() {
 
 	logrus.SetLevel(logrus.DebugLevel)
 
+	app.Flags = []cli.Flag{
+		cli.StringFlag{Name: "core-uri", Value: "localhost:8080",
+			EnvVar: "MATRIX_CORE_URI"},
+	}
+
 	app.Commands = []cli.Command{{
 		Name:   "core",
 		Usage:  "start the matrix core",
@@ -37,33 +42,33 @@ func main() {
 	}, {
 		Name:   "device",
 		Usage:  "start the matrix device",
-		Action: func(c *cli.Context) error { return device.Start(5000, 8080) },
+		Action: func(c *cli.Context) error { return device.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:   "zigzag",
 		Usage:  "start zigzag game",
-		Action: func(c *cli.Context) error { return zigzag.Start("localhost:8080") },
+		Action: func(c *cli.Context) error { return zigzag.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:   "yumyum",
 		Usage:  "start yumyum game",
-		Action: func(c *cli.Context) error { return yumyum.Start("localhost:8080") },
+		Action: func(c *cli.Context) error { return yumyum.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:   "demo",
 		Usage:  "start demo software",
-		Action: func(c *cli.Context) error { return demo.Start("localhost:8080") },
+		Action: func(c *cli.Context) error { return demo.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:   "clock",
 		Usage:  "start clock software",
-		Action: func(c *cli.Context) error { return clock.Start("localhost:8080") },
+		Action: func(c *cli.Context) error { return clock.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:   "draw",
 		Usage:  "start draw software",
-		Action: func(c *cli.Context) error { return draw.Start("localhost:8080") },
+		Action: func(c *cli.Context) error { return draw.Start(c.Parent().String("core-uri")) },
 	}, {
 		Name:  "all",
 		Usage: "start all",
 		Action: func(c *cli.Context) error {
 			go func() {
-				if err := device.Start(5000, 8080); err != nil {
+				if err := device.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
@@ -78,27 +83,27 @@ func main() {
 				}
 			}()
 			go func() {
-				if err := zigzag.Start("localhost:8080"); err != nil {
+				if err := zigzag.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
 			go func() {
-				if err := yumyum.Start("localhost:8080"); err != nil {
+				if err := yumyum.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
 			go func() {
-				if err := demo.Start("localhost:8080"); err != nil {
+				if err := demo.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
 			go func() {
-				if err := clock.Start("localhost:8080"); err != nil {
+				if err := clock.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
 			go func() {
-				if err := draw.Start("localhost:8080"); err != nil {
+				if err := draw.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()

@@ -58,8 +58,7 @@ func (d *draw) Init(a software.API) (err error) {
 		d.api.GetColorFromLocalThemeByName("flat", "yellow_1"),
 	}
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (d *draw) Start(playerCount uint64) {

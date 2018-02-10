@@ -1,25 +1,23 @@
 reset:
 	(cd gamepad && make reset)
 	(cd emulator && make reset)
-	(cd device && make reset)
 
 clean:
 	rm -rf matrix-package
 	rm -f matrix
+	rm -f matrix.zip
+	rm *.log
 	(cd gamepad && make clean)
 	(cd emulator && make clean)
-	(cd device && make clean)
 
 install:
 	(cd gamepad && make install)
 	(cd emulator && make install)
-	(cd device && make install)
 
 build:
-	CGO_ENABLED=0 GOARM=6 GOARCH=arm GOOS=linux go build -a -installsuffix cgo -o matrix .
+	go build -a -o matrix .
 	(cd gamepad && make build)
 	(cd emulator && make build)
-	(cd device && make build)
 
 package:	
 	rm -rf matrix-package

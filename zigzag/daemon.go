@@ -40,8 +40,7 @@ func (z *zigzag) Init(a software.API) (err error) {
 		MaxPlayerCount: 4,
 	})
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (z *zigzag) Start(playerCount uint64) {

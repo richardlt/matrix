@@ -64,3 +64,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/google/gousb"
+
+[[constraint]]
+  branch = "master"
+  name = "go.bug.st/serial.v1"
