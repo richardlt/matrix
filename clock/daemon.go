@@ -61,8 +61,7 @@ func (c *clock) Init(a software.API) (err error) {
 	c.green1 = c.api.GetColorFromLocalThemeByName("flat", "green_1")
 	c.green2 = c.api.GetColorFromLocalThemeByName("flat", "green_2")
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (c *clock) Start(playerCount uint64) {
@@ -71,16 +70,18 @@ func (c *clock) Start(playerCount uint64) {
 
 	c.print()
 
-	t := time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ctx.Done():
-			t.Stop()
-			return
-		case <-t.C:
-			c.print()
+	go func() {
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-t.C:
+				c.print()
+			}
 		}
-	}
+	}()
 }
 
 func (c *clock) Close() {

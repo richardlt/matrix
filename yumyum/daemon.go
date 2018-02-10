@@ -36,8 +36,7 @@ func (y *yumyum) Init(a software.API) (err error) {
 		MaxPlayerCount: 4,
 	})
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (y *yumyum) Start(playerCount uint64) {

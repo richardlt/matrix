@@ -85,6 +85,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/tarm/serial"
+  packages = ["."]
+  revision = "eaafced92e9619f03c72527efeab21e326f3bc36"
+
+[[projects]]
+  branch = "master"
   name = "github.com/valyala/bytebufferpool"
   packages = ["."]
   revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
@@ -193,6 +199,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "050de8575ed4ebdb581a97f1f7a3ebfc07a07305d148729e55c476f9a05a4143"
+  inputs-digest = "c979402dc8a169d402423fdfb5d23c6add794a0ecf149f5e69c522669d772318"
   solver-name = "gps-cdcl"
   solver-version = 1
