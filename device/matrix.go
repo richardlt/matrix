@@ -11,7 +11,7 @@ import (
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 	"github.com/sirupsen/logrus"
-	"github.com/tarm/serial"
+	serial "go.bug.st/serial.v1"
 )
 
 const refreshDelay = time.Millisecond * 60 // ~17hz
@@ -151,18 +151,23 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 	for _, path := range paths {
 		logrus.Debugf("Try to open port at %s", path)
 
-		s, err := serial.OpenPort(&serial.Config{Name: path, Baud: 115200})
+		port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
 		logrus.Debugf("Port opened at %s", path)
 
-		s.Flush()
+		if err := port.ResetInputBuffer(); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := port.ResetOutputBuffer(); err != nil {
+			return errors.WithStack(err)
+		}
 
 		// read the matrix size
 		buf := make([]byte, 1)
-		_, err = s.Read(buf)
+		_, err = port.Read(buf)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -171,10 +176,9 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 
 		logrus.Debugf("Receive %d size for port at %s", size, path)
 
-		go func() {
+		go func(path string) {
 			t := time.NewTicker(refreshDelay)
 			defer t.Stop()
-			defer s.Close()
 
 			var lastBuffer []byte
 			for {
@@ -189,8 +193,8 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 							buffer[i] = m.buffer[i]
 						}
 
-						if _, err := s.Write(buffer); err != nil {
-							logrus.Error(errors.WithStack(err))
+						if _, err := port.Write(buffer); err != nil {
+							logrus.Errorf("%+v", errors.WithStack(err))
 							return
 						}
 
@@ -198,7 +202,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					}
 				}
 			}
-		}()
+		}(path)
 	}
 
 	return nil

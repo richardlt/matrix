@@ -67,4 +67,8 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/tarm/serial"
+  name = "github.com/google/gousb"
+
+[[constraint]]
+  branch = "master"
+  name = "go.bug.st/serial.v1"

@@ -4,3 +4,5 @@ matrix
 matrix-package
 matrix.zip
 .vscode
+.vagrant
+*.log

@@ -9,17 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type action struct {
-	Slot    uint64 `json:"slot"`
-	Command string `json:"command"`
-}
-
 // Start device deamon.
 func Start(uri string) error {
-	m := newMatrix()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	m := newMatrix()
 	go func() {
 		if err := m.OpenPorts(ctx); err != nil {
 			logrus.Errorf("%+v", err)
@@ -27,6 +22,11 @@ func Start(uri string) error {
 	}()
 
 	g := newGamepad()
+	go func() {
+		if err := g.OpenDevices(ctx); err != nil {
+			logrus.Errorf("%+v", err)
+		}
+	}()
 
 	go func() {
 		if err := display.Connect(uri, m, true); err != nil {
