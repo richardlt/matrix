@@ -14,7 +14,7 @@ import (
 	serial "go.bug.st/serial.v1"
 )
 
-const refreshDelay = time.Millisecond * 60 // ~17hz
+const refreshDelay = time.Millisecond * 65 // ~15hz
 const defaultBrightness = 204
 
 func newMatrix() *matrix {

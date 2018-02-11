@@ -1,23 +1,27 @@
-reset:
+reset-all:
 	(cd gamepad && make reset)
 	(cd emulator && make reset)
+
+clean-all: clean
+	(cd gamepad && make clean)
+	(cd emulator && make clean)
+
+install-all:
+	(cd gamepad && make install)
+	(cd emulator && make install)
+
+build-all: build
+	(cd gamepad && make build)
+	(cd emulator && make build)
 
 clean:
 	rm -rf matrix-package
 	rm -f matrix
 	rm -f matrix.zip
-	rm *.log
-	(cd gamepad && make clean)
-	(cd emulator && make clean)
-
-install:
-	(cd gamepad && make install)
-	(cd emulator && make install)
+	rm -f *.log
 
 build:
 	go build -a -o matrix .
-	(cd gamepad && make build)
-	(cd emulator && make build)
 
 package:	
 	rm -rf matrix-package
@@ -28,8 +32,6 @@ package:
 	cp -R themes matrix-package/
 	cp -R fonts matrix-package/
 	cp -R images matrix-package/
-	cp -R gamepad/build/default/ matrix-package/gamepad/public/
-	cp -R emulator/client/public/ matrix-package/emulator/public/
-	cp -R device/build/* matrix-package/device/
-	cp -R device/node_modules matrix-package/device/
-	cd matrix-package && zip -ro ../matrix.zip *
+	cp -R gamepad/build/default/. matrix-package/gamepad/public/
+	cp -R emulator/client/public/. matrix-package/emulator/public/
+	zip -r matrix.zip matrix-package
