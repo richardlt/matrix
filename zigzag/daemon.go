@@ -53,15 +53,20 @@ func (z *zigzag) Start(playerCount uint64) {
 	go func() {
 		t := time.NewTicker(time.Millisecond * 300)
 		defer t.Stop()
-		for {
+
+		var gameOver bool
+		for !gameOver {
 			select {
 			case <-ctx.Done():
 				return
 			case <-t.C:
 				z.engine.MovePlayers()
 				z.print()
+				gameOver = z.engine.IsGameOver()
 			}
 		}
+
+		z.renderer.PrintGameOver(z.engine.GetWinners())
 	}()
 }
 
@@ -69,6 +74,7 @@ func (z *zigzag) Close() {
 	if z.cancel != nil {
 		z.cancel()
 	}
+	z.renderer.Clean()
 }
 
 func (z *zigzag) ActionReceived(slot int, cmd common.Command) {

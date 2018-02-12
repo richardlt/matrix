@@ -56,6 +56,46 @@ func (e *engine) MovePlayers() {
 	}
 }
 
+func (e *engine) IsGameOver() bool {
+	// check first that there is more than one snake alive
+	if len(e.snakes) > 1 {
+		countAliveSnakes := 0
+		for _, s := range e.snakes {
+			if s.Length() > 0 {
+				countAliveSnakes++
+			}
+		}
+		if countAliveSnakes == 1 {
+			return true
+		}
+	}
+
+	// then check if there are still candies
+	for _, c := range e.candies {
+		if c.State {
+			return false
+		}
+	}
+	return true
+}
+
+func (e *engine) GetWinners() []int {
+	max := e.snakes[0].Length()
+	winners := []int{0}
+
+	for i := 1; i < len(e.snakes); i++ {
+		l := e.snakes[i].Length()
+		if l > max {
+			max = l
+			winners = []int{i}
+		} else if l == max {
+			winners = append(winners, i)
+		}
+	}
+
+	return winners
+}
+
 func (e *engine) movePlayer(playerSlot int, s *snake) {
 	if s.Length() > 0 {
 		s.Body = append(
