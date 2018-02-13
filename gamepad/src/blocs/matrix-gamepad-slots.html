@@ -26,21 +26,10 @@
     class MatrixGamepadSlots extends ReduxMixin(Polymer.Element) {
       static get is() { return 'matrix-gamepad-slots'; }
       static get properties() {
-        return {
-          slots: {
-            type: Array,
-            statePath: "player.slots"
-          },
-          slot: {
-            type: Number,
-            statePath: "player.slot"
-          }
-        };
+        return { slots: { type: Array, statePath: "player.slots" } };
       }
 
-      _getSlotColor(slot) {
-        return slot.number == this.slot ? "green" : "#222222";
-      }
+      _getSlotColor(slot) { return slot.mine ? "green" : "#222222"; }
     }
 
     window.customElements.define(MatrixGamepadSlots.is, MatrixGamepadSlots);

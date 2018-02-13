@@ -113,10 +113,6 @@ func (g *gamepadServer) Command(gp *gamepad, cmd common.Command) {
 	}
 }
 
-func (g *gamepadServer) AskSlot(gp *gamepad, slot int) {}
-
-func (g *gamepadServer) GetSlots(gp *gamepad) {}
-
 func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	s, err := socketio.NewServer(nil)
 	if err != nil {
@@ -126,8 +122,7 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	if err := s.On("connection", func(so socketio.Socket) {
 		g := newGamepad(so)
 		so.Join("display")
-		so.On("ask_slot", func(slot int) { gs.AskSlot(g, slot) })
-		so.On("get_slots", func() { gs.GetSlots(g) })
+		so.On("select-slot", func(slot int) { g.SelectSlot(slot) })
 		so.On("command", func(cmd string) { gs.Command(g, commandFromString(cmd)) })
 		so.On("disconnection", func() { gs.RemoveGamepad(g) })
 		gs.AddGamepad(g)
@@ -144,9 +139,14 @@ func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
 	return s, nil
 }
 
-func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, 0} }
+func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, -1} }
 
 type gamepad struct {
 	so   socketio.Socket
 	Slot int
+}
+
+func (g *gamepad) SelectSlot(slot int) {
+	g.Slot = slot
+	g.so.Emit("slot", slot)
 }

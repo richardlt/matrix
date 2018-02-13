@@ -2,16 +2,19 @@
   function player(state, action) {
     if (typeof state === 'undefined') {
       return {
-        slots: [{ number: 0 }, { number: 1 }, { number: 2 }, { number: 3 }],
-        slot: 2
+        slots: [{}, {}, {}, {}],
+        selectVisible: false
       }
     }
 
     switch (action.type) {
-      case 'GET_SLOTS':
+      case 'GET_SLOT':
         return Object.assign({}, state, {
-          slots: action.slots
+          slots: state.slots.map((s, i) => { return { mine: action.slot == i }; }),
+          selectVisible: false
         });
+      case 'SET_SELECT_VISIBLE':
+        return Object.assign({}, state, { selectVisible: action.visible });
     }
 
     return state

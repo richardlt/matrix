@@ -7,33 +7,28 @@
   <script>
     class MatrixGamepadSocket extends ReduxMixin(Polymer.Element) {
       static get is() { return 'matrix-gamepad-socket'; }
-      static get properties() {
-        return {};
-      }
+      static get properties() { return {}; }
       static get actions() {
         return {
-          newFrame: (frame) => {
-            return {
-              type: 'NEW_FRAME',
-              frame
-            };
-          }
+          newFrame: (frame) => { return { type: 'NEW_FRAME', frame }; },
+          getSlot: (slot) => { return { type: 'GET_SLOT', slot }; }
         };
       }
 
-      command(cmd) {
-        this._socket.emit('command', cmd);
-      }
+      command(cmd) { this._socket.emit('command', cmd); }
+
+      selectSlot(slot) { this._socket.emit('select-slot', slot); }
 
       ready() {
         super.ready();
         this._socket = io(window.origin);
-        this._socket.on('connect', () => { });
+        this._socket.on('connect', () => { this.selectSlot(0); });
         this._socket.on('frame', (data) => {
           if (data.number == 0) {
             this.dispatch('newFrame', data.pixels);
           }
         });
+        this._socket.on('slot', (slot) => { this.dispatch('getSlot', slot); });
         this._socket.on('disconnect', () => { });
       }
     }

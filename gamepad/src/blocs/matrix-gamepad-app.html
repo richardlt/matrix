@@ -4,6 +4,7 @@
 <link rel="import" href="../components/matrix-gamepad-left-pad.html">
 <link rel="import" href="../components/matrix-gamepad-right-pad.html">
 <link rel="import" href="matrix-gamepad-slots.html">
+<link rel="import" href="matrix-gamepad-select-slots.html">
 <link rel="import" href="../components/matrix-gamepad-button.html">
 
 <link rel="import" href="../store/store.html">
@@ -14,6 +15,12 @@
     <style>
       :host {
         display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .content {
+        position: absolute;
         width: 100%;
         height: 100%;
         display: flex;
@@ -64,27 +71,44 @@
         line-height: 22px;
       }
     </style>
-    <div class="side">
-      <matrix-gamepad-button id="l" class="top">l</matrix-gamepad-button>
-      <matrix-gamepad-left-pad on-command="handleCommand"></matrix-gamepad-left-pad>
-      <matrix-gamepad-button id="select" class="bottom">select</matrix-gamepad-button>
+    <div class="content">
+      <div class="side">
+        <matrix-gamepad-button id="l" class="top">l</matrix-gamepad-button>
+        <matrix-gamepad-left-pad on-command="handleCommand"></matrix-gamepad-left-pad>
+        <matrix-gamepad-button id="select" class="bottom">select [[selectVisible]]</matrix-gamepad-button>
+      </div>
+      <div class="center">
+        <matrix-gamepad-matrix></matrix-gamepad-matrix>
+        <matrix-gamepad-slots on-click="handleClickSlots"></matrix-gamepad-slots>
+      </div>
+      <div class="side">
+        <matrix-gamepad-button id="r" class="top">r</matrix-gamepad-button>
+        <matrix-gamepad-right-pad on-command="handleCommand"></matrix-gamepad-right-pad>
+        <matrix-gamepad-button id="start" class="bottom">start</matrix-gamepad-button>
+      </div>
     </div>
-    <div class="center">
-      <matrix-gamepad-matrix></matrix-gamepad-matrix>
-      <matrix-gamepad-slots></matrix-gamepad-slots>
-    </div>
-    <div class="side">
-      <matrix-gamepad-button id="r" class="top">r</matrix-gamepad-button>
-      <matrix-gamepad-right-pad on-command="handleCommand"></matrix-gamepad-right-pad>
-      <matrix-gamepad-button id="start" class="bottom">start</matrix-gamepad-button>
-    </div>
+    <matrix-gamepad-select-slots style$="display: [[getSelectDisplay(selectVisible)]]" on-select-slot="handleSelectSlot"></matrix-gamepad-select-slots>
     <matrix-gamepad-socket id="socket"></matrix-gamepad-socket>
   </template>
 
   <script>
-    class MatrixGamepadApp extends Polymer.Element {
+    class MatrixGamepadApp extends ReduxMixin(Polymer.Element) {
       static get is() { return 'matrix-gamepad-app'; }
-      static get properties() { return {}; }
+      static get properties() {
+        return {
+          selectVisible: {
+            type: Boolean,
+            statePath: "player.selectVisible"
+          }
+        };
+      }
+      static get actions() {
+        return {
+          setSelectVisible: (visible) => {
+            return { type: 'SET_SELECT_VISIBLE', visible };
+          }
+        };
+      }
 
       ready() {
         super.ready();
@@ -150,6 +174,12 @@
       }
 
       handleCommand(cmd) { this.$.socket.command(cmd.detail); }
+
+      handleSelectSlot(slot) { this.$.socket.selectSlot(slot.detail); }
+
+      getSelectDisplay(visible) { return visible ? 'flex' : 'none'; }
+
+      handleClickSlots(e) { this.dispatch('setSelectVisible', !this.selectVisible); }
     }
 
     window.customElements.define(MatrixGamepadApp.is, MatrixGamepadApp);
