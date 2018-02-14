@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/battleships"
 	"github.com/richardlt/matrix/clock"
 	"github.com/richardlt/matrix/core"
 	"github.com/richardlt/matrix/demo"
@@ -64,6 +65,10 @@ func main() {
 		Usage:  "start draw software",
 		Action: func(c *cli.Context) error { return draw.Start(c.Parent().String("core-uri")) },
 	}, {
+		Name:   "battleships",
+		Usage:  "start battleships software",
+		Action: func(c *cli.Context) error { return battleships.Start(c.Parent().String("core-uri")) },
+	}, {
 		Name:  "all",
 		Usage: "start all",
 		Action: func(c *cli.Context) error {
@@ -104,6 +109,11 @@ func main() {
 			}()
 			go func() {
 				if err := draw.Start(c.Parent().String("core-uri")); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
+				if err := battleships.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()
