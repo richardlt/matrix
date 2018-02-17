@@ -1,6 +1,8 @@
 package blocks
 
 import (
+	"fmt"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
@@ -16,8 +18,20 @@ func newRenderer(a software.API) (*renderer, error) {
 		return nil, err
 	}
 
+	l3, err := a.NewLayer()
+	if err != nil {
+		return nil, err
+	}
+
+	td, err := l1.NewTextDriver(a.GetFontFromLocal("FiveByFive"))
+	if err != nil {
+		return nil, err
+	}
+
+	td.OnStep(func(total, current uint64) { a.Print() })
+
 	return &renderer{
-		api: a, layerPiece: l2, layerStack: l1,
+		api: a, layerInfo: l3, layerPiece: l2, layerStack: l1, textDriver: td,
 		pieceColors: []common.Color{
 			a.GetColorFromLocalThemeByName("flat", "green_2"),
 			a.GetColorFromLocalThemeByName("flat", "blue_2"),
@@ -31,32 +45,39 @@ func newRenderer(a software.API) (*renderer, error) {
 }
 
 type renderer struct {
-	api                    software.API
-	pieceColors            []common.Color
-	layerPiece, layerStack software.Layer
+	api                               software.API
+	pieceColors                       []common.Color
+	layerInfo, layerPiece, layerStack software.Layer
+	textDriver                        *software.TextDriver
 }
 
 func (r *renderer) Clean() {
 	r.layerPiece.Clean()
 	r.layerStack.Clean()
+	r.layerInfo.Clean()
 }
 
-func (r *renderer) Print(blocks []block, piece piece) {
-	r.printBlocks(blocks)
-	r.printPiece(piece)
+func (r *renderer) Print(stack map[common.Coord]pieceType, p *piece) {
+	r.layerStack.Clean()
+	for c, t := range stack {
+		r.layerStack.SetWithCoord(c, r.pieceColors[int(t)])
+	}
+
+	if p != nil {
+		r.layerPiece.Clean()
+		for _, c := range p.ToCoords() {
+			r.layerPiece.SetWithCoord(c, r.pieceColors[int(p.Type)])
+		}
+	}
+
 	r.api.Print()
 }
 
-func (r *renderer) printBlocks(blocks []block) {
-	r.layerStack.Clean()
-	for _, b := range blocks {
-		r.layerStack.SetWithCoord(b.Coord, r.pieceColors[int(b.Type)])
-	}
+func (r *renderer) StartPrintScore(score int) {
+	r.layerInfo.Clean()
+	r.textDriver.OnEnd(func() { r.StartPrintScore(score) })
+	r.textDriver.Render(fmt.Sprintf("%d POINTS", score), common.Coord{X: 0, Y: 4},
+		r.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{})
 }
 
-func (r *renderer) printPiece(piece piece) {
-	r.layerPiece.Clean()
-	for _, c := range piece.ToCoords() {
-		r.layerPiece.SetWithCoord(c, r.pieceColors[int(piece.Type)])
-	}
-}
+func (r *renderer) StopPrintScore() { r.textDriver.Stop() }

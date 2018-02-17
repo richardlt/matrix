@@ -54,15 +54,17 @@ func (b *blocks) Start(uint64) {
 	b.commandChan = make(chan common.Command)
 
 	go func() {
-		ti := time.NewTicker(time.Millisecond * 600)
-		defer ti.Stop()
+		ti := time.NewTicker(time.Millisecond * 500)
+		defer func() {
+			ti.Stop()
+			close(b.commandChan)
+			b.commandChan = nil
+		}()
 
 		var gameOver bool
 		for !gameOver {
 			select {
 			case <-ctx.Done():
-				close(b.commandChan)
-				b.commandChan = nil
 				return
 			case <-ti.C:
 				b.engine.MovePiece()
@@ -82,6 +84,9 @@ func (b *blocks) Start(uint64) {
 				b.print()
 			}
 		}
+
+		b.renderer.Clean()
+		b.renderer.StartPrintScore(b.engine.Score)
 	}()
 }
 
@@ -90,6 +95,7 @@ func (b *blocks) Close() {
 		b.cancel()
 	}
 	b.renderer.Clean()
+	b.renderer.StopPrintScore()
 }
 
 func (b *blocks) ActionReceived(slot int, cmd common.Command) {
@@ -98,9 +104,4 @@ func (b *blocks) ActionReceived(slot int, cmd common.Command) {
 	}
 }
 
-func (b *blocks) print() {
-	p := b.engine.GetPiece()
-	if p != nil {
-		b.renderer.Print(b.engine.GetBlocks(), *p)
-	}
-}
+func (b *blocks) print() { b.renderer.Print(b.engine.Stack, b.engine.Piece) }

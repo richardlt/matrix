@@ -18,7 +18,9 @@ const (
 	t pieceType = 6
 )
 
-func newRandomPiece() *piece { return newPiece(pieceType(rand.Intn(7))) }
+func newRandomPiece(rand *rand.Rand) *piece {
+	return newPiece(pieceType(rand.Intn(7)))
+}
 
 func newPiece(t pieceType) *piece {
 	switch t {
