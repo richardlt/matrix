@@ -14,7 +14,7 @@ import (
 	serial "go.bug.st/serial.v1"
 )
 
-const refreshDelay = time.Millisecond * 65 // ~15hz
+const refreshDelay = time.Millisecond * 30
 const defaultBrightness = 204
 
 func newMatrix() *matrix {
@@ -187,8 +187,9 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					return
 				case <-t.C:
 					if !bytes.Equal(lastBuffer, m.buffer) {
-						buffer := make([]byte, size*3+1)
+						lastBuffer = m.buffer
 
+						buffer := make([]byte, size*3+1)
 						for i := 0; i < len(m.buffer) && i < len(buffer); i++ {
 							buffer[i] = m.buffer[i]
 						}
@@ -198,7 +199,13 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 							return
 						}
 
-						lastBuffer = m.buffer
+						// read the ack
+						ack := make([]byte, 1)
+						_, err = port.Read(ack)
+						if err != nil {
+							logrus.Errorf("%+v", errors.WithStack(err))
+							return
+						}
 					}
 				}
 			}

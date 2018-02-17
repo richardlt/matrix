@@ -63,8 +63,8 @@ func (r *renderer) Print(stack map[common.Coord]pieceType, p *piece) {
 		r.layerStack.SetWithCoord(c, r.pieceColors[int(t)])
 	}
 
+	r.layerPiece.Clean()
 	if p != nil {
-		r.layerPiece.Clean()
 		for _, c := range p.ToCoords() {
 			r.layerPiece.SetWithCoord(c, r.pieceColors[int(p.Type)])
 		}
@@ -76,7 +76,7 @@ func (r *renderer) Print(stack map[common.Coord]pieceType, p *piece) {
 func (r *renderer) StartPrintScore(score int) {
 	r.layerInfo.Clean()
 	r.textDriver.OnEnd(func() { r.StartPrintScore(score) })
-	r.textDriver.Render(fmt.Sprintf("%d POINTS", score), common.Coord{X: 0, Y: 4},
+	r.textDriver.Render(fmt.Sprintf("%d PTS", score), common.Coord{X: 0, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{})
 }
 

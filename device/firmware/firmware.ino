@@ -72,5 +72,10 @@ void loop()
     }
 
     pixels.show();
+
+    Serial.flush();
+
+    char ack[] = {(char)NUMPIXELS};
+    Serial.write(ack, 1);
   }
 }
