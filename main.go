@@ -3,8 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/sirupsen/logrus"
-
+	"github.com/richardlt/matrix/blocks"
 	"github.com/richardlt/matrix/clock"
 	"github.com/richardlt/matrix/core"
 	"github.com/richardlt/matrix/demo"
@@ -14,6 +13,7 @@ import (
 	"github.com/richardlt/matrix/gamepad"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
+	"github.com/sirupsen/logrus"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -64,6 +64,10 @@ func main() {
 		Usage:  "start draw software",
 		Action: func(c *cli.Context) error { return draw.Start(c.Parent().String("core-uri")) },
 	}, {
+		Name:   "blocks",
+		Usage:  "start blocks software",
+		Action: func(c *cli.Context) error { return blocks.Start(c.Parent().String("core-uri")) },
+	}, {
 		Name:  "all",
 		Usage: "start all",
 		Action: func(c *cli.Context) error {
@@ -104,6 +108,11 @@ func main() {
 			}()
 			go func() {
 				if err := draw.Start(c.Parent().String("core-uri")); err != nil {
+					logrus.Errorf("%+v", err)
+				}
+			}()
+			go func() {
+				if err := blocks.Start(c.Parent().String("core-uri")); err != nil {
 					logrus.Errorf("%+v", err)
 				}
 			}()

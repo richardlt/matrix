@@ -115,6 +115,8 @@ func (s *SoftwareServer) RemoveSoftware(so *software) {
 		s.current = nil
 	}
 
+	so.ForceStop()
+
 	s.softwareLock.Lock()
 	var ss []*software
 	for _, es := range s.softwares {
@@ -332,6 +334,12 @@ type software struct {
 	caracterDrivers                map[string]*drivers.Caracter
 	textDrivers                    map[string]*drivers.Text
 	imageDrivers                   map[string]*drivers.Image
+}
+
+func (s *software) ForceStop() {
+	for _, td := range s.textDrivers {
+		td.Stop()
+	}
 }
 
 func (s software) GetMeta() SoftwareMeta {
