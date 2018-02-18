@@ -132,7 +132,7 @@ func (d *demo) play() {
 }
 
 func (d *demo) playRandom(ctx context.Context) {
-	ticker := time.NewTicker(time.Millisecond * 50)
+	ticker := time.NewTicker(time.Millisecond * 25)
 	defer ticker.Stop()
 	d.randomDriver.Render()
 	for {
