@@ -66,7 +66,7 @@ func (z *zigzag) Start(playerCount uint64) {
 			}
 		}
 
-		z.renderer.PrintGameOver(z.engine.GetWinners())
+		z.renderer.StartPrintWinners(z.engine.GetWinners())
 	}()
 }
 
@@ -75,6 +75,7 @@ func (z *zigzag) Close() {
 		z.cancel()
 	}
 	z.renderer.Clean()
+	z.renderer.StopPrintWinners()
 }
 
 func (z *zigzag) ActionReceived(slot int, cmd common.Command) {

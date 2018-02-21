@@ -30,51 +30,51 @@ type Text struct {
 }
 
 // Render displays given text from left to right with scroll effect if too long.
-func (t *Text) Render(text string, center common.Coord, color, background common.Color) {
+func (t *Text) Render(text string, center common.Coord, color, background common.Color, repeat bool) {
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
 
-	t.ticker = time.NewTicker(100 * time.Millisecond)
+	text = fmt.Sprintf(" %s ", strings.Join(strings.Split(text, ""), " "))
 
-	spacesText := fmt.Sprintf("   %s  ", strings.Join(strings.Split(text, ""), " "))
-
-	textLength := 0
-	for _, c := range spacesText {
-		textLength += int(render.GetFontCaracterByValue(t.font, c).Width)
+	len := uint64(0)
+	for _, c := range text {
+		len += render.GetFontCaracterByValue(t.font, c).Width
 	}
 
-	stepCount := textLength - int(t.frame.Width)
+	stepCount := int(center.X) + int(len-t.frame.Width)
 	if stepCount < 0 {
 		stepCount = 0
-	} else {
-		stepCount++
 	}
 
 	step := 0
 
 	go func() {
+		t.ticker = time.NewTicker(100 * time.Millisecond)
 		for _ = range t.ticker.C {
-			if step > stepCount {
+			if step > stepCount && !repeat {
 				t.Stop()
-				if t.endCallback != nil {
-					t.endCallback()
-				}
-			} else {
-				if t.stepCallback != nil {
-					go t.stepCallback(uint64(stepCount), uint64(step))
-				}
-				beginX := 0 - step
-				for _, c := range spacesText {
-					caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
-					t.caracterDriver.Render(c, common.Coord{
-						X: int64(beginX) + int64(caracterWidth) - int64(caracterWidth/2) - 1,
-						Y: center.Y,
-					}, color, background)
-					beginX += int(caracterWidth)
-				}
-				step++
+				break
 			}
+
+			beginX := int(center.X) - step
+			for _, c := range text {
+				caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
+				t.caracterDriver.Render(c, common.Coord{
+					X: int64(beginX) + int64(caracterWidth) - int64(caracterWidth/2) - 1,
+					Y: center.Y,
+				}, color, background)
+				beginX += int(caracterWidth)
+			}
+
+			if t.stepCallback != nil {
+				go t.stepCallback(uint64(stepCount), uint64(step))
+			}
+			step++
+		}
+
+		if t.endCallback != nil {
+			t.endCallback()
 		}
 	}()
 }
@@ -89,5 +89,6 @@ func (t *Text) OnStep(c func(total, current uint64)) { t.stepCallback = c }
 func (t *Text) Stop() {
 	if t.ticker != nil {
 		t.ticker.Stop()
+		t.ticker = nil
 	}
 }

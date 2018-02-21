@@ -233,7 +233,8 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 			}
 			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
 				td.Render(req.DriverData.Text, *req.DriverData.Coord,
-					*req.DriverData.Color, *req.DriverData.Background)
+					*req.DriverData.Color, *req.DriverData.Background,
+					req.DriverData.Repeat)
 			}
 			if id, ok := so.imageDrivers[req.DriverData.UUID]; ok {
 				id.Render(*req.DriverData.Image, *req.DriverData.Coord)

@@ -57,6 +57,7 @@ message ConnectRequest {
     common.Coord coord = 6;
     string text = 7;
     Image image = 8;
+    bool repeat = 9;
   }
   Type type = 1;
   SoftwareData softwareData = 2;

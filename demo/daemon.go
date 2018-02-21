@@ -125,9 +125,9 @@ func (d *demo) play() {
 	case 2:
 		d.playText()
 	case 3:
-		d.playImage(ctx)
+		d.playTextRepeat()
 	case 4:
-		d.playBar()
+		d.playImage(ctx)
 	}
 }
 
@@ -165,11 +165,18 @@ func (d *demo) playText() {
 		})
 		d.textDriver.Render("SOFTWARE", common.Coord{X: 0, Y: 6},
 			d.api.GetColorFromLocalThemeByName("flat", "green_2"),
-			common.Color{})
+			common.Color{}, false)
 	})
 	d.textDriver.Render("EXAMPLE", common.Coord{X: 0, Y: 2},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
-		common.Color{})
+		common.Color{}, false)
+}
+
+func (d *demo) playTextRepeat() {
+	d.textDriver.OnEnd(func() {})
+	d.textDriver.Render("REPEAT", common.Coord{X: 5, Y: 2},
+		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
+		common.Color{}, true)
 }
 
 func (d *demo) playImage(ctx context.Context) {
@@ -202,5 +209,3 @@ func (d *demo) playImage(ctx context.Context) {
 		}
 	}
 }
-
-func (d *demo) playBar() {}
