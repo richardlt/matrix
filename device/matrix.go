@@ -118,7 +118,7 @@ func (m *matrix) print() {
 
 func (m *matrix) Close() {}
 
-func (m *matrix) ActionReceived(slot int, cmd common.Command) {
+func (m *matrix) ActionReceived(slot uint64, cmd common.Command) {
 	switch cmd {
 	case common.Command_LEFT_UP:
 		if m.brightness > 0 {

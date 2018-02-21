@@ -90,7 +90,7 @@ func (c *clock) Close() {
 	}
 }
 
-func (c clock) ActionReceived(slot int, cmd common.Command) {}
+func (c clock) ActionReceived(slot uint64, cmd common.Command) {}
 
 func (c *clock) print() {
 	c.layer.Clean()

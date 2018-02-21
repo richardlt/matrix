@@ -5,6 +5,7 @@ import (
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/core/system"
 	"github.com/richardlt/matrix/sdk-go/common"
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
 func newSoftMenuState(sms []system.SoftwareMeta) *softMenuState {
@@ -81,39 +82,42 @@ func (p *playerMenuState) Init(ctx *Context) {
 }
 
 func newSoftwareState(meta system.SoftwareMeta, count uint64) *softwareState {
-	return &softwareState{meta: meta, playerCount: count}
+	mp := software.NewMultiPress(common.Button_SELECT, common.Button_START)
+	st := &softwareState{
+		meta:                  meta,
+		playerCount:           count,
+		multiPressSelectStart: mp,
+	}
+
+	mp.OnAction(func(slot uint64) {
+		st.catchAction(system.Action{
+			Slot:    slot,
+			Command: commandSelectStart,
+		})
+	})
+
+	return st
 }
 
+const commandSelectStart = 100
+
 type softwareState struct {
-	meta          system.SoftwareMeta
-	playerCount   uint64
-	selectPressed bool
-	startPressed  bool
+	meta                  system.SoftwareMeta
+	playerCount           uint64
+	multiPressSelectStart software.ActionGenerator
+	ctx                   *Context
 }
 
 func (s *softwareState) Init(ctx *Context) {
+	s.ctx = ctx
+
 	ctx.softwareServer.OnPrint(func(f render.Frame) {
 		ctx.displayServer.Print([]render.Frame{f})
 	})
 
 	ctx.playerServer.OnAction(func(a system.Action) {
-		switch a.Command {
-		case common.Command_SELECT_DOWN:
-			s.selectPressed = true
-		case common.Command_SELECT_UP:
-			s.selectPressed = false
-		case common.Command_START_DOWN:
-			s.startPressed = true
-		case common.Command_START_UP:
-			s.startPressed = false
-		}
-
-		if s.selectPressed && s.startPressed {
-			ctx.softwareServer.CloseSoftware()
-			ctx.SetState(newSoftMenuState(ctx.GetSoftwareMeta()))
-		} else {
-			ctx.softwareServer.Command(a.Slot, a.Command)
-		}
+		s.multiPressSelectStart.SendAction(a.Slot, a.Command)
+		s.catchAction(a)
 	})
 
 	ctx.softwareServer.OnSoftwareChange(func(sms []system.SoftwareMeta) {
@@ -130,4 +134,14 @@ func (s *softwareState) Init(ctx *Context) {
 	})
 
 	ctx.softwareServer.StartSoftware(s.meta, s.playerCount)
+}
+
+func (s *softwareState) catchAction(a system.Action) {
+	switch a.Command {
+	case commandSelectStart:
+		s.ctx.softwareServer.CloseSoftware()
+		s.ctx.SetState(newSoftMenuState(s.ctx.GetSoftwareMeta()))
+	default:
+		s.ctx.softwareServer.Command(a.Slot, a.Command)
+	}
 }

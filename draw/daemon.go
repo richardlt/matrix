@@ -89,39 +89,40 @@ func (d *draw) Start(playerCount uint64) {
 
 func (d draw) Close() {}
 
-func (d *draw) ActionReceived(slot int, cmd common.Command) {
+func (d *draw) ActionReceived(slot uint64, cmd common.Command) {
+	pSlot := int(slot)
 	switch cmd {
 	case common.Command_A_UP:
-		d.layerDraw.SetWithCoord(d.players[slot].Coord, d.colors[d.players[slot].Color])
+		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, d.colors[d.players[pSlot].Color])
 		d.print()
 	case common.Command_B_UP:
-		d.layerDraw.SetWithCoord(d.players[slot].Coord, common.Color{})
+		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, common.Color{})
 		d.print()
 	case common.Command_X_UP:
-		if d.players[slot].Color < len(d.colors)-1 {
-			d.players[slot].Color++
+		if d.players[pSlot].Color < len(d.colors)-1 {
+			d.players[pSlot].Color++
 		} else {
-			d.players[slot].Color = 0
+			d.players[pSlot].Color = 0
 		}
 		d.print()
 	case common.Command_LEFT_UP:
-		if d.players[slot].Coord.X > 0 {
-			d.players[slot].Coord.X--
+		if d.players[pSlot].Coord.X > 0 {
+			d.players[pSlot].Coord.X--
 		}
 		d.print()
 	case common.Command_UP_UP:
-		if d.players[slot].Coord.Y > 0 {
-			d.players[slot].Coord.Y--
+		if d.players[pSlot].Coord.Y > 0 {
+			d.players[pSlot].Coord.Y--
 		}
 		d.print()
 	case common.Command_RIGHT_UP:
-		if d.players[slot].Coord.X < 15 {
-			d.players[slot].Coord.X++
+		if d.players[pSlot].Coord.X < 15 {
+			d.players[pSlot].Coord.X++
 		}
 		d.print()
 	case common.Command_DOWN_UP:
-		if d.players[slot].Coord.Y < 8 {
-			d.players[slot].Coord.Y++
+		if d.players[pSlot].Coord.Y < 8 {
+			d.players[pSlot].Coord.Y++
 		}
 		d.print()
 	}
