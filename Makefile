@@ -21,7 +21,7 @@ clean:
 	rm -f *.log
 
 build:
-	go build -a -o matrix .
+	go build -o matrix .
 
 package:	
 	rm -rf matrix-package
