@@ -87,7 +87,7 @@ func (r *renderer) StartPrintWinners(winners []int) {
 		text = fmt.Sprintf("PLAYER %d WON", winners[0]+1)
 	}
 
-	r.textDriver.Render(text, common.Coord{X: 0, Y: 4},
+	r.textDriver.Render(text, common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		common.Color{}, true)
 }

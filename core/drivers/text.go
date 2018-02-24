@@ -13,20 +13,18 @@ import (
 // NewText returns a new text driver.
 func NewText(fr *render.Frame, fo software.Font) *Text {
 	return &Text{
-		frame:          fr,
-		font:           fo,
-		caracterDriver: NewCaracter(fr, fo),
+		frame: fr,
+		font:  fo,
 	}
 }
 
 // Text allows to render a given text in frame.
 type Text struct {
-	frame          *render.Frame
-	font           software.Font
-	caracterDriver *Caracter
-	ticker         *time.Ticker
-	endCallback    func()
-	stepCallback   func(total, current uint64)
+	frame        *render.Frame
+	font         software.Font
+	ticker       *time.Ticker
+	endCallback  func()
+	stepCallback func(total, current uint64)
 }
 
 // Render displays given text from left to right with scroll effect if too long.
@@ -36,6 +34,9 @@ func (t *Text) Render(text string, center common.Coord, color, background common
 	}
 
 	text = fmt.Sprintf(" %s ", strings.Join(strings.Split(text, ""), " "))
+	if repeat && 0 < center.X {
+		text += strings.Repeat(" ", int(center.X))
+	}
 
 	len := uint64(0)
 	for _, c := range text {
@@ -47,29 +48,53 @@ func (t *Text) Render(text string, center common.Coord, color, background common
 		stepCount = 0
 	}
 
-	step := 0
+	f := render.NewFrame(len, t.frame.Height)
+	cd := NewCaracter(&f, t.font)
 
+	offset := int64(0)
+	for _, c := range text {
+		caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
+		cd.Render(c, common.Coord{
+			X: offset + int64(caracterWidth-caracterWidth/2) - 1,
+			Y: center.Y,
+		}, color, background)
+		offset += int64(caracterWidth)
+	}
+
+	step := 0
 	go func() {
 		t.ticker = time.NewTicker(100 * time.Millisecond)
+
+		xStart := int(center.X)
+		offset := 0
 		for _ = range t.ticker.C {
 			if step > stepCount && !repeat {
 				t.Stop()
 				break
 			}
 
-			beginX := int(center.X) - step
-			for _, c := range text {
-				caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
-				t.caracterDriver.Render(c, common.Coord{
-					X: int64(beginX) + int64(caracterWidth) - int64(caracterWidth/2) - 1,
-					Y: center.Y,
-				}, color, background)
-				beginX += int(caracterWidth)
+			for i, j := xStart, offset; i < int(t.frame.Width); i++ {
+				t.frame.SetColumn(i, f.GetColumn(j))
+				if j < int(f.Width)-1 {
+					j++
+				} else {
+					j = 0
+				}
+			}
+			if xStart > 0 {
+				xStart--
+			} else {
+				if offset < int(f.Width)-1 {
+					offset++
+				} else {
+					offset = 0
+				}
 			}
 
 			if t.stepCallback != nil {
 				go t.stepCallback(uint64(stepCount), uint64(step))
 			}
+
 			step++
 		}
 

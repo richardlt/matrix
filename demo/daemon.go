@@ -63,9 +63,7 @@ func (d *demo) Init(a software.API) (err error) {
 	if err != nil {
 		return err
 	}
-	d.textDriver.OnStep(func(total, current uint64) {
-		d.api.Print()
-	})
+	d.textDriver.OnStep(func(total, current uint64) { d.api.Print() })
 
 	d.imageDriver, err = d.layer.NewImageDriver()
 	if err != nil {
@@ -174,7 +172,7 @@ func (d *demo) playText() {
 
 func (d *demo) playTextRepeat() {
 	d.textDriver.OnEnd(func() {})
-	d.textDriver.Render("REPEAT", common.Coord{X: 5, Y: 2},
+	d.textDriver.Render("REPEAT", common.Coord{X: 10, Y: 4},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		common.Color{}, true)
 }

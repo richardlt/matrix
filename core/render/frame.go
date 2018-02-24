@@ -35,3 +35,23 @@ func (f *Frame) Clean() {
 		f.Pixels[i] = &common.Color{}
 	}
 }
+
+// GetColumn returns pixels for given column index.
+func (f *Frame) GetColumn(idx int) []common.Color {
+	c := make([]common.Color, f.Height)
+	if 0 <= idx && idx < int(f.Width) {
+		for i := 0; i < int(f.Height); i++ {
+			c[i] = *f.Pixels[i*int(f.Width)+idx]
+		}
+	}
+	return c
+}
+
+// SetColumn update pixels of a given column by index.
+func (f *Frame) SetColumn(idx int, col []common.Color) {
+	if 0 <= idx && idx < int(f.Width) {
+		for i := 0; i < int(f.Height) && i < len(col); i++ {
+			f.Pixels[i*int(f.Width)+idx] = &col[i]
+		}
+	}
+}

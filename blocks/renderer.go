@@ -75,7 +75,7 @@ func (r *renderer) Print(stack map[common.Coord]pieceType, p *piece) {
 
 func (r *renderer) StartPrintScore(score int) {
 	r.layerInfo.Clean()
-	r.textDriver.Render(fmt.Sprintf("%d PTS", score), common.Coord{X: 0, Y: 4},
+	r.textDriver.Render(fmt.Sprintf("%d PTS", score), common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{}, true)
 }
 
