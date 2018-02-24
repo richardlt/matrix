@@ -102,7 +102,8 @@ func (t *TextDriver) Step(total, current uint64) {
 	}
 }
 
-func (t *TextDriver) Render(text string, coord common.Coord, color, background common.Color) error {
+func (t *TextDriver) Render(text string, coord common.Coord,
+	color, background common.Color, repeat bool) error {
 	return t.ctx.SendConnectRequest(ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
@@ -112,6 +113,7 @@ func (t *TextDriver) Render(text string, coord common.Coord, color, background c
 			Coord:      &coord,
 			Color:      &color,
 			Background: &background,
+			Repeat:     repeat,
 		},
 	})
 }
