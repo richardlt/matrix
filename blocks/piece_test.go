@@ -10,7 +10,7 @@ import (
 func TestToCoords(t *testing.T) {
 	assert := assert.New(t)
 
-	p := newPiece(L)
+	p := newPiece(l)
 	p.Coord = common.Coord{X: 5, Y: 5}
 
 	cs := p.ToCoords()

@@ -6,3 +6,4 @@ matrix.zip
 .vscode
 .vagrant
 *.log
+report.xml

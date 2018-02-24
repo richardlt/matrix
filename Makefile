@@ -35,3 +35,6 @@ package:
 	cp -R gamepad/build/default/. matrix-package/gamepad/public/
 	cp -R emulator/client/public/. matrix-package/emulator/public/
 	zip -r matrix.zip matrix-package
+
+test-with-report: 	
+	go test github.com/richardlt/matrix/... -v | go-junit-report > report.xml

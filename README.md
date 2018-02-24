@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/richardlt/matrix/master/logo.png" width="30"/>&#8239;Matrix
+# <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/logo.png" width="30"/>&#8239;Matrix
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/richardlt/matrix)](https://goreportcard.com/report/github.com/richardlt/matrix)
 
