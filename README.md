@@ -6,20 +6,20 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 
 <p align="center">
   <br/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.gif" height="75%"/><br/>
+  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.gif" width="75%"/><br/>
 </p>
 
 ## Existing softwares
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/yumyum.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/clock.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/zigzag.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/draw.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/device.gif" height="75%"/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.gif" height="75%"/>
-</p>
+| | Name | Description |
+| - | - | - |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.png" width="60"/> | Demo | A demo software that uses all drivers from the SDK. |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/yumyum.png" width="60"/> | Yumyum | Eat all the candies with your monster to win the game. |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/clock.png" width="60"/> | Clock | What time is it? |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/zigzag.png" width="60"/> | Zigzag | Turn left then right, eat candies but not yourself. |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/draw.png" width="60"/> | Draw | For those who like pixel art. |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/device.png" width="60"/> | Device | The Device software allows you to change the luminosity of the LEDs. |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.png" width="60"/> | Blocks | A puzzle game, score a maximum of points by clearing complete lines. |
 
 ## Development setup
 
