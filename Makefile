@@ -37,7 +37,7 @@ package:
 	zip -r matrix.zip matrix-package
 
 test: 	
-	go test github.com/richardlt/matrix/... -v
+	go test -race github.com/richardlt/matrix/... -v
 
 test-with-report: 	
-	go test github.com/richardlt/matrix/... -v | go-junit-report > report.xml
+	go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml

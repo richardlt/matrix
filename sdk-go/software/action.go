@@ -1,6 +1,11 @@
 package software
 
-import common "github.com/richardlt/matrix/sdk-go/common"
+import (
+	"sync"
+	"time"
+
+	common "github.com/richardlt/matrix/sdk-go/common"
+)
 
 // ActionGenerator takes SDK actions to generate custom one.
 type ActionGenerator interface {
@@ -58,5 +63,84 @@ func (m *mutliPress) SendAction(slot uint64, cmd common.Command) {
 
 	if allPressed && m.actionCallback != nil {
 		m.actionCallback(slot)
+	}
+}
+
+// NewLongPress returns a long press generator.
+func NewLongPress(button common.Button, triggerDelay,
+	fireDelay time.Duration) ActionGenerator {
+	return &longPress{
+		button:       button,
+		triggerDelay: triggerDelay,
+		fireDelay:    fireDelay,
+		timers:       map[uint64]*time.Timer{},
+		tickers:      map[uint64]*time.Ticker{},
+	}
+}
+
+type longPress struct {
+	passThrough
+	button                  common.Button
+	triggerDelay, fireDelay time.Duration
+	timersLock, tickersLock sync.RWMutex
+	timers                  map[uint64]*time.Timer
+	tickers                 map[uint64]*time.Ticker
+}
+
+func (l *longPress) SendAction(slot uint64, cmd common.Command) {
+	button, pressed := common.CommandToButtonState(cmd)
+	if button != l.button {
+		return
+	}
+
+	l.timersLock.RLock()
+	timer, okTimer := l.timers[slot]
+	l.timersLock.RUnlock()
+
+	l.tickersLock.RLock()
+	ticker, okTicker := l.tickers[slot]
+	l.tickersLock.RUnlock()
+
+	// if the button was just pressed
+	if (!okTimer || timer == nil) && (!okTicker || ticker == nil) && pressed {
+		newTimer := time.NewTimer(l.triggerDelay)
+
+		l.timersLock.Lock()
+		l.timers[slot] = newTimer
+		l.timersLock.Unlock()
+
+		go func() {
+			<-newTimer.C
+			l.action(slot)
+
+			newTicker := time.NewTicker(l.fireDelay)
+
+			l.tickersLock.Lock()
+			l.tickers[slot] = newTicker
+			l.tickersLock.Unlock()
+
+			for _ = range newTicker.C {
+				l.action(slot)
+			}
+		}()
+	} else if !pressed {
+		if timer != nil {
+			timer.Stop()
+			l.timersLock.Lock()
+			l.timers[slot] = nil
+			l.timersLock.Unlock()
+		}
+		if ticker != nil {
+			ticker.Stop()
+			l.tickersLock.Lock()
+			l.tickers[slot] = nil
+			l.tickersLock.Unlock()
+		}
+	}
+}
+
+func (l *longPress) action(slot uint64) {
+	if l.actionCallback != nil {
+		go l.actionCallback(slot)
 	}
 }

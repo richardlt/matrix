@@ -1,7 +1,9 @@
 package software
 
 import (
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/richardlt/matrix/sdk-go/common"
 
@@ -42,4 +44,35 @@ func TestMultiPress(t *testing.T) {
 	mp.SendAction(1, common.Command_L_DOWN)
 	assert.True(multi[0])
 	assert.True(multi[1])
+}
+
+func TestLongPress(t *testing.T) {
+	assert := assert.New(t)
+
+	count := make([]int, 3)
+	var mutex sync.Mutex
+	lp := NewLongPress(common.Button_A, 500*time.Millisecond, 250*time.Millisecond)
+	lp.OnAction(func(slot uint64) {
+		mutex.Lock()
+		count[slot]++
+		mutex.Unlock()
+	})
+
+	lp.SendAction(0, common.Command_A_DOWN)
+	time.Sleep(200 * time.Millisecond)
+
+	lp.SendAction(1, common.Command_A_DOWN)
+	time.Sleep(200 * time.Millisecond)
+
+	lp.SendAction(1, common.Command_A_UP)
+	lp.SendAction(2, common.Command_A_DOWN)
+
+	time.Sleep(600 * time.Millisecond)
+	lp.SendAction(0, common.Command_A_UP)
+	lp.SendAction(2, common.Command_A_UP)
+
+	mutex.Lock()
+	assert.True(count[0] > 0 && count[1] == 0 && count[2] > 0)
+	assert.True(count[0] > count[2])
+	mutex.Unlock()
 }
