@@ -36,5 +36,8 @@ package:
 	cp -R emulator/client/public/. matrix-package/emulator/public/
 	zip -r matrix.zip matrix-package
 
+test: 	
+	go test github.com/richardlt/matrix/... -v
+
 test-with-report: 	
 	go test github.com/richardlt/matrix/... -v | go-junit-report > report.xml

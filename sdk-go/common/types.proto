@@ -36,6 +36,21 @@ enum Command {
   R_DOWN = 23;
 }
 
+enum Button {
+  UP = 0;
+  RIGHT = 1;
+  LEFT = 2;
+  DOWN = 3;
+  A = 4;
+  B = 5;
+  X = 6;
+  Y = 7;
+  START = 8;
+  SELECT = 9;
+  L = 10;
+  R = 11;
+}
+
 message Layer {
   string uuid = 1;
 }

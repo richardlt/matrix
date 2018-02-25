@@ -78,7 +78,7 @@ func (d *demo) Start(playerCount uint64) { d.play() }
 
 func (d *demo) Close() { d.reset() }
 
-func (d *demo) ActionReceived(slot int, cmd common.Command) {
+func (d *demo) ActionReceived(slot uint64, cmd common.Command) {
 	switch cmd {
 	case common.Command_LEFT_UP:
 		if d.step < 1 {

@@ -78,16 +78,17 @@ func (z *zigzag) Close() {
 	z.renderer.StopPrintWinners()
 }
 
-func (z *zigzag) ActionReceived(slot int, cmd common.Command) {
+func (z *zigzag) ActionReceived(slot uint64, cmd common.Command) {
+	pSlot := int(slot)
 	switch cmd {
 	case common.Command_LEFT_UP:
-		z.engine.ChangePlayerDirection(slot, "left")
+		z.engine.ChangePlayerDirection(pSlot, "left")
 	case common.Command_UP_UP:
-		z.engine.ChangePlayerDirection(slot, "up")
+		z.engine.ChangePlayerDirection(pSlot, "up")
 	case common.Command_RIGHT_UP:
-		z.engine.ChangePlayerDirection(slot, "right")
+		z.engine.ChangePlayerDirection(pSlot, "right")
 	case common.Command_DOWN_UP:
-		z.engine.ChangePlayerDirection(slot, "down")
+		z.engine.ChangePlayerDirection(pSlot, "down")
 	}
 	z.print()
 }

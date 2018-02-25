@@ -46,16 +46,17 @@ func (y *yumyum) Start(playerCount uint64) {
 
 func (y yumyum) Close() {}
 
-func (y *yumyum) ActionReceived(slot int, cmd common.Command) {
+func (y *yumyum) ActionReceived(slot uint64, cmd common.Command) {
+	pSlot := int(slot)
 	switch cmd {
 	case common.Command_LEFT_UP:
-		y.engine.MovePlayer(slot, "left")
+		y.engine.MovePlayer(pSlot, "left")
 	case common.Command_UP_UP:
-		y.engine.MovePlayer(slot, "up")
+		y.engine.MovePlayer(pSlot, "up")
 	case common.Command_RIGHT_UP:
-		y.engine.MovePlayer(slot, "right")
+		y.engine.MovePlayer(pSlot, "right")
 	case common.Command_DOWN_UP:
-		y.engine.MovePlayer(slot, "down")
+		y.engine.MovePlayer(pSlot, "down")
 	}
 	y.print()
 }

@@ -14,7 +14,7 @@ type Software interface {
 	Init(API) error
 	Start(uint64)
 	Close()
-	ActionReceived(int, common.Command)
+	ActionReceived(uint64, common.Command)
 }
 
 func init() {
@@ -136,8 +136,7 @@ func processResponse(s Software, res *ConnectResponse) {
 		case ConnectResponse_SoftwareData_CLOSE:
 			go s.Close()
 		case ConnectResponse_SoftwareData_PLAYER_COMMAND:
-			go s.ActionReceived(int(res.SoftwareData.Slot),
-				res.SoftwareData.Command)
+			go s.ActionReceived(res.SoftwareData.Slot, res.SoftwareData.Command)
 		}
 	}
 }

@@ -9,20 +9,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const commandLR = common.Command(100)
+
 // Start the blocks software.
 func Start(uri string) error {
 	logrus.Infof("Start blocks for uri %s\n", uri)
 
-	t := &blocks{}
+	mp := software.NewMultiPress(common.Button_L, common.Button_R)
+	b := &blocks{mutliPressLR: mp}
 
-	return software.Connect(uri, t, true)
+	mp.OnAction(func(slot uint64) {
+		if b.commandChan != nil {
+			b.commandChan <- commandLR
+		}
+	})
+
+	return software.Connect(uri, b, true)
 }
 
 type blocks struct {
-	engine      *engine
-	renderer    *renderer
-	cancel      func()
-	commandChan chan common.Command
+	engine        *engine
+	renderer      *renderer
+	cancel        func()
+	commandChan   chan common.Command
+	mutliPressLR  software.ActionGenerator
+	rotateCommand bool
 }
 
 func (b *blocks) Init(a software.API) (err error) {
@@ -72,14 +83,30 @@ func (b *blocks) Start(uint64) {
 				gameOver = b.engine.IsGameOver()
 			case cmd := <-b.commandChan:
 				switch cmd {
-				case common.Command_UP_UP:
-					b.engine.MovePieceUp()
 				case common.Command_DOWN_UP:
-					b.engine.MovePieceDown()
+					if !b.rotateCommand {
+						b.engine.MovePieceDown()
+					} else {
+						b.engine.MovePiece()
+					}
+				case common.Command_LEFT_UP:
+					if b.rotateCommand {
+						b.engine.MovePieceDown()
+					}
+				case common.Command_UP_UP:
+					if !b.rotateCommand {
+						b.engine.MovePieceUp()
+					}
+				case common.Command_RIGHT_UP:
+					if b.rotateCommand {
+						b.engine.MovePieceUp()
+					} else {
+						b.engine.MovePiece()
+					}
 				case common.Command_A_UP:
 					b.engine.RotatePiece()
-				case common.Command_RIGHT_UP:
-					b.engine.MovePiece()
+				case commandLR:
+					b.rotateCommand = !b.rotateCommand
 				}
 				b.print()
 			}
@@ -98,7 +125,8 @@ func (b *blocks) Close() {
 	b.renderer.StopPrintScore()
 }
 
-func (b *blocks) ActionReceived(slot int, cmd common.Command) {
+func (b *blocks) ActionReceived(slot uint64, cmd common.Command) {
+	b.mutliPressLR.SendAction(slot, cmd)
 	if b.commandChan != nil {
 		b.commandChan <- cmd
 	}
