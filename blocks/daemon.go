@@ -9,30 +9,53 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const commandLR = common.Command(100)
+const (
+	commandLR             common.Command = 100
+	commandHoldLeft       common.Command = 101
+	commandHoldUp         common.Command = 102
+	commandHoldRight      common.Command = 103
+	commandHoldDown       common.Command = 104
+	longPressTriggerDelay time.Duration  = 200 * time.Millisecond
+	longPressFireDelay    time.Duration  = 50 * time.Millisecond
+)
 
 // Start the blocks software.
 func Start(uri string) error {
 	logrus.Infof("Start blocks for uri %s\n", uri)
 
 	mp := software.NewMultiPress(common.Button_L, common.Button_R)
-	b := &blocks{mutliPressLR: mp}
+	lpl := software.NewLongPress(common.Button_LEFT,
+		longPressTriggerDelay, longPressFireDelay)
+	lpu := software.NewLongPress(common.Button_UP,
+		longPressTriggerDelay, longPressFireDelay)
+	lpr := software.NewLongPress(common.Button_RIGHT,
+		longPressTriggerDelay, longPressFireDelay)
+	lpd := software.NewLongPress(common.Button_DOWN,
+		longPressTriggerDelay, longPressFireDelay)
+	b := &blocks{
+		mutliPressLR:   mp,
+		longPressLeft:  lpl,
+		longPressUp:    lpu,
+		longPressRight: lpr,
+		longPressDown:  lpd,
+	}
 
-	mp.OnAction(func(slot uint64) {
-		if b.commandChan != nil {
-			b.commandChan <- commandLR
-		}
-	})
+	mp.OnAction(func(slot uint64) { b.action(commandLR) })
+	lpl.OnAction(func(slot uint64) { b.action(commandHoldLeft) })
+	lpu.OnAction(func(slot uint64) { b.action(commandHoldUp) })
+	lpr.OnAction(func(slot uint64) { b.action(commandHoldRight) })
+	lpd.OnAction(func(slot uint64) { b.action(commandHoldDown) })
 
 	return software.Connect(uri, b, true)
 }
 
 type blocks struct {
-	engine        *engine
-	renderer      *renderer
-	cancel        func()
-	commandChan   chan common.Command
-	mutliPressLR  software.ActionGenerator
+	engine      *engine
+	renderer    *renderer
+	cancel      func()
+	commandChan chan common.Command
+	mutliPressLR, longPressLeft, longPressUp,
+	longPressRight, longPressDown software.ActionGenerator
 	rotateCommand bool
 }
 
@@ -66,11 +89,7 @@ func (b *blocks) Start(uint64) {
 
 	go func() {
 		ti := time.NewTicker(time.Millisecond * 500)
-		defer func() {
-			ti.Stop()
-			close(b.commandChan)
-			b.commandChan = nil
-		}()
+		defer ti.Stop()
 
 		var gameOver bool
 		for !gameOver {
@@ -83,23 +102,23 @@ func (b *blocks) Start(uint64) {
 				gameOver = b.engine.IsGameOver()
 			case cmd := <-b.commandChan:
 				switch cmd {
-				case common.Command_DOWN_UP:
-					if !b.rotateCommand {
+				case common.Command_LEFT_UP, commandHoldLeft:
+					if b.rotateCommand {
 						b.engine.MovePieceDown()
+					}
+				case common.Command_UP_UP, commandHoldUp:
+					if !b.rotateCommand {
+						b.engine.MovePieceUp()
+					}
+				case common.Command_RIGHT_UP, commandHoldRight:
+					if b.rotateCommand {
+						b.engine.MovePieceUp()
 					} else {
 						b.engine.MovePiece()
 					}
-				case common.Command_LEFT_UP:
-					if b.rotateCommand {
-						b.engine.MovePieceDown()
-					}
-				case common.Command_UP_UP:
+				case common.Command_DOWN_UP, commandHoldDown:
 					if !b.rotateCommand {
-						b.engine.MovePieceUp()
-					}
-				case common.Command_RIGHT_UP:
-					if b.rotateCommand {
-						b.engine.MovePieceUp()
+						b.engine.MovePieceDown()
 					} else {
 						b.engine.MovePiece()
 					}
@@ -127,6 +146,14 @@ func (b *blocks) Close() {
 
 func (b *blocks) ActionReceived(slot uint64, cmd common.Command) {
 	b.mutliPressLR.SendAction(slot, cmd)
+	b.longPressLeft.SendAction(slot, cmd)
+	b.longPressUp.SendAction(slot, cmd)
+	b.longPressRight.SendAction(slot, cmd)
+	b.longPressDown.SendAction(slot, cmd)
+	b.action(cmd)
+}
+
+func (b *blocks) action(cmd common.Command) {
 	if b.commandChan != nil {
 		b.commandChan <- cmd
 	}
