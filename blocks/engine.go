@@ -44,6 +44,29 @@ func (e *engine) MovePiece() {
 	}
 }
 
+func fibo(n int) int {
+	if n <= 1 {
+		return n
+	}
+	return fibo(n-1) + fibo(n-2)
+}
+
+func (e engine) getScoreFromColumn(cs []int) (score int) {
+	count := 0
+	for i, c := range cs {
+		count++
+		if len(cs) <= i+1 || cs[i+1] != c+1 || count == 4 {
+			if count > 1 {
+				score += fibo(count + 2)
+			} else {
+				score++
+			}
+			count = 0
+		}
+	}
+	return
+}
+
 func (e *engine) removeColumns() {
 	var columnsFull []int
 	for x := 0; x < e.gridWidth; x++ {
@@ -59,6 +82,8 @@ func (e *engine) removeColumns() {
 		}
 	}
 
+	e.Score += e.getScoreFromColumn(columnsFull)
+
 	for _, y := range columnsFull {
 		m := map[common.Coord]pieceType{}
 		for c, t := range e.Stack {
@@ -71,8 +96,6 @@ func (e *engine) removeColumns() {
 		}
 		e.Stack = m
 	}
-
-	e.Score += len(columnsFull)
 }
 
 func (e *engine) MovePieceUp() {

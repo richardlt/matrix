@@ -17,6 +17,7 @@ const (
 	commandHoldDown       common.Command = 104
 	longPressTriggerDelay time.Duration  = 200 * time.Millisecond
 	longPressFireDelay    time.Duration  = 50 * time.Millisecond
+	defaultMoveDelay      time.Duration  = 500 * time.Millisecond
 )
 
 // Start the blocks software.
@@ -88,7 +89,7 @@ func (b *blocks) Start(uint64) {
 	b.commandChan = make(chan common.Command)
 
 	go func() {
-		ti := time.NewTicker(time.Millisecond * 500)
+		ti := time.NewTicker(defaultMoveDelay)
 		defer ti.Stop()
 
 		var gameOver bool
