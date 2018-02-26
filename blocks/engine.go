@@ -8,7 +8,11 @@ import (
 )
 
 func newEngine(w, h int) *engine {
-	return &engine{gridHeight: h, gridWidth: w, Stack: map[common.Coord]pieceType{}}
+	return &engine{
+		gridHeight: h, gridWidth: w,
+		Stack: map[common.Coord]pieceType{},
+		rand:  rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
 }
 
 type block struct {
@@ -21,15 +25,18 @@ type engine struct {
 	Piece                 *piece
 	Stack                 map[common.Coord]pieceType
 	Score                 int
+	rand                  *rand.Rand
 }
 
 func (e *engine) ChangePieceDirection(direction string) {}
 
 func (e *engine) MovePiece() {
 	if e.Piece == nil {
-		rand := rand.New(rand.NewSource(time.Now().Unix()))
-		e.Piece = newRandomPiece(rand)
-		e.Piece.Coord = common.Coord{X: -2, Y: 2 + rand.Int63n(4)}
+		e.Piece = newRandomPiece(e.rand)
+		e.Piece.Coord = common.Coord{X: -2, Y: 2 + e.rand.Int63n(4)}
+		for i := e.rand.Int63n(4); i > 0; i-- {
+			e.Piece.Rotate()
+		}
 		return
 	}
 

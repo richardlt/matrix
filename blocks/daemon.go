@@ -16,7 +16,7 @@ const (
 	commandHoldRight      common.Command = 103
 	commandHoldDown       common.Command = 104
 	longPressTriggerDelay time.Duration  = 200 * time.Millisecond
-	longPressFireDelay    time.Duration  = 50 * time.Millisecond
+	longPressFireDelay    time.Duration  = 100 * time.Millisecond
 	defaultMoveDelay      time.Duration  = 500 * time.Millisecond
 )
 
@@ -92,43 +92,55 @@ func (b *blocks) Start(uint64) {
 		ti := time.NewTicker(defaultMoveDelay)
 		defer ti.Stop()
 
+		var paused bool
 		var gameOver bool
 		for !gameOver {
 			select {
 			case <-ctx.Done():
 				return
 			case <-ti.C:
-				b.engine.MovePiece()
-				b.print()
-				gameOver = b.engine.IsGameOver()
-			case cmd := <-b.commandChan:
-				switch cmd {
-				case common.Command_LEFT_UP, commandHoldLeft:
-					if b.rotateCommand {
-						b.engine.MovePieceDown()
-					}
-				case common.Command_UP_UP, commandHoldUp:
-					if !b.rotateCommand {
-						b.engine.MovePieceUp()
-					}
-				case common.Command_RIGHT_UP, commandHoldRight:
-					if b.rotateCommand {
-						b.engine.MovePieceUp()
-					} else {
-						b.engine.MovePiece()
-					}
-				case common.Command_DOWN_UP, commandHoldDown:
-					if !b.rotateCommand {
-						b.engine.MovePieceDown()
-					} else {
-						b.engine.MovePiece()
-					}
-				case common.Command_A_UP:
-					b.engine.RotatePiece()
-				case commandLR:
-					b.rotateCommand = !b.rotateCommand
+				if !paused {
+					b.engine.MovePiece()
+					b.print()
+					gameOver = b.engine.IsGameOver()
 				}
-				b.print()
+			case cmd := <-b.commandChan:
+				if !paused || cmd == common.Command_START_UP {
+					switch cmd {
+					case common.Command_LEFT_UP, commandHoldLeft:
+						if b.rotateCommand {
+							b.engine.MovePieceDown()
+						}
+					case common.Command_UP_UP, commandHoldUp:
+						if !b.rotateCommand {
+							b.engine.MovePieceUp()
+						}
+					case common.Command_RIGHT_UP, commandHoldRight:
+						if b.rotateCommand {
+							b.engine.MovePieceUp()
+						} else {
+							b.engine.MovePiece()
+						}
+					case common.Command_DOWN_UP, commandHoldDown:
+						if !b.rotateCommand {
+							b.engine.MovePieceDown()
+						} else {
+							b.engine.MovePiece()
+						}
+					case common.Command_A_UP:
+						b.engine.RotatePiece()
+					case commandLR:
+						b.rotateCommand = !b.rotateCommand
+					case common.Command_START_UP:
+						paused = !paused
+						if paused {
+							b.renderer.StartPrintPaused()
+						} else {
+							b.renderer.StopPrintInfo()
+						}
+					}
+					b.print()
+				}
 			}
 		}
 
@@ -142,7 +154,7 @@ func (b *blocks) Close() {
 		b.cancel()
 	}
 	b.renderer.Clean()
-	b.renderer.StopPrintScore()
+	b.renderer.StopPrintInfo()
 }
 
 func (b *blocks) ActionReceived(slot uint64, cmd common.Command) {

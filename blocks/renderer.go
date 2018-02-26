@@ -23,7 +23,7 @@ func newRenderer(a software.API) (*renderer, error) {
 		return nil, err
 	}
 
-	td, err := l1.NewTextDriver(a.GetFontFromLocal("FiveByFive"))
+	td, err := l3.NewTextDriver(a.GetFontFromLocal("FiveByFive"))
 	if err != nil {
 		return nil, err
 	}
@@ -79,4 +79,15 @@ func (r *renderer) StartPrintScore(score int) {
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{}, true)
 }
 
-func (r *renderer) StopPrintScore() { r.textDriver.Stop() }
+func (r *renderer) StartPrintPaused() {
+	r.layerInfo.Clean()
+	r.textDriver.Render("PAUSED", common.Coord{X: 4, Y: 4},
+		r.api.GetColorFromLocalThemeByName("flat", "dark_grey_2"),
+		common.Color{},
+		true)
+}
+
+func (r *renderer) StopPrintInfo() {
+	r.layerInfo.Clean()
+	r.textDriver.Stop()
+}
