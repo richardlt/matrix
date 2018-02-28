@@ -24,8 +24,9 @@ type clock struct {
 	layer                       software.Layer
 	caracterBig, caracterMedium *software.CaracterDriver
 	cancel                      func()
-	green1, green2              common.Color
 	blink                       bool
+	colors                      []common.Color
+	model, color                int
 }
 
 func (c *clock) Init(a software.API) (err error) {
@@ -58,8 +59,15 @@ func (c *clock) Init(a software.API) (err error) {
 		return err
 	}
 
-	c.green1 = c.api.GetColorFromLocalThemeByName("flat", "green_1")
-	c.green2 = c.api.GetColorFromLocalThemeByName("flat", "green_2")
+	c.colors = []common.Color{
+		a.GetColorFromLocalThemeByName("flat", "green_2"),
+		a.GetColorFromLocalThemeByName("flat", "blue_2"),
+		a.GetColorFromLocalThemeByName("flat", "violet_2"),
+		a.GetColorFromLocalThemeByName("flat", "white_2"),
+		a.GetColorFromLocalThemeByName("flat", "red_2"),
+		a.GetColorFromLocalThemeByName("flat", "orange_2"),
+		a.GetColorFromLocalThemeByName("flat", "yellow_2"),
+	}
 
 	return a.Ready()
 }
@@ -78,6 +86,7 @@ func (c *clock) Start(playerCount uint64) {
 			case <-ctx.Done():
 				return
 			case <-t.C:
+				c.blink = !c.blink
 				c.print()
 			}
 		}
@@ -90,36 +99,89 @@ func (c *clock) Close() {
 	}
 }
 
-func (c clock) ActionReceived(slot uint64, cmd common.Command) {}
+func (c *clock) ActionReceived(slot uint64, cmd common.Command) {
+	switch cmd {
+	case common.Command_A_UP:
+		if c.color < len(c.colors)-1 {
+			c.color++
+		} else {
+			c.color = 0
+		}
+		c.print()
+	case common.Command_LEFT_UP:
+		if c.model > 0 {
+			c.model--
+		} else {
+			c.model = 2
+		}
+		c.print()
+	case common.Command_RIGHT_UP:
+		if c.model < 2 {
+			c.model++
+		} else {
+			c.model = 0
+		}
+		c.print()
+	}
+}
 
 func (c *clock) print() {
 	c.layer.Clean()
 
 	now := time.Now()
 	h, m := now.Hour(), now.Minute()
+	color := c.colors[c.color]
 
+	switch c.model {
+	case 0:
+		c.printModelBig(h, m, color)
+	case 1:
+		c.printModelMedium(h, m, color, false)
+	case 2:
+		c.printModelMedium(h, m, color, true)
+	}
+
+	c.api.Print()
+}
+
+func (c *clock) printModelBig(h, m int, color common.Color) {
 	if h >= 10 {
-		c.layer.SetWithCoord(common.Coord{X: 5, Y: 1}, c.green1)
+		c.layer.SetWithCoord(common.Coord{X: 0, Y: 7}, color)
 	}
 	if h >= 20 {
-		c.layer.SetWithCoord(common.Coord{X: 6, Y: 1}, c.green1)
+		c.layer.SetWithCoord(common.Coord{X: 0, Y: 6}, color)
 	}
 
 	c.caracterBig.Render([]rune(strconv.Itoa(h % 10))[0],
-		common.Coord{X: 3, Y: 4}, c.green2, common.Color{})
+		common.Coord{X: 4, Y: 4}, color, common.Color{})
 
 	c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
-		common.Coord{X: 9, Y: 5}, c.green2, common.Color{})
+		common.Coord{X: 10, Y: 5}, color, common.Color{})
 
 	c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
-		common.Coord{X: 13, Y: 5}, c.green2, common.Color{})
+		common.Coord{X: 14, Y: 5}, color, common.Color{})
 
 	if c.blink {
-		c.layer.SetWithCoord(common.Coord{X: 6, Y: 4}, c.green1)
-		c.layer.SetWithCoord(common.Coord{X: 6, Y: 6}, c.green1)
+		c.layer.SetWithCoord(common.Coord{X: 7, Y: 4}, color)
+		c.layer.SetWithCoord(common.Coord{X: 7, Y: 6}, color)
+	}
+}
+
+func (c *clock) printModelMedium(h, m int, color common.Color, static bool) {
+	var offset int64
+	if static || c.blink {
+		offset = 1
 	}
 
-	c.blink = !c.blink
+	c.caracterMedium.Render([]rune(strconv.Itoa(h / 10))[0],
+		common.Coord{X: 1, Y: 3 + offset}, color, common.Color{})
 
-	c.api.Print()
+	c.caracterMedium.Render([]rune(strconv.Itoa(h % 10))[0],
+		common.Coord{X: 5, Y: 3 + offset}, color, common.Color{})
+
+	c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
+		common.Coord{X: 10, Y: 5 - offset}, color, common.Color{})
+
+	c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
+		common.Coord{X: 14, Y: 5 - offset}, color, common.Color{})
 }
