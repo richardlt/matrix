@@ -1,70 +1,92 @@
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const path = require('path');
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const path = require("path");
+
 const packageJSON = require("./package.json");
 
-const BUILD_DIR = path.resolve(__dirname, 'client/public');
-const APP_DIR = path.resolve(__dirname, 'client/src');
-const PRODUCTION = process.env.NODE_ENV === 'production';
+const BUILD_DIR = path.resolve(__dirname, "client/public");
+const APP_DIR = path.resolve(__dirname, "client/src");
+const PRODUCTION = process.env.NODE_ENV === "production";
 
 const config = {
+  mode: PRODUCTION ? "production" : "development",
   devtool: PRODUCTION ? "source-map" : "eval-source-map",
   entry: {
-    bundle: APP_DIR + '/app.js',
+    bundle: APP_DIR + "/app.js",
     vendor: Object.keys(packageJSON.dependencies)
   },
   output: {
     path: BUILD_DIR,
-    filename: PRODUCTION ? '[name].[chunkhash].js' : '[name].js'
+    filename: PRODUCTION ? "[name].[chunkhash].js" : "[name].js"
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          chunks: "initial",
+          name: "vendor",
+          enforce: true
+        }
+      }
+    }
   },
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin({ name: 'vendor' }),
     new HtmlWebpackPlugin({
-      title: 'Matrix emulator' + (!PRODUCTION ? ' dev' : ''),
-      template: APP_DIR + '/index.ejs'
+      title: "Matrix emulator" + (!PRODUCTION ? " dev" : ""),
+      template: APP_DIR + "/index.ejs"
     }),
     new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: JSON.stringify(PRODUCTION ? 'production' : 'develoment')
+      "process.env": {
+        NODE_ENV: JSON.stringify(PRODUCTION ? "production" : "develoment")
       }
     })
   ],
   module: {
-    loaders: [
+    rules: [
       {
-        test: /\.js?/,
-        include: APP_DIR,
-        loader: 'babel-loader'
+        test: /\.js$/,
+        loader: "babel-loader",
+        query: {
+          presets: ["react", "es2015", "stage-2"]
+        },
+        include: APP_DIR
       }
     ]
   }
 };
 
 if (PRODUCTION) {
-  config.plugins = [
-    new webpack.HashedModuleIdsPlugin(),
-    new webpack.optimize.ModuleConcatenationPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
+  config.optimization.minimizer = [
+    new UglifyJsPlugin({
       sourceMap: true,
-      compress: {
-        warnings: false,
-        drop_debugger: true
-      },
-      output: {
-        comments: false
+      uglifyOptions: {
+        compress: {
+          warnings: false,
+          drop_debugger: true
+        },
+        output: {
+          comments: false
+        }
       }
     })
+  ];
+  config.plugins = [
+    new webpack.HashedModuleIdsPlugin(),
+    new webpack.optimize.ModuleConcatenationPlugin()
   ].concat(config.plugins);
 } else {
   config.devServer = {
     port: 3001,
-    contentBase: path.join(__dirname, 'dist'),
+    contentBase: path.join(__dirname, "dist"),
     compress: true,
-    proxy: [{
-      context: ["/socket.io"],
-      ws: true,
-      target: "http://localhost:3000"
-    }],
+    proxy: [
+      {
+        context: ["/socket.io"],
+        ws: true,
+        target: "http://localhost:3000"
+      }
+    ],
     historyApiFallback: true,
     hot: true
   };

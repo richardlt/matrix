@@ -21,7 +21,7 @@ Vagrant.configure("2") do |config|
     apt-get install -y git build-essential pkg-config libusb-1.0
 
     # install Golang
-    export VERSION=1.9.4
+    export VERSION=1.10.3
     export OS=linux
     export ARCH=amd64
     wget -q https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz
