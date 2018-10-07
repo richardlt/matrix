@@ -27,7 +27,6 @@ package:
 	rm -rf matrix-package
 	mkdir -p matrix-package/gamepad/public
 	mkdir -p matrix-package/emulator/public
-	mkdir -p matrix-package/device
 	cp matrix matrix-package/
 	cp -R themes matrix-package/
 	cp -R fonts matrix-package/
