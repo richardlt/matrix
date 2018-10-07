@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/richardlt/matrix/sdk-go/common"
-
-	"github.com/google/gousb"
+	"github.com/karalabe/hid"
 	"github.com/pkg/errors"
+	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/sirupsen/logrus"
 )
@@ -38,7 +37,7 @@ func (g *gamepad) Init(api *player.API) error {
 }
 
 type device struct {
-	HID    *gousb.Device
+	HID    hid.DeviceInfo
 	Conf   config
 	States map[string]bool
 	Index  int
@@ -51,23 +50,16 @@ type action struct {
 }
 
 func (g *gamepad) OpenDevices(ctx context.Context) error {
-	uctx := gousb.NewContext()
-
 	cAction := make(chan action)
 	defer close(cAction)
 
-	vid, pid := gousb.ID(0x0079), gousb.ID(0x0011)
-	devs, err := uctx.OpenDevices(func(desc *gousb.DeviceDesc) bool {
-		return desc.Vendor == vid && desc.Product == pid
-	})
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	vid, pid := uint16(0x0079), uint16(0x0011)
+	devs := hid.Enumerate(vid, pid)
 
 	logrus.Debugf("Found %d controller", len(devs))
 
 	for i := 0; i < len(devs); i++ {
-		key := fmt.Sprintf("%d_%d", devs[i].Desc.Vendor, devs[i].Desc.Product)
+		key := fmt.Sprintf("%d_%d", devs[i].VendorID, devs[i].ProductID)
 		go g.listenDevice(cAction, &device{
 			HID:    devs[i],
 			Conf:   g.configs[key],
@@ -80,7 +72,6 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			uctx.Close()
 			return nil
 		case a := <-cAction:
 			if g.api != nil {
@@ -91,41 +82,26 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 }
 
 func (g *gamepad) listenDevice(cAction chan action, dev *device) {
-	defer dev.HID.Close()
 	defer logrus.Debugf("Stop listening from %s controller", dev.Key)
 
-	if err := dev.HID.SetAutoDetach(true); err != nil {
-		logrus.Errorf("%+v", errors.WithStack(err))
-		return
-	}
-
-	cfg, err := dev.HID.Config(1)
+	d, err := dev.HID.Open()
 	if err != nil {
 		logrus.Errorf("%+v", errors.WithStack(err))
 		return
 	}
-	defer cfg.Close()
-
-	intf, err := cfg.Interface(0, 0)
-	if err != nil {
-		logrus.Errorf("%+v", errors.WithStack(err))
-		return
-	}
-	defer intf.Close()
-
-	epIn, err := intf.InEndpoint(1)
-	if err != nil {
-		logrus.Errorf("%+v", errors.WithStack(err))
-		return
-	}
+	defer func() {
+		if err := d.Close(); err != nil {
+			logrus.Errorf("%+v", errors.WithStack(err))
+		}
+	}()
 
 	logrus.Debugf("Listening from %s controller", dev.Key)
 
 	handler := g.handleData(dev)
 
-	buf := make([]byte, epIn.Desc.MaxPacketSize)
+	buf := make([]byte, 7)
 	for {
-		if _, err := epIn.Read(buf); err != nil {
+		if _, err := d.Read(buf); err != nil {
 			logrus.Errorf("%+v", errors.WithStack(err))
 			return
 		}

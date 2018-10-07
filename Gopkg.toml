@@ -24,6 +24,14 @@
 #   go-tests = true
 #   unused-packages = true
 
+[prune]
+  go-tests = true
+  unused-packages = true
+
+  [[prune.project]]
+      name = "github.com/karalabe/hid"
+      non-go = true
+      unused-packages = false
 
 [[constraint]]
   branch = "master"
@@ -61,14 +69,10 @@
   name = "gopkg.in/urfave/cli.v1"
   version = "1.20.0"
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/google/gousb"
-
 [[constraint]]
   branch = "master"
   name = "go.bug.st/serial.v1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/karalabe/hid"
