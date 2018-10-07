@@ -10,4 +10,4 @@ install:
 	bower install
 
 build:
-	polymer build
+	npm run build
