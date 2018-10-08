@@ -38,7 +38,7 @@ $ make install
 
 3. Run it.
 ```sh
-$ go run main.go all
+$ go run main.go start --log-level info core gamepad emulator demo
 $ (cd $GOPATH/src/github.com/richardlt/matrix/emulator && npm start)
 $ (cd $GOPATH/src/github.com/richardlt/matrix/gamepad && npm start)
 ```
