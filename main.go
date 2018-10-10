@@ -26,8 +26,20 @@ func main() {
 		Name:  "start",
 		Usage: "start the matrix components",
 		Flags: []cli.Flag{
-			cli.StringFlag{Name: "core-uri", Value: "localhost:8080", EnvVar: "MATRIX_CORE_URI"},
-			cli.StringFlag{Name: "log-level", Value: "warning", Usage: "[panic fatal error warning info debug]"},
+			cli.StringFlag{
+				Name:   "core-uri",
+				Value:  "localhost:8080",
+				EnvVar: "MATRIX_CORE_URI",
+				Usage:  "Core URI is used by softwares, players and displays.",
+			},
+			cli.IntFlag{Name: "core-port", Value: 8080, EnvVar: "MATRIX_CORE_PORT"},
+			cli.IntFlag{Name: "emulator-port", Value: 3000, EnvVar: "MATRIX_EMULATOR_PORT"},
+			cli.IntFlag{Name: "gamepad-port", Value: 4000, EnvVar: "MATRIX_GAMEPAD_PORT"},
+			cli.StringFlag{
+				Name:  "log-level",
+				Value: "warning",
+				Usage: "[panic fatal error warning info debug]",
+			},
 		},
 		ArgsUsage: "[core emulator gamepad device zigzag yumyum demo clock draw blocks]",
 		Action:    startAction,
@@ -64,11 +76,11 @@ func startAction(c *cli.Context) error {
 	for _, arg := range args {
 		switch arg {
 		case "core":
-			cs = append(cs, component(func() error { return core.Start(8080) }))
+			cs = append(cs, component(func() error { return core.Start(c.Int("core-port")) }))
 		case "emulator":
-			cs = append(cs, component(func() error { return emulator.Start(3000, c.String("core-uri")) }))
+			cs = append(cs, component(func() error { return emulator.Start(c.Int("emulator-port"), c.String("core-uri")) }))
 		case "gamepad":
-			cs = append(cs, component(func() error { return gamepad.Start(4000, c.String("core-uri")) }))
+			cs = append(cs, component(func() error { return gamepad.Start(c.Int("gamepad-port"), c.String("core-uri")) }))
 		case "device":
 			cs = append(cs, component(func() error { return device.Start(c.String("core-uri")) }))
 		case "zigzag":
