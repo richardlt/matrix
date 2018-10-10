@@ -23,7 +23,8 @@ type pixel struct {
 	B int `json:"b"`
 }
 
-func Start(port, corePort int) error {
+// Start the emulator server.
+func Start(port int, uri string) error {
 	frameChannel := make(chan frame)
 	defer close(frameChannel)
 
@@ -39,7 +40,7 @@ func Start(port, corePort int) error {
 	}()
 
 	go func() {
-		if err := display.Connect(fmt.Sprintf("localhost:%d", corePort), emulator{frameChannel}, true); err != nil {
+		if err := display.Connect(uri, emulator{frameChannel}, true); err != nil {
 			logrus.Errorf("%+v", errors.WithStack(err))
 		}
 	}()

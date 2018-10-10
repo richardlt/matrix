@@ -7,3 +7,4 @@ matrix.zip
 .vagrant
 *.log
 report.xml
+build

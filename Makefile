@@ -19,9 +19,15 @@ clean:
 	rm -f matrix
 	rm -f matrix.zip
 	rm -f *.log
+	rm -rf build
 
 build:
 	go build -o matrix .
+
+build-arm:
+	docker run -it -e TARGETS="linux/arm-6 linux/arm-7" -e OUT=matrix -e EXT_GOPATH=/gopath \
+	-v $(PWD):/gopath/src/github.com/richardlt/matrix \
+	-v $(PWD)/build:/build karalabe/xgo-latest github.com/richardlt/matrix
 
 package:	
 	rm -rf matrix-package

@@ -25,7 +25,7 @@ type pixel struct {
 }
 
 // Start the gamepad server.
-func Start(port, corePort int) error {
+func Start(port int, uri string) error {
 	frameChannel := make(chan frame)
 	defer close(frameChannel)
 
@@ -43,13 +43,13 @@ func Start(port, corePort int) error {
 	}()
 
 	go func() {
-		if err := display.Connect(fmt.Sprintf("localhost:%d", corePort), gs, true); err != nil {
+		if err := display.Connect(uri, gs, true); err != nil {
 			logrus.Errorf("%+v", err)
 		}
 	}()
 
 	go func() {
-		if err := player.Connect(fmt.Sprintf("localhost:%d", corePort), gs, true); err != nil {
+		if err := player.Connect(uri, gs, true); err != nil {
 			logrus.Errorf("%+v", err)
 		}
 	}()
