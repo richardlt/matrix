@@ -13,6 +13,7 @@ import (
 	"github.com/richardlt/matrix/draw"
 	"github.com/richardlt/matrix/emulator"
 	"github.com/richardlt/matrix/gamepad"
+	"github.com/richardlt/matrix/getout"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
 	"github.com/sirupsen/logrus"
@@ -95,6 +96,8 @@ func startAction(c *cli.Context) error {
 			cs = append(cs, component(func() error { return draw.Start(c.String("core-uri")) }))
 		case "blocks":
 			cs = append(cs, component(func() error { return blocks.Start(c.String("core-uri")) }))
+		case "getout":
+			cs = append(cs, component(func() error { return getout.Start(c.String("core-uri")) }))
 		default:
 			return errors.New("Invalid given component name")
 		}
