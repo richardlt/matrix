@@ -41,13 +41,33 @@ func (g *getout) Init(a software.API) (err error) {
 
 func (g *getout) Start(uint64) {
 	g.engine = newEngine(16, 9)
-	g.print()
+	g.renderer.printGrid(g.engine.grid)
+	g.renderer.printPlayer(g.engine.player, g.engine.end)
 }
 
 func (g *getout) Close() {
-	g.renderer.Clean()
+	g.renderer.clean()
+	g.renderer.stopPrintGameOver()
 }
 
-func (g *getout) ActionReceived(slot uint64, cmd common.Command) {}
+func (g *getout) ActionReceived(slot uint64, cmd common.Command) {
+	if g.engine.isGameOver() {
+		return
+	}
 
-func (g *getout) print() { g.renderer.Print(g.engine.grid, g.engine.start, g.engine.end) }
+	switch cmd {
+	case common.Command_LEFT_UP:
+		g.engine.move("left")
+	case common.Command_UP_UP:
+		g.engine.move("up")
+	case common.Command_RIGHT_UP:
+		g.engine.move("right")
+	case common.Command_DOWN_UP:
+		g.engine.move("down")
+	}
+	g.renderer.printPlayer(g.engine.player, g.engine.end)
+
+	if g.engine.isGameOver() {
+		g.renderer.startPrintGameOver()
+	}
+}
