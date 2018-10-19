@@ -75,7 +75,7 @@ func (r *renderer) startPrintGameOver() {
 	r.layerInfo.Clean()
 	r.textDriver.Render("GAME OVER", common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"),
-		common.Color{}, true)
+		common.Color{A: 1}, true)
 }
 
 func (r *renderer) stopPrintGameOver() { r.textDriver.Stop() }
