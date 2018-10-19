@@ -30,8 +30,6 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 1. Requirements.
 * [Go](https://golang.org/dl/) (version 1.10+)
 * [Node.js](https://nodejs.org/en/download/) (with npm, version 8+)
-* [Bower](https://bower.io/) (latest)
-* [Polymer CLI](https://www.polymer-project.org/2.0/docs/tools/polymer-cli) (latest)
 
 2. Install JS projects dependencies.
 ```sh
