@@ -1,10 +1,12 @@
 {
   "name": "matrix-gamepad",
   "scripts": {
+    "install": "bower --allow-root install",
     "start": "polymer serve --port 4001 | node proxy.js",
     "build": "NODE_ENV=production polymer build"
   },
   "devDependencies": {
+    "bower": "1.8.4",
     "browser-sync": "2.26.0",
     "http-proxy-middleware": "0.19.0",
     "polymer-cli": "1.8.0"

@@ -7,7 +7,7 @@ clean:
 
 install:
 	npm install
-	bower install
+	npm run install
 
 build:
 	npm run build
