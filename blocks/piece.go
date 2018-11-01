@@ -2,8 +2,6 @@ package blocks
 
 import (
 	"math/rand"
-
-	"github.com/richardlt/matrix/sdk-go/common"
 )
 
 type pieceType int
@@ -26,88 +24,88 @@ func newPiece(t pieceType) *piece {
 	switch t {
 	case i:
 		return &piece{Type: i, views: []view{{
-			Width: 1, Height: 4, Center: common.Coord{X: 0, Y: 1},
+			Width: 1, Height: 4, Center: coord{x: 0, y: 1},
 			Mask: []bool{true, true, true, true},
 		}, {
-			Width: 4, Height: 1, Center: common.Coord{X: 2, Y: 0},
+			Width: 4, Height: 1, Center: coord{x: 2, y: 0},
 			Mask: []bool{true, true, true, true},
 		}}}
 	case l:
 		return &piece{Type: l, views: []view{{
-			Width: 2, Height: 3, Center: common.Coord{X: 0, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 0, y: 1},
 			Mask: []bool{true, false, true, false, true, true},
 		}, {
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 0},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 0},
 			Mask: []bool{true, true, true, true, false, false},
 		}, {
-			Width: 2, Height: 3, Center: common.Coord{X: 1, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 1, y: 1},
 			Mask: []bool{true, true, false, true, false, true},
 		}, {
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 1},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 1},
 			Mask: []bool{false, false, true, true, true, true},
 		}}}
 	case j:
 		return &piece{Type: j, views: []view{{
-			Width: 2, Height: 3, Center: common.Coord{X: 1, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 1, y: 1},
 			Mask: []bool{false, true, false, true, true, true},
 		}, {
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 1},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 1},
 			Mask: []bool{true, false, false, true, true, true},
 		}, {
-			Width: 2, Height: 3, Center: common.Coord{X: 0, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 0, y: 1},
 			Mask: []bool{true, true, true, false, true, false},
 		}, {
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 0},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 0},
 			Mask: []bool{true, true, true, false, false, true},
 		}}}
 	case o:
 		return &piece{Type: o, views: []view{{
-			Width: 2, Height: 2, Center: common.Coord{X: 0, Y: 1},
+			Width: 2, Height: 2, Center: coord{x: 0, y: 1},
 			Mask: []bool{true, true, true, true},
 		}}}
 	case s:
 		return &piece{Type: s, views: []view{{
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 1},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 1},
 			Mask: []bool{false, true, true, true, true, false},
 		}, {
-			Width: 2, Height: 3, Center: common.Coord{X: 0, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 0, y: 1},
 			Mask: []bool{true, false, true, true, false, true},
 		}}}
 	case z:
 		return &piece{Type: z, views: []view{{
-			Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 1},
+			Width: 3, Height: 2, Center: coord{x: 1, y: 1},
 			Mask: []bool{true, true, false, false, true, true},
 		}, {
-			Width: 2, Height: 3, Center: common.Coord{X: 1, Y: 1},
+			Width: 2, Height: 3, Center: coord{x: 1, y: 1},
 			Mask: []bool{false, true, true, true, true, false},
 		}}}
 	}
 	return &piece{Type: t, views: []view{{
-		Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 0},
+		Width: 3, Height: 2, Center: coord{x: 1, y: 0},
 		Mask: []bool{true, true, true, false, true, false},
 	}, {
-		Width: 2, Height: 3, Center: common.Coord{X: 1, Y: 1},
+		Width: 2, Height: 3, Center: coord{x: 1, y: 1},
 		Mask: []bool{false, true, true, true, false, true},
 	}, {
-		Width: 3, Height: 2, Center: common.Coord{X: 1, Y: 1},
+		Width: 3, Height: 2, Center: coord{x: 1, y: 1},
 		Mask: []bool{false, true, false, true, true, true},
 	}, {
-		Width: 2, Height: 3, Center: common.Coord{X: 0, Y: 1},
+		Width: 2, Height: 3, Center: coord{x: 0, y: 1},
 		Mask: []bool{true, false, true, true, true, false},
 	}}}
 }
 
 type view struct {
-	Width, Height int64
+	Width, Height int
 	Mask          []bool
-	Center        common.Coord
+	Center        coord
 }
 
 type piece struct {
 	Type  pieceType
 	views []view
 	angle int
-	Coord common.Coord
+	Coord coord
 }
 
 func (p *piece) Rotate() {
@@ -118,14 +116,14 @@ func (p *piece) Rotate() {
 	}
 }
 
-func (p *piece) ToCoords() (coords []common.Coord) {
+func (p *piece) ToCoords() (coords []coord) {
 	v := p.views[p.angle]
-	for y := int64(0); y < v.Height; y++ {
-		diffY := y - v.Center.Y
-		for x := int64(0); x < v.Width; x++ {
-			diffX := x - v.Center.X
+	for y := 0; y < v.Height; y++ {
+		diffY := y - v.Center.y
+		for x := 0; x < v.Width; x++ {
+			diffX := x - v.Center.x
 			if v.Mask[x+y*v.Width] {
-				coords = append(coords, common.Coord{X: p.Coord.X + diffX, Y: p.Coord.Y + diffY})
+				coords = append(coords, coord{x: p.Coord.x + diffX, y: p.Coord.y + diffY})
 			}
 		}
 	}
