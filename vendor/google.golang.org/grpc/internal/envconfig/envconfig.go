@@ -1,8 +1,6 @@
-// +build go1.8
-
 /*
  *
- * Copyright 2017 gRPC authors.
+ * Copyright 2018 gRPC authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +16,20 @@
  *
  */
 
-package dns
+// Package envconfig contains grpc settings configured by environment variables.
+package envconfig
 
-import "net"
+import (
+	"os"
+	"strings"
+)
+
+const (
+	prefix   = "GRPC_GO_"
+	retryStr = prefix + "RETRY"
+)
 
 var (
-	lookupHost = net.DefaultResolver.LookupHost
-	lookupSRV  = net.DefaultResolver.LookupSRV
-	lookupTXT  = net.DefaultResolver.LookupTXT
+	// Retry is set if retry is explicitly enabled via "GRPC_GO_RETRY=on".
+	Retry = strings.EqualFold(os.Getenv(retryStr), "on")
 )
