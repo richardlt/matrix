@@ -3,27 +3,27 @@ package blocks
 import (
 	"math/rand"
 	"time"
-
-	"github.com/richardlt/matrix/sdk-go/common"
 )
+
+type coord struct{ x, y int }
 
 func newEngine(w, h int) *engine {
 	return &engine{
 		gridHeight: h, gridWidth: w,
-		Stack: map[common.Coord]pieceType{},
+		Stack: map[coord]pieceType{},
 		rand:  rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
 type block struct {
-	Coord common.Coord
+	Coord coord
 	Type  pieceType
 }
 
 type engine struct {
 	gridHeight, gridWidth int
 	Piece                 *piece
-	Stack                 map[common.Coord]pieceType
+	Stack                 map[coord]pieceType
 	Score                 int
 	rand                  *rand.Rand
 }
@@ -33,7 +33,7 @@ func (e *engine) ChangePieceDirection(direction string) {}
 func (e *engine) MovePiece() {
 	if e.Piece == nil {
 		e.Piece = newRandomPiece(e.rand)
-		e.Piece.Coord = common.Coord{X: -2, Y: 2 + e.rand.Int63n(4)}
+		e.Piece.Coord = coord{x: -2, y: 2 + e.rand.Intn(4)}
 		for i := e.rand.Int63n(4); i > 0; i-- {
 			e.Piece.Rotate()
 		}
@@ -47,7 +47,7 @@ func (e *engine) MovePiece() {
 		e.Piece = nil
 		e.removeColumns()
 	} else {
-		e.Piece.Coord.X++
+		e.Piece.Coord.x++
 	}
 }
 
@@ -79,7 +79,7 @@ func (e *engine) removeColumns() {
 	for x := 0; x < e.gridWidth; x++ {
 		full := true
 		for y := 0; y < e.gridHeight; y++ {
-			if _, ok := e.Stack[common.Coord{X: int64(x), Y: int64(y)}]; !ok {
+			if _, ok := e.Stack[coord{x: x, y: y}]; !ok {
 				full = false
 				break
 			}
@@ -92,12 +92,12 @@ func (e *engine) removeColumns() {
 	e.Score += e.getScoreFromColumn(columnsFull)
 
 	for _, y := range columnsFull {
-		m := map[common.Coord]pieceType{}
+		m := map[coord]pieceType{}
 		for c, t := range e.Stack {
-			if int(c.X) < y {
-				c.X++
+			if int(c.x) < y {
+				c.x++
 				m[c] = t
-			} else if int(c.X) > y {
+			} else if int(c.x) > y {
 				m[c] = t
 			}
 		}
@@ -108,9 +108,9 @@ func (e *engine) removeColumns() {
 func (e *engine) MovePieceUp() {
 	if e.Piece != nil {
 		copy := *e.Piece
-		copy.Coord.Y--
+		copy.Coord.y--
 		if !e.isPieceStopped(copy) {
-			e.Piece.Coord.Y--
+			e.Piece.Coord.y--
 		}
 	}
 }
@@ -118,9 +118,9 @@ func (e *engine) MovePieceUp() {
 func (e *engine) MovePieceDown() {
 	if e.Piece != nil {
 		copy := *e.Piece
-		copy.Coord.Y++
+		copy.Coord.y++
 		if !e.isPieceStopped(copy) {
-			e.Piece.Coord.Y++
+			e.Piece.Coord.y++
 		}
 	}
 }
@@ -136,10 +136,10 @@ func (e *engine) RotatePiece() {
 }
 
 func (e *engine) isPieceStopped(p piece) bool {
-	p.Coord.X++
+	p.Coord.x++
 	cs := p.ToCoords()
 	for _, c := range cs {
-		if int(c.X) >= e.gridWidth || c.Y < 0 || int(c.Y) >= e.gridHeight {
+		if c.x >= e.gridWidth || c.y < 0 || c.y >= e.gridHeight {
 			return true
 		}
 
@@ -153,7 +153,7 @@ func (e *engine) isPieceStopped(p piece) bool {
 
 func (e *engine) IsGameOver() bool {
 	for c := range e.Stack {
-		if c.X < 0 {
+		if c.x < 0 {
 			return true
 		}
 	}

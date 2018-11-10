@@ -19,7 +19,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8f2df6167daef6f4d56d07f99bbcf4733117db0dedfd959995b9a679c52561f1"
+  digest = "1:f26d410f706e6bdfb1576cacf9e4bbd3add8b55a298bf90ab20f588854bad6e0"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -29,7 +29,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "UT"
-  revision = "c65a0412e71e8b9b3bfd22925720d23c0f054237"
+  revision = "1918e1ff6ffd2be7bed0553df8650672c3bfe80d"
 
 [[projects]]
   branch = "master"
@@ -202,14 +202,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f313c49503632280aedce92138be8669e3798f5961297165a30c1ec0b1be39b3"
+  digest = "1:6a875550c3b582f6c2d7e2ce44aba792511f00016d7c46b0a4fb26f730ef3058"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "03467258950d845cd1877eab69461b98e8c09219"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   branch = "master"
@@ -243,7 +243,7 @@
   revision = "4eb30f4778eed4c258ba66527a0d4f9ec8a36c45"
 
 [[projects]]
-  digest = "1:146674af28df95a4c6ccd0522484a18d7ecd70619817f0774519fa1351badbab"
+  digest = "1:c3ad9841823db6da420a5625b367913b4ff54bbe60e8e3c98bd20e243e62e2d2"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -254,9 +254,14 @@
     "connectivity",
     "credentials",
     "encoding",
-    "grpclb/grpc_lb_v1/messages",
+    "encoding/proto",
     "grpclog",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
@@ -267,11 +272,10 @@
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "UT"
-  revision = "6b51017f791ae1cfbec89c52efdf444b13b550ef"
-  version = "v1.9.2"
+  revision = "2e463a05d100327ca47ac218281906921038fd95"
+  version = "v1.16.0"
 
 [[projects]]
   digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"

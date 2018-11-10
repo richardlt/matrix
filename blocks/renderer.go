@@ -57,16 +57,18 @@ func (r *renderer) Clean() {
 	r.layerInfo.Clean()
 }
 
-func (r *renderer) Print(stack map[common.Coord]pieceType, p *piece) {
+func (r *renderer) Print(stack map[coord]pieceType, p *piece) {
 	r.layerStack.Clean()
 	for c, t := range stack {
-		r.layerStack.SetWithCoord(c, r.pieceColors[int(t)])
+		r.layerStack.SetWithCoord(common.Coord{X: int64(c.x), Y: int64(c.y)},
+			r.pieceColors[int(t)])
 	}
 
 	r.layerPiece.Clean()
 	if p != nil {
 		for _, c := range p.ToCoords() {
-			r.layerPiece.SetWithCoord(c, r.pieceColors[int(p.Type)])
+			r.layerPiece.SetWithCoord(common.Coord{X: int64(c.x), Y: int64(c.y)},
+				r.pieceColors[int(p.Type)])
 		}
 	}
 
