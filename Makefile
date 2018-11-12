@@ -29,11 +29,16 @@ build-arm:
 	-v $(PWD):/gopath/src/github.com/richardlt/matrix \
 	-v $(PWD)/build:/build karalabe/xgo-1.11 github.com/richardlt/matrix
 
+build-windows:
+	docker run -it -e TARGETS="windows/amd64" -e OUT=matrix -e EXT_GOPATH=/gopath \
+	-v $(PWD):/gopath/src/github.com/richardlt/matrix \
+	-v $(PWD)/build:/build karalabe/xgo-1.11 github.com/richardlt/matrix
+
 package:	
 	rm -rf matrix-package
 	mkdir -p matrix-package/gamepad/public
 	mkdir -p matrix-package/emulator/public
-	cp matrix matrix-package/
+	cp build/matrix-* matrix-package/
 	cp -R themes matrix-package/
 	cp -R fonts matrix-package/
 	cp -R images matrix-package/

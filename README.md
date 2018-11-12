@@ -25,20 +25,20 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.png" width="60"/> | Getout | A labyrinth game, try to get out if you can. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.gif" width="150"/> |
 | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.png" width="60"/> | Rollup dice | Random dice generator (https://github.com/gwenker/matrix-rollup-dice). | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.gif" width="150"/> |
 
-## Development setup
+## Development setup (linux/darwin)
 
 1. Requirements.
-* [Go](https://golang.org/dl/) (version 1.10+)
+* [Go](https://golang.org/dl/) (version 1.11+)
 * [Node.js](https://nodejs.org/en/download/) (with npm, version 8+)
 
 2. Install JS projects dependencies.
 ```sh
-$ make install
+$ make install-all
 ```
 
 3. Run it.
 ```sh
-$ go run main.go start --log-level info core gamepad emulator demo
+$ go run main.go start --log-level info core gamepad emulator demo # you can start all other softwares by adding their names
 $ (cd $GOPATH/src/github.com/richardlt/matrix/emulator && npm start)
 $ (cd $GOPATH/src/github.com/richardlt/matrix/gamepad && npm start)
 ```
