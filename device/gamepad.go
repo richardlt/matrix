@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"sync"
+	"time"
 
 	"github.com/karalabe/hid"
 	"github.com/pkg/errors"
@@ -40,8 +42,7 @@ type device struct {
 	HID    hid.DeviceInfo
 	Conf   config
 	States map[string]bool
-	Index  int
-	Key    string
+	Slot   int
 }
 
 type action struct {
@@ -54,20 +55,57 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 	defer close(cAction)
 
 	vid, pid := uint16(0x0079), uint16(0x0011)
-	devs := hid.Enumerate(vid, pid)
 
-	logrus.Debugf("Found %d controller", len(devs))
+	go func() {
+		connected := map[string]*device{}
+		mutex := new(sync.Mutex)
 
-	for i := 0; i < len(devs); i++ {
-		key := fmt.Sprintf("%d_%d", devs[i].VendorID, devs[i].ProductID)
-		go g.listenDevice(cAction, &device{
-			HID:    devs[i],
-			Conf:   g.configs[key],
-			States: map[string]bool{},
-			Index:  i,
-			Key:    key,
-		})
-	}
+		for {
+			if ctx.Err() != nil {
+				break
+			}
+
+			mutex.Lock()
+
+			mFreeSlots := map[int]bool{0: true, 1: true, 2: true, 3: true}
+			for _, d := range connected {
+				mFreeSlots[d.Slot] = false
+			}
+			freeSlots := []int{}
+			for i := 0; i < len(mFreeSlots); i++ {
+				if mFreeSlots[i] {
+					freeSlots = append(freeSlots, i)
+				}
+			}
+
+			if len(freeSlots) > 0 {
+				devs := hid.Enumerate(vid, pid)
+				for i := 0; i < len(devs) && i < len(freeSlots); i++ {
+					if _, ok := connected[devs[i].Path]; !ok {
+						key := fmt.Sprintf("%d_%d", devs[i].VendorID, devs[i].ProductID)
+						d := &device{
+							HID:    devs[i],
+							Conf:   g.configs[key],
+							States: map[string]bool{},
+							Slot:   freeSlots[i],
+						}
+						connected[d.HID.Path] = d
+						logrus.Debugf("Controller %s connected on slot %d", d.HID.Path, d.Slot)
+						go func(d *device) {
+							g.listenDevice(cAction, d)
+							mutex.Lock()
+							delete(connected, d.HID.Path)
+							mutex.Unlock()
+							logrus.Debugf("Controller %s at slot %d disconnected", d.HID.Path, d.Slot)
+						}(d)
+					}
+				}
+			}
+
+			mutex.Unlock()
+			time.Sleep(time.Second)
+		}
+	}()
 
 	for {
 		select {
@@ -82,7 +120,7 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 }
 
 func (g *gamepad) listenDevice(cAction chan action, dev *device) {
-	defer logrus.Debugf("Stop listening from %s controller", dev.Key)
+	defer logrus.Debugf("Stop listening from %s controller", dev.HID.Path)
 
 	d, err := dev.HID.Open()
 	if err != nil {
@@ -95,7 +133,7 @@ func (g *gamepad) listenDevice(cAction chan action, dev *device) {
 		}
 	}()
 
-	logrus.Debugf("Listening from %s controller", dev.Key)
+	logrus.Debugf("Listening from %s controller", dev.HID.Path)
 
 	handler := g.handleData(dev)
 
@@ -141,9 +179,9 @@ func (g *gamepad) handleData(dev *device) func([]byte) *action {
 
 			var a *action
 			if isPressed && !currentState {
-				a = &action{Slot: dev.Index, Command: commandFromString(b.Name + ":press")}
+				a = &action{Slot: dev.Slot, Command: commandFromString(b.Name + ":press")}
 			} else if !isPressed && currentState {
-				a = &action{Slot: dev.Index, Command: commandFromString(b.Name + ":release")}
+				a = &action{Slot: dev.Slot, Command: commandFromString(b.Name + ":release")}
 			}
 
 			dev.States[b.Name] = isPressed
