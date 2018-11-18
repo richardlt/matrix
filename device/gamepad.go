@@ -62,7 +62,7 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 
 		for {
 			if ctx.Err() != nil {
-				break
+				return
 			}
 
 			mutex.Lock()
@@ -90,13 +90,13 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 							Slot:   freeSlots[i],
 						}
 						connected[d.HID.Path] = d
-						logrus.Debugf("Controller %s connected on slot %d", d.HID.Path, d.Slot)
+						logrus.Infof("Controller %s connected on slot %d", d.HID.Path, d.Slot)
 						go func(d *device) {
 							g.listenDevice(cAction, d)
 							mutex.Lock()
 							delete(connected, d.HID.Path)
 							mutex.Unlock()
-							logrus.Debugf("Controller %s at slot %d disconnected", d.HID.Path, d.Slot)
+							logrus.Infof("Controller %s at slot %d disconnected", d.HID.Path, d.Slot)
 						}(d)
 					}
 				}

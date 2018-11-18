@@ -5,6 +5,7 @@ import (
 	"context"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -136,81 +137,115 @@ func (m *matrix) ActionReceived(slot uint64, cmd common.Command) {
 }
 
 func (m *matrix) OpenPorts(ctx context.Context) error {
-	matches, err := filepath.Glob("/dev/tty*")
-	if err != nil {
-		return errors.WithStack(err)
-	}
+	connected := map[string]struct{}{}
+	mutex := new(sync.Mutex)
 
-	paths := []string{}
-	for _, ma := range matches {
-		if strings.Contains(strings.ToLower(ma), "usb") {
-			paths = append(paths, ma)
-		}
-	}
+	go func() {
+		for {
+			if ctx.Err() != nil {
+				return
+			}
 
-	for _, path := range paths {
-		logrus.Debugf("Try to open port at %s", path)
+			mutex.Lock()
+			defered := func() {
+				mutex.Unlock()
+				time.Sleep(time.Second)
+			}
 
-		port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
-		if err != nil {
-			return errors.WithStack(err)
-		}
+			matches, err := filepath.Glob("/dev/tty*")
+			if err != nil {
+				logrus.Errorf("%+v", errors.WithStack(err))
+				defered()
+				continue
+			}
 
-		logrus.Debugf("Port opened at %s", path)
-
-		if err := port.ResetInputBuffer(); err != nil {
-			return errors.WithStack(err)
-		}
-		if err := port.ResetOutputBuffer(); err != nil {
-			return errors.WithStack(err)
-		}
-
-		// read the matrix size
-		buf := make([]byte, 1)
-		_, err = port.Read(buf)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		size := int(buf[0])
-
-		logrus.Debugf("Receive %d size for port at %s", size, path)
-
-		go func(path string) {
-			t := time.NewTicker(refreshDelay)
-			defer t.Stop()
-
-			var lastBuffer []byte
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-t.C:
-					if !bytes.Equal(lastBuffer, m.buffer) {
-						lastBuffer = m.buffer
-
-						buffer := make([]byte, size*3+1)
-						for i := 0; i < len(m.buffer) && i < len(buffer); i++ {
-							buffer[i] = m.buffer[i]
-						}
-
-						if _, err := port.Write(buffer); err != nil {
-							logrus.Errorf("%+v", errors.WithStack(err))
-							return
-						}
-
-						// read the ack
-						ack := make([]byte, 1)
-						_, err = port.Read(ack)
-						if err != nil {
-							logrus.Errorf("%+v", errors.WithStack(err))
-							return
-						}
-					}
+			paths := []string{}
+			for _, ma := range matches {
+				if strings.Contains(strings.ToLower(ma), "usb") {
+					paths = append(paths, ma)
 				}
 			}
-		}(path)
-	}
+
+			for _, path := range paths {
+				if _, ok := connected[path]; !ok {
+					logrus.Debugf("Try to open port at %s", path)
+
+					port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
+					if err != nil {
+						logrus.Errorf("%+v", errors.WithStack(err))
+						continue
+					}
+
+					logrus.Debugf("Port opened at %s", path)
+
+					if err := port.ResetInputBuffer(); err != nil {
+						logrus.Errorf("%+v", errors.WithStack(err))
+						continue
+					}
+					if err := port.ResetOutputBuffer(); err != nil {
+						logrus.Errorf("%+v", errors.WithStack(err))
+						continue
+					}
+
+					// read the matrix size
+					buf := make([]byte, 1)
+					if _, err := port.Read(buf); err != nil {
+						logrus.Errorf("%+v", errors.WithStack(err))
+						continue
+					}
+					size := int(buf[0])
+					logrus.Debugf("Receive %d size for port at %s", size, path)
+
+					connected[path] = struct{}{}
+					logrus.Infof("Serial %s connected", path)
+
+					go func(path string) {
+						t := time.NewTicker(refreshDelay)
+						defer func() {
+							t.Stop()
+
+							mutex.Lock()
+							delete(connected, path)
+							mutex.Unlock()
+							logrus.Infof("Serial %s disconnected", path)
+						}()
+
+						var lastBuffer []byte
+						for {
+							select {
+							case <-ctx.Done():
+								return
+							case <-t.C:
+								if !bytes.Equal(lastBuffer, m.buffer) {
+									lastBuffer = m.buffer
+
+									buffer := make([]byte, size*3+1)
+									for i := 0; i < len(m.buffer) && i < len(buffer); i++ {
+										buffer[i] = m.buffer[i]
+									}
+
+									if _, err := port.Write(buffer); err != nil {
+										logrus.Errorf("%+v", errors.WithStack(err))
+										return
+									}
+
+									// read the ack
+									ack := make([]byte, 1)
+									_, err = port.Read(ack)
+									if err != nil {
+										logrus.Errorf("%+v", errors.WithStack(err))
+										return
+									}
+								}
+							}
+						}
+					}(path)
+				}
+			}
+
+			defered()
+		}
+	}()
 
 	return nil
 }
