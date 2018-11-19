@@ -3,7 +3,6 @@ package device
 import (
 	"bytes"
 	"context"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -152,7 +151,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 				time.Sleep(time.Second)
 			}
 
-			matches, err := filepath.Glob("/dev/tty*")
+			ports, err := serial.GetPortsList()
 			if err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 				defered()
@@ -160,9 +159,9 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 			}
 
 			paths := []string{}
-			for _, ma := range matches {
-				if strings.Contains(strings.ToLower(ma), "usb") {
-					paths = append(paths, ma)
+			for _, p := range ports {
+				if strings.Contains(strings.ToLower(p), "usb") {
+					paths = append(paths, p)
 				}
 			}
 
@@ -178,21 +177,12 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 
 					logrus.Debugf("Port opened at %s", path)
 
-					if err := port.ResetInputBuffer(); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
-						continue
-					}
-					if err := port.ResetOutputBuffer(); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
-						continue
-					}
+					_ = port.ResetInputBuffer()  // ignore error, always occured on darwin
+					_ = port.ResetOutputBuffer() // ignore error, always occured on darwin
 
 					// read the matrix size
 					buf := make([]byte, 1)
-					if _, err := port.Read(buf); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
-						continue
-					}
+					_, _ = port.Read(buf) // ignore error, always occured on darwin
 					size := int(buf[0])
 					logrus.Debugf("Receive %d size for port at %s", size, path)
 
