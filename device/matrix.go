@@ -162,7 +162,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 			newInvalid := map[string]struct{}{}
 
 			for _, path := range paths {
-				if !(strings.Contains(path, "usb") || strings.Contains(path, "com")) {
+				if !(strings.Contains(strings.ToLower(path), "usb") || strings.Contains(path, "COM")) {
 					continue
 				}
 				if _, ok := invalid[path]; ok {
@@ -190,9 +190,9 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					_ = port.ResetOutputBuffer() // ignore error, always occured on darwin
 
 					logrus.Debugf("Search for matrix signature and size at %s", path)
-					buf := make([]byte, 1)
+					buf := make([]byte, 2)
 
-					ctxTimeout, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+					ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 					go func() {
 						defer cancel()
 						_, _ = port.Read(buf) // ignore error, always occured on darwin
@@ -201,12 +201,18 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					<-ctxTimeout.Done()
 					if ctxTimeout.Err() != nil && ctxTimeout.Err().Error() != "context canceled" {
 						_ = port.Close()
+						logrus.Debugf("Port at %s didn't answer to connect", path)
+						newInvalid[path] = struct{}{}
+						continue
+					}
+
+					if buf[0] != 0x15 {
 						logrus.Debugf("Port at %s is not a matrix device", path)
 						newInvalid[path] = struct{}{}
 						continue
 					}
 
-					size := int(buf[0])
+					size := int(buf[1])
 					logrus.Debugf("Receive %d size for port at %s", size, path)
 
 					connected[path] = struct{}{}
