@@ -137,6 +137,7 @@ func (m *matrix) ActionReceived(slot uint64, cmd common.Command) {
 
 func (m *matrix) OpenPorts(ctx context.Context) error {
 	connected := map[string]struct{}{}
+	invalid := map[string]struct{}{}
 	mutex := new(sync.Mutex)
 
 	go func() {
@@ -151,27 +152,35 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 				time.Sleep(time.Second)
 			}
 
-			ports, err := serial.GetPortsList()
+			paths, err := serial.GetPortsList()
 			if err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 				defered()
 				continue
 			}
 
-			paths := []string{}
-			for _, p := range ports {
-				if strings.Contains(strings.ToLower(p), "usb") {
-					paths = append(paths, p)
-				}
-			}
+			newInvalid := map[string]struct{}{}
 
 			for _, path := range paths {
+				if !(strings.Contains(path, "usb") || strings.Contains(path, "com")) {
+					continue
+				}
+				if _, ok := invalid[path]; ok {
+					newInvalid[path] = struct{}{}
+					continue
+				}
+
 				if _, ok := connected[path]; !ok {
 					logrus.Debugf("Try to open port at %s", path)
 
 					port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
 					if err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
+						if err.Error() == "Serial port busy" {
+							logrus.Debugf("Port at %s is not available", path)
+							newInvalid[path] = struct{}{}
+						} else {
+							logrus.Errorf("%+v", errors.WithStack(err))
+						}
 						continue
 					}
 
@@ -180,9 +189,23 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					_ = port.ResetInputBuffer()  // ignore error, always occured on darwin
 					_ = port.ResetOutputBuffer() // ignore error, always occured on darwin
 
-					// read the matrix size
+					logrus.Debugf("Search for matrix signature and size at %s", path)
 					buf := make([]byte, 1)
-					_, _ = port.Read(buf) // ignore error, always occured on darwin
+
+					ctxTimeout, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+					go func() {
+						defer cancel()
+						_, _ = port.Read(buf) // ignore error, always occured on darwin
+					}()
+
+					<-ctxTimeout.Done()
+					if ctxTimeout.Err() != nil && ctxTimeout.Err().Error() != "context canceled" {
+						_ = port.Close()
+						logrus.Debugf("Port at %s is not a matrix device", path)
+						newInvalid[path] = struct{}{}
+						continue
+					}
+
 					size := int(buf[0])
 					logrus.Debugf("Receive %d size for port at %s", size, path)
 
@@ -232,6 +255,8 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					}(path)
 				}
 			}
+
+			invalid = newInvalid
 
 			defered()
 		}
