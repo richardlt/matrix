@@ -24,8 +24,8 @@ void setup()
     ; // wait for serial port to connect
   }
 
-  char buffer[] = {(char)NUMPIXELS};
-  Serial.write(buffer, 1);
+  char buffer[] = {0x15, (char)NUMPIXELS};
+  Serial.write(buffer, 2);
   Serial.flush();
 }
 

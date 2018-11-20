@@ -3,7 +3,6 @@ package device
 import (
 	"bytes"
 	"context"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -138,6 +137,7 @@ func (m *matrix) ActionReceived(slot uint64, cmd common.Command) {
 
 func (m *matrix) OpenPorts(ctx context.Context) error {
 	connected := map[string]struct{}{}
+	invalid := map[string]struct{}{}
 	mutex := new(sync.Mutex)
 
 	go func() {
@@ -152,48 +152,67 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 				time.Sleep(time.Second)
 			}
 
-			matches, err := filepath.Glob("/dev/tty*")
+			paths, err := serial.GetPortsList()
 			if err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 				defered()
 				continue
 			}
 
-			paths := []string{}
-			for _, ma := range matches {
-				if strings.Contains(strings.ToLower(ma), "usb") {
-					paths = append(paths, ma)
-				}
-			}
+			newInvalid := map[string]struct{}{}
 
 			for _, path := range paths {
+				if !(strings.Contains(strings.ToLower(path), "usb") || strings.Contains(path, "COM")) {
+					continue
+				}
+				if _, ok := invalid[path]; ok {
+					newInvalid[path] = struct{}{}
+					continue
+				}
+
 				if _, ok := connected[path]; !ok {
 					logrus.Debugf("Try to open port at %s", path)
 
 					port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
 					if err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
+						if err.Error() == "Serial port busy" {
+							logrus.Debugf("Port at %s is not available", path)
+							newInvalid[path] = struct{}{}
+						} else {
+							logrus.Errorf("%+v", errors.WithStack(err))
+						}
 						continue
 					}
 
 					logrus.Debugf("Port opened at %s", path)
 
-					if err := port.ResetInputBuffer(); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
-						continue
-					}
-					if err := port.ResetOutputBuffer(); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
+					_ = port.ResetInputBuffer()  // ignore error, always occured on darwin
+					_ = port.ResetOutputBuffer() // ignore error, always occured on darwin
+
+					logrus.Debugf("Search for matrix signature and size at %s", path)
+					buf := make([]byte, 2)
+
+					ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+					go func() {
+						defer cancel()
+						_, _ = port.Read(buf) // ignore error, always occured on darwin
+					}()
+
+					<-ctxTimeout.Done()
+					if ctxTimeout.Err() != nil && ctxTimeout.Err().Error() != "context canceled" {
+						_ = port.Close()
+						logrus.Debugf("Port at %s didn't answer to connect", path)
+						newInvalid[path] = struct{}{}
 						continue
 					}
 
-					// read the matrix size
-					buf := make([]byte, 1)
-					if _, err := port.Read(buf); err != nil {
-						logrus.Errorf("%+v", errors.WithStack(err))
+					if buf[0] != 0x15 {
+						logrus.Debugf("Port at %s is not a matrix device", path)
+						newInvalid[path] = struct{}{}
 						continue
 					}
-					size := int(buf[0])
+
+					size := int(buf[1])
 					logrus.Debugf("Receive %d size for port at %s", size, path)
 
 					connected[path] = struct{}{}
@@ -242,6 +261,8 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 					}(path)
 				}
 			}
+
+			invalid = newInvalid
 
 			defered()
 		}
