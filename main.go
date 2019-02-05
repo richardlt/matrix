@@ -5,6 +5,10 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	cli "gopkg.in/urfave/cli.v1"
+
+	"github.com/richardlt/matrix/animate"
 	"github.com/richardlt/matrix/blocks"
 	"github.com/richardlt/matrix/clock"
 	"github.com/richardlt/matrix/core"
@@ -16,8 +20,6 @@ import (
 	"github.com/richardlt/matrix/getout"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
-	"github.com/sirupsen/logrus"
-	cli "gopkg.in/urfave/cli.v1"
 )
 
 func main() {
@@ -98,6 +100,8 @@ func startAction(c *cli.Context) error {
 			cs = append(cs, component(func() error { return blocks.Start(c.String("core-uri")) }))
 		case "getout":
 			cs = append(cs, component(func() error { return getout.Start(c.String("core-uri")) }))
+		case "animate":
+			cs = append(cs, component(func() error { return animate.Start(c.String("core-uri")) }))
 		default:
 			return errors.New("Invalid given component name")
 		}
