@@ -42,6 +42,7 @@ package:
 	cp -R themes matrix-package/
 	cp -R fonts matrix-package/
 	cp -R images matrix-package/
+	cp -R animations matrix-package/
 	cp -R gamepad/build/default/. matrix-package/gamepad/public/
 	cp -R emulator/client/public/. matrix-package/emulator/public/
 	zip -r matrix.zip matrix-package

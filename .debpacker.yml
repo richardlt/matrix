@@ -5,6 +5,7 @@ copy-files:
   - "./matrix-package/themes/*:themes"
   - "./matrix-package/fonts/*:fonts"
   - "./matrix-package/images/*:images"
+  - "./matrix-package/animations/*:animations"
   - "./matrix-package/gamepad/public/*:gamepad/public"
   - "./matrix-package/emulator/public/*:emulator/public"
 version: "0.0.1"
@@ -13,7 +14,7 @@ maintainer: "richard.le.terrier@gmail.com"
 systemd-configuration:
   user: "root"
   after: network.target
-  args: ["start", "--log-level", "info", "--gamepad-port", "80", "core", "device", "gamepad", "emulator", "demo", "zigzag", "yumyum", "clock", "draw", "blocks", "getout"]
+  args: ["start", "--log-level", "info", "--gamepad-port", "80", "core", "device", "gamepad", "emulator", "demo", "zigzag", "yumyum", "clock", "draw", "blocks", "getout", "animate"]
   stop-command: /bin/kill $MAINPID
   restart: always
   wanted-by: multi-user.target
