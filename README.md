@@ -24,6 +24,7 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.png" width="60"/> | Blocks | A puzzle game, score a maximum of points by clearing complete lines. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.gif" width="150"/> |
 | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.png" width="60"/> | Getout | A labyrinth game, try to get out if you can. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.gif" width="150"/> |
 | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.png" width="60"/> | Rollup dice | Random dice generator (https://github.com/gwenker/matrix-rollup-dice). | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.gif" width="150"/> |
+| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/animate.png" width="60"/> | Animate | Player for animations generated with Glediator (http://www.solderlab.de/index.php/software/glediator). | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/animate.gif" width="150"/> |
 
 ## Matrix types
 
