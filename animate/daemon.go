@@ -48,10 +48,10 @@ func Start(uri string) error {
 }
 
 type header struct {
-	Name        string `json:"name"`
-	Orientation string `json:"orientation"`
-	Width       int    `json:"width"`
-	Height      int    `json:"height"`
+	Name   string `json:"name"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	FPS    int    `json:"fps"`
 }
 
 type animation []byte
@@ -178,9 +178,11 @@ func (a *animate) play() {
 	ctx, cancel := context.WithCancel(context.Background())
 	a.cancel = cancel
 
-	ticker := time.NewTicker(time.Millisecond * 50)
+	h := a.headers[a.index]
+
+	ticker := time.NewTicker(time.Second / time.Duration(h.FPS))
 	defer ticker.Stop()
-	maxIndex := len(anim) / (a.headers[a.index].Width * a.headers[a.index].Height * 3)
+	maxIndex := len(anim) / (h.Width * h.Height * 3)
 	index := 0
 	for {
 		select {
@@ -188,11 +190,8 @@ func (a *animate) play() {
 			return
 		case <-ticker.C:
 			a.imageDriver.Render(
-				anim.readFrame(a.headers[a.index].Width, a.headers[a.index].Height, index),
-				common.Coord{
-					X: int64(a.headers[a.index].Width / 2),
-					Y: int64(a.headers[a.index].Height / 2),
-				},
+				anim.readFrame(h.Width, h.Height, index),
+				common.Coord{X: 8, Y: 4}, // middle of the screen
 			)
 			if index+1 == maxIndex {
 				index = 0
