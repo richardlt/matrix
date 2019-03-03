@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ovh/cds/sdk"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -29,7 +28,7 @@ func Start(uri string) error {
 		if !info.IsDir() && strings.HasSuffix(path, ".json") {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
-				return sdk.WithStack(err)
+				return errors.WithStack(err)
 			}
 
 			var h header
