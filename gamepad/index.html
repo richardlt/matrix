@@ -1,29 +1,31 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>Matrix gamepad</title>
-    <meta name="description" content="matrix-gamepad description">
+<head>
+  <meta charset="utf-8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <meta name="description" content="Matrix gamepad">
 
-    <!-- See https://goo.gl/OOhYW5 -->
-    <link rel="manifest" href="/manifest.json">
+  <title>Matrix gamepad</title>
 
-    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+  <link rel="manifest" href="/manifest.json">
 
-    <link rel="import" href="/src/blocs/matrix-gamepad-app.html">
+  <script src="./node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js" async></script>
+  <script src="./node_modules/socket.io-client/dist/socket.io.js" async></script>
+  <script src="./src/matrix-gamepad-app.js" type="module" async></script>
 
-    <style>
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <matrix-gamepad-app></matrix-gamepad-app>
-  </body>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <matrix-gamepad-app></matrix-gamepad-app>
+</body>
+
 </html>
