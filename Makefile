@@ -16,13 +16,12 @@ build-all: build
 
 clean:
 	rm -rf matrix-package
-	rm -f matrix
 	rm -f matrix.zip
 	rm -f *.log
 	rm -rf build
 
 build:
-	go build -o matrix .
+	go build -o build/matrix-local .
 
 build-arm:
 	docker run -it -e TARGETS="linux/arm-7" -e OUT=matrix -e EXT_GOPATH=/gopath \

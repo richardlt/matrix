@@ -1,18 +1,20 @@
 {
   "name": "matrix-gamepad",
+  "main": "src/matrix-gamepad-app.js",
   "scripts": {
-    "install": "bower --allow-root install",
     "start": "polymer serve --port 4001 | node proxy.js",
     "build": "NODE_ENV=production polymer build"
   },
   "devDependencies": {
-    "bower": "1.8.4",
-    "browser-sync": "2.26.0",
-    "http-proxy-middleware": "0.19.0",
-    "polymer-cli": "1.8.0"
+    "browser-sync": "2.26.3",
+    "http-proxy-middleware": "0.19.1",
+    "polymer-cli": "1.9.7",
+    "@webcomponents/webcomponentsjs": "2.2.7"
   },
   "dependencies": {
-    "redux": "4.0.0",
-    "socket.io-client": "2.1.1"
+    "@polymer/polymer": "3.2.0",
+    "polymer-redux": "2.0.0-beta.2",
+    "redux": "4.0.1",
+    "socket.io-client": "2.2.0"
   }
 }
