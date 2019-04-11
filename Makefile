@@ -55,4 +55,4 @@ test:
 	go test -race github.com/richardlt/matrix/... -v
 
 test-with-report: 	
-	go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
+	GOPROXY=https://gocenter.io GO111MODULE=on go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
