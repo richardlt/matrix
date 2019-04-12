@@ -6,7 +6,7 @@ clean-all: clean
 	(cd gamepad && make clean)
 	(cd emulator && make clean)
 
-install-all:
+install-all: install
 	(cd gamepad && make install)
 	(cd emulator && make install)
 
@@ -19,6 +19,11 @@ clean:
 	rm -f matrix.zip
 	rm -f *.log
 	rm -rf build
+	rm -rf vendor
+
+install:
+	GO111MODULE=off go clean -modcache || true
+	GOPROXY=https://gocenter.io GO111MODULE=on go mod tidy
 
 build:
 	go build -o build/matrix-local .
@@ -50,4 +55,4 @@ test:
 	go test -race github.com/richardlt/matrix/... -v
 
 test-with-report: 	
-	go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
+	GOPROXY=https://gocenter.io GO111MODULE=on go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml

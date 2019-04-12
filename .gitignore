@@ -7,3 +7,4 @@ matrix.zip
 *.log
 report.xml
 build
+vendor
