@@ -1,0 +1,61 @@
+version: v1.0
+name: build
+jobs:
+- job: all-binary
+  steps:
+  - checkout: '{{.cds.workspace}}/go/src/github.com/richardlt/matrix'
+  - script:
+    - export GO111MODULE=on
+    - export GOPROXY=https://gocenter.io
+    - export EXT_GOPATH={{.cds.workspace}}/go
+    - export OUT=matrix
+    - export FLAG_V='false'
+    - export TARGETS='linux/arm-7 linux/amd64 darwin/amd64 windows/amd64'
+    - cd {{.cds.workspace}}/go/src/github.com/richardlt/matrix
+    - /build.sh .
+  - artifactUpload:
+      path: /build/matrix-*
+      tag: '{{.cds.version}}'
+  requirements:
+  - binary: git
+  - model: xgo-1.12
+- job: all-binary-test
+  steps:
+  - checkout: '{{.cds.workspace}}'
+  - script:
+    - go get -u github.com/jstemmer/go-junit-report
+    - export GO111MODULE=on
+    - export GOPROXY=https://gocenter.io
+    - make test-with-report
+  - jUnitReport: report.xml
+  requirements:
+  - binary: git
+  - model: go-1.12
+- job: emulator-ui
+  steps:
+  - checkout: '{{.cds.workspace}}'
+  - script:
+    - (cd emulator && make install)
+    - (cd emulator && make build)
+    - apt-get update && apt-get install -y zip
+    - zip -r emulator-ui.zip emulator/client/public
+  - artifactUpload:
+      path: '{{.cds.workspace}}/emulator-ui.zip'
+      tag: '{{.cds.version}}'
+  requirements:
+  - binary: git
+  - model: node-10.15
+- job: gamepad-ui
+  steps:
+  - checkout: '{{.cds.workspace}}'
+  - script:
+    - (cd gamepad && make install)
+    - (cd gamepad && make build)
+    - apt-get update && apt-get install -y zip
+    - zip -r gamepad-ui.zip gamepad/build/default
+  - artifactUpload:
+      path: '{{.cds.workspace}}/gamepad-ui.zip'
+      tag: '{{.cds.version}}'
+  requirements:
+  - binary: git
+  - model: node-10.15

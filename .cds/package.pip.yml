@@ -1,0 +1,46 @@
+version: v1.0
+name: package
+stages:
+- zip
+- deb
+jobs:
+- job: zip
+  stage: zip
+  steps:
+  - checkout: '{{.cds.workspace}}'
+  - artifactDownload:
+      path: '{{.cds.workspace}}'
+      tag: '{{.cds.version}}'
+  - script:
+    - unzip emulator-ui.zip
+    - unzip gamepad-ui.zip
+    - mkdir -p build
+    - cp matrix-linux* build/
+    - cp matrix-darwin* build/
+    - cp matrix-windows* build/
+    - make package
+  - artifactUpload:
+      path: '{{.cds.workspace}}/matrix.zip'
+      tag: '{{.cds.version}}'
+  requirements:
+  - binary: git
+  - binary: make
+  - binary: unzip
+  - binary: zip
+- job: deb
+  stage: deb
+  steps:
+  - checkout: '{{.cds.workspace}}'
+  - artifactDownload:
+      path: '{{.cds.workspace}}'
+      pattern: matrix.zip
+      tag: '{{.cds.version}}'
+  - script:
+    - unzip matrix.zip
+    - debpacker make
+  - artifactUpload:
+      path: '{{.cds.workspace}}/target/matrix.deb'
+      tag: '{{.cds.version}}'
+  requirements:
+  - model: debpacker-0.0.1
+  - binary: git
