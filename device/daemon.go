@@ -2,11 +2,12 @@ package device
 
 import (
 	"context"
+	
+	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/richardlt/matrix/sdk-go/software"
-	"github.com/sirupsen/logrus"
 )
 
 // Start device deamon.

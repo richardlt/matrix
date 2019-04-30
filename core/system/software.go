@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	uuid "github.com/satori/go.uuid"
+	
 	"github.com/richardlt/matrix/core/drivers"
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/sdk-go/common"
 	softwareSDK "github.com/richardlt/matrix/sdk-go/software"
-	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 // NewSoftwareServer returns new software server.

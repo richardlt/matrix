@@ -20,6 +20,7 @@ import (
 	"github.com/richardlt/matrix/getout"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
+	"github.com/richardlt/matrix/light"
 )
 
 func main() {
@@ -102,6 +103,8 @@ func startAction(c *cli.Context) error {
 			cs = append(cs, component(func() error { return getout.Start(c.String("core-uri")) }))
 		case "animate":
 			cs = append(cs, component(func() error { return animate.Start(c.String("core-uri")) }))
+		case "light":
+			cs = append(cs, component(func() error { return light.Start(c.String("core-uri")) }))
 		default:
 			return errors.New("Invalid given component name")
 		}

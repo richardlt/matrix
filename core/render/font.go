@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/richardlt/matrix/sdk-go/software"
-
 	"github.com/pkg/errors"
+
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
 // GetFontCaracterByValue returns a font's caracter from given value.
@@ -16,7 +16,6 @@ func GetFontCaracterByValue(f software.Font, value rune) software.Font_Caracter 
 			return *c
 		}
 	}
-
 	return software.Font_Caracter{}
 }
 

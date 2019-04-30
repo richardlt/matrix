@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/richardlt/matrix/sdk-go/common"
-	"github.com/richardlt/matrix/sdk-go/software"
 	"github.com/sirupsen/logrus"
 	serial "go.bug.st/serial.v1"
+
+	"github.com/richardlt/matrix/sdk-go/common"
+	"github.com/richardlt/matrix/sdk-go/software"
 )
 
 const refreshDelay = time.Millisecond * 30

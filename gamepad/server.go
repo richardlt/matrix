@@ -6,11 +6,12 @@ import (
 
 	"github.com/googollee/go-socket.io"
 	"github.com/labstack/echo"
+	"github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
+	
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
-	"github.com/sirupsen/logrus"
 )
 
 type frame struct {

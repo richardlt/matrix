@@ -9,9 +9,10 @@ import (
 
 	"github.com/karalabe/hid"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/player"
-	"github.com/sirupsen/logrus"
 )
 
 func newGamepad() *gamepad {
