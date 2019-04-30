@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/sdk-go/common"
 	displaySDK "github.com/richardlt/matrix/sdk-go/display"
-	"github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 // NewDisplayServer return new display server.

@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
+	
 	"github.com/richardlt/matrix/core/os"
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/core/system"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/richardlt/matrix/sdk-go/software"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 // Start the matrix core.

@@ -6,7 +6,7 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 
 <p align="center">
   <br/>
-  <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/gamepad.gif" width="400"/>
+  <img src="./docs/gamepad.gif" width="400"/>
   <br/>
   <br/>
 </p>
@@ -15,16 +15,17 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 
 | | Name | Description | |
 | - | - | - | - |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.png" width="60"/> | Demo | A demo software that uses all drivers from the SDK. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/demo.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/yumyum.png" width="60"/> | Yumyum | Eat all the candies with your monster to win the game. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/yumyum.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/clock.png" width="60"/> | Clock | What time is it? | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/clock.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/zigzag.png" width="60"/> | Zigzag | Turn left then right, eat candies but not yourself. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/zigzag.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/draw.png" width="60"/> | Draw | For those who like pixel art. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/draw.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/device.png" width="60"/> | Device | The Device software allows you to change the luminosity of the LEDs. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/device.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.png" width="60"/> | Blocks | A puzzle game, score a maximum of points by clearing complete lines. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/blocks.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.png" width="60"/> | Getout | A labyrinth game, try to get out if you can. | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/getout.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.png" width="60"/> | Rollup dice | Random dice generator (https://github.com/gwenker/matrix-rollup-dice). | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/rollup-dice.gif" width="150"/> |
-| <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/animate.png" width="60"/> | Animate | Player for animations generated with Glediator (http://www.solderlab.de/index.php/software/glediator). | <img src="https://raw.githubusercontent.com/richardlt/matrix/master/docs/animate.gif" width="150"/> |
+| <img src="./docs/demo.png" width="60"/> | Demo | A demo software that uses all drivers from the SDK. | <img src="./docs/demo.gif" width="150"/> |
+| <img src="./docs/yumyum.png" width="60"/> | Yumyum | Eat all the candies with your monster to win the game. | <img src="./docs/yumyum.gif" width="150"/> |
+| <img src="./docs/clock.png" width="60"/> | Clock | What time is it? | <img src="./docs/clock.gif" width="150"/> |
+| <img src="./docs/zigzag.png" width="60"/> | Zigzag | Turn left then right, eat candies but not yourself. | <img src="./docs/zigzag.gif" width="150"/> |
+| <img src="./docs/draw.png" width="60"/> | Draw | For those who like pixel art. | <img src="./docs/draw.gif" width="150"/> |
+| <img src="./docs/device.png" width="60"/> | Device | The Device software allows you to change the luminosity of the LEDs. | <img src="./docs/device.gif" width="150"/> |
+| <img src="./docs/blocks.png" width="60"/> | Blocks | A puzzle game, score a maximum of points by clearing complete lines. | <img src="./docs/blocks.gif" width="150"/> |
+| <img src="./docs/getout.png" width="60"/> | Getout | A labyrinth game, try to get out if you can. | <img src="./docs/getout.gif" width="150"/> |
+| <img src="./docs/rollup-dice.png" width="60"/> | Rollup dice | Random dice generator (https://github.com/gwenker/matrix-rollup-dice). | <img src="./docs/rollup-dice.gif" width="150"/> |
+| <img src="./docs/animate.png" width="60"/> | Animate | Player for animations generated with Glediator (http://www.solderlab.de/index.php/software/glediator). | <img src="./docs/animate.gif" width="150"/> |
+| <img src="./docs/light.png" width="60"/> | Light | Simple software to generate mood light. | <img src="./docs/light.gif" width="150"/> |
 
 ## Matrix types
 

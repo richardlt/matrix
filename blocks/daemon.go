@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
-	"github.com/sirupsen/logrus"
 )
 
 const (

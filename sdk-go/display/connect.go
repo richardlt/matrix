@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/pkg/errors"
-	common "github.com/richardlt/matrix/sdk-go/common"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+
+	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
 type Display interface {

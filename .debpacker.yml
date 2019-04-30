@@ -14,7 +14,7 @@ maintainer: "richard.le.terrier@gmail.com"
 systemd-configuration:
   user: "root"
   after: network.target
-  args: ["start", "--log-level", "info", "--gamepad-port", "80", "core", "device", "gamepad", "emulator", "demo", "zigzag", "yumyum", "clock", "draw", "blocks", "getout", "animate"]
+  args: ["start", "--log-level", "info", "--gamepad-port", "80", "core", "device", "gamepad", "emulator", "demo", "zigzag", "yumyum", "clock", "draw", "blocks", "getout", "animate", "light"]
   stop-command: /bin/kill $MAINPID
   restart: always
   wanted-by: multi-user.target

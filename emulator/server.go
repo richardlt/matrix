@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-
 	"github.com/googollee/go-socket.io"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 )

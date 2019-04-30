@@ -1,9 +1,10 @@
 package draw
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
-	"github.com/sirupsen/logrus"
 )
 
 // Start the draw software.

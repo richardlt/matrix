@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/richardlt/matrix/sdk-go/common"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/richardlt/matrix/sdk-go/common"
 )
 
 func TestPassThrough(t *testing.T) {

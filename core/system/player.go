@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/richardlt/matrix/sdk-go/common"
-	playerSDK "github.com/richardlt/matrix/sdk-go/player"
 	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
+
+	"github.com/richardlt/matrix/sdk-go/common"
+	playerSDK "github.com/richardlt/matrix/sdk-go/player"
 )
 
 // NewPlayerServer returns new player server.
