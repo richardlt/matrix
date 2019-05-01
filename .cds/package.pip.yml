@@ -42,5 +42,5 @@ jobs:
       path: '{{.cds.workspace}}/target/matrix.deb'
       tag: '{{.cds.version}}'
   requirements:
-  - model: debpacker-0.0.1
   - binary: git
+  - model: debpacker-0.0.1

@@ -2,9 +2,5 @@ version: v1.0
 name: matrix
 vcs_server: github
 repo: richardlt/matrix
-keys:
-  app-matrix-git:
-    type: ssh
-    value: b8bf25fa2e854c0e94873162c5d418b5
 vcs_connection_type: ssh
-vcs_ssh_key: app-matrix-git
+vcs_ssh_key: proj-matrix
