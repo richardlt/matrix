@@ -51,6 +51,12 @@ package:
 	cp -R emulator/client/public/. matrix-package/emulator/public/
 	zip -r matrix.zip matrix-package
 
+debpacker:
+	rm -rf target
+	docker run -it \
+	-v $(PWD):/tmp/workspace \
+	-w /tmp/workspace richardleterrier/debpacker:v0.0.2 debpacker make
+
 test: 	
 	go test -race github.com/richardlt/matrix/... -v
 
