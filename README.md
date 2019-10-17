@@ -66,7 +66,7 @@ $ cd matrix-package && ./matrix-[REPLACE_DEPENDING_OS] start --log-level info --
 ## Development setup (linux/darwin)
 
 1. Requirements.
-* [Go](https://golang.org/dl/) (version 1.12+)
+* [Go](https://golang.org/dl/) (version 1.13+)
 * [Node.js](https://nodejs.org/en/download/) (with npm, version 10+)
 
 2. Install JS projects dependencies.
@@ -76,8 +76,6 @@ $ make install-all
 
 3. Run it.
 ```sh
-$ export GO111MODULE=on
-$ export GOPROXY=https://gocenter.io
 $ go run main.go start --log-level info core gamepad emulator demo # you can start all other softwares by adding their names
 $ (cd emulator && npm start)
 $ (cd gamepad && npm start)
