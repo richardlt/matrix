@@ -5,8 +5,6 @@ jobs:
   steps:
   - checkout: '{{.cds.workspace}}/go/src/github.com/richardlt/matrix'
   - script:
-    - export GO111MODULE=on
-    - export GOPROXY=https://gocenter.io
     - export EXT_GOPATH={{.cds.workspace}}/go
     - export OUT=matrix
     - export FLAG_V='false'
@@ -24,8 +22,6 @@ jobs:
   - checkout: '{{.cds.workspace}}'
   - script:
     - go get -u github.com/jstemmer/go-junit-report
-    - export GO111MODULE=on
-    - export GOPROXY=https://gocenter.io
     - make test-with-report
   - jUnitReport: report.xml
   requirements:
