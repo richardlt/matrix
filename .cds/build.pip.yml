@@ -18,7 +18,7 @@ jobs:
       tag: '{{.cds.version}}'
   requirements:
   - binary: git
-  - model: xgo-1.12
+  - model: shared.richardlt/xgo-1.13
 - job: all-binary-test
   steps:
   - checkout: '{{.cds.workspace}}'
@@ -30,7 +30,7 @@ jobs:
   - jUnitReport: report.xml
   requirements:
   - binary: git
-  - model: go-1.12
+  - model: shared.richardlt/go-1.13
 - job: emulator-ui
   steps:
   - checkout: '{{.cds.workspace}}'
@@ -44,7 +44,7 @@ jobs:
       tag: '{{.cds.version}}'
   requirements:
   - binary: git
-  - model: node-10.15
+  - model: shared.richardlt/node-10.16
 - job: gamepad-ui
   steps:
   - checkout: '{{.cds.workspace}}'
@@ -58,4 +58,4 @@ jobs:
       tag: '{{.cds.version}}'
   requirements:
   - binary: git
-  - model: node-10.15
+  - model: shared.richardlt/node-10.16

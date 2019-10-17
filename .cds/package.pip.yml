@@ -43,4 +43,4 @@ jobs:
       tag: '{{.cds.version}}'
   requirements:
   - binary: git
-  - model: debpacker-0.0.1
+  - model: shared.richardlt/debpacker-0.0.2
