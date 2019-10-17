@@ -1,6 +1,6 @@
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 const path = require("path");
 
 const packageJSON = require("./package.json");
@@ -48,7 +48,7 @@ const config = {
         test: /\.js$/,
         loader: "babel-loader",
         query: {
-          presets: ["react", "es2015", "stage-2"]
+          presets: ["@babel/preset-env", "@babel/preset-react"]
         },
         include: APP_DIR
       }
@@ -57,20 +57,7 @@ const config = {
 };
 
 if (PRODUCTION) {
-  config.optimization.minimizer = [
-    new UglifyJsPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        compress: {
-          warnings: false,
-          drop_debugger: true
-        },
-        output: {
-          comments: false
-        }
-      }
-    })
-  ];
+  config.optimization.minimizer = [new TerserPlugin()];
   config.plugins = [
     new webpack.HashedModuleIdsPlugin(),
     new webpack.optimize.ModuleConcatenationPlugin()
