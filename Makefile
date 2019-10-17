@@ -23,7 +23,7 @@ clean:
 
 install:
 	GO111MODULE=off go clean -modcache || true
-	GOPROXY=https://gocenter.io GO111MODULE=on go mod tidy
+	go mod tidy
 
 build:
 	go build -o build/matrix-local .
@@ -31,12 +31,12 @@ build:
 build-arm:
 	docker run -it -e TARGETS="linux/arm-7" -e OUT=matrix -e EXT_GOPATH=/gopath \
 	-v $(PWD):/gopath/src/github.com/richardlt/matrix \
-	-v $(PWD)/build:/build karalabe/xgo-1.11 github.com/richardlt/matrix
+	-v $(PWD)/build:/build richardleterrier/xgo:v1.13.1 github.com/richardlt/matrix
 
 build-windows:
 	docker run -it -e TARGETS="windows/amd64" -e OUT=matrix -e EXT_GOPATH=/gopath \
 	-v $(PWD):/gopath/src/github.com/richardlt/matrix \
-	-v $(PWD)/build:/build karalabe/xgo-1.11 github.com/richardlt/matrix
+	-v $(PWD)/build:/build richardleterrier/xgo:v1.13.1 github.com/richardlt/matrix
 
 package:	
 	rm -rf matrix-package
@@ -55,4 +55,4 @@ test:
 	go test -race github.com/richardlt/matrix/... -v
 
 test-with-report: 	
-	GOPROXY=https://gocenter.io GO111MODULE=on go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
+	go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
