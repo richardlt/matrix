@@ -48,7 +48,7 @@ const config = {
         test: /\.js$/,
         loader: "babel-loader",
         query: {
-          presets: ["react", "es2015", "stage-2"]
+          presets: ["@babel/preset-env", "@babel/preset-react"]
         },
         include: APP_DIR
       }

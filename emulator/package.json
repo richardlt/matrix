@@ -5,21 +5,21 @@
     "build": "NODE_ENV=production webpack"
   },
   "dependencies": {
-    "prop-types": "15.6.2",
-    "react": "16.5.2",
-    "react-dom": "16.5.2",
-    "socket.io-client": "2.1.1",
-    "styled-components": "3.4.9"
+    "prop-types": "15.7.2",
+    "react": "16.10.2",
+    "react-dom": "16.10.2",
+    "socket.io-client": "2.3.0",
+    "styled-components": "4.4.0"
   },
   "devDependencies": {
-    "babel-core": "6.26.3",
-    "babel-loader": "7.1.5",
-    "babel-preset-es2015": "6.24.1",
-    "babel-preset-react": "6.24.1",
-    "babel-preset-stage-2": "6.24.1",
+    "@babel/core": "7.6.4",
+    "babel-loader": "8.0.6",
+    "@babel/preset-env": "7.6.3",
+    "@babel/preset-react": "7.6.3",
     "html-webpack-plugin": "3.2.0",
-    "webpack": "4.20.2",
-    "webpack-cli": "3.1.2",
-    "webpack-dev-server": "3.1.9"
+    "uglifyjs-webpack-plugin": "2.2.0",
+    "webpack": "4.41.2",
+    "webpack-cli": "3.3.9",
+    "webpack-dev-server": "3.8.2"
   }
 }
