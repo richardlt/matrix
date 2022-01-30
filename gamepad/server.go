@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/googollee/go-socket.io"
 	"github.com/labstack/echo"
-	"github.com/sirupsen/logrus"
 	"github.com/pkg/errors"
-	
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
+	"github.com/richardlt/matrix/websocket"
 )
 
 type frame struct {
@@ -32,14 +32,11 @@ func Start(port int, uri string) error {
 
 	gs := &gamepadServer{frameChannel: frameChannel}
 
-	s, err := newSocketIOServer(gs)
-	if err != nil {
-		return err
-	}
+	s := newWebSocketServer(gs)
 
 	go func() {
 		for f := range frameChannel {
-			s.BroadcastTo("display", "frame", f)
+			s.Broadcast("frame", f)
 		}
 	}()
 
@@ -56,7 +53,9 @@ func Start(port int, uri string) error {
 	}()
 
 	e := echo.New()
-	e.Any("/socket.io/", echo.WrapHandler(s))
+	e.HideBanner = true
+
+	e.Any("/websocket", echo.WrapHandler(s))
 	e.Static("/", "./gamepad/public")
 
 	logrus.Infof("Start gamepad on port %d\n", port)
@@ -114,40 +113,36 @@ func (g *gamepadServer) Command(gp *gamepad, cmd common.Command) {
 	}
 }
 
-func newSocketIOServer(gs *gamepadServer) (*socketio.Server, error) {
-	s, err := socketio.NewServer(nil)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+func newWebSocketServer(gs *gamepadServer) *websocket.Server {
+	s := websocket.NewServer()
 
-	if err := s.On("connection", func(so socketio.Socket) {
-		g := newGamepad(so)
-		so.Join("display")
-		so.On("select-slot", func(slot int) { g.SelectSlot(slot) })
-		so.On("command", func(cmd string) { gs.Command(g, commandFromString(cmd)) })
-		so.On("disconnection", func() { gs.RemoveGamepad(g) })
+	s.OnConnect(func(c *websocket.Client) {
+		g := newGamepad(c)
 		gs.AddGamepad(g)
-	}); err != nil {
-		return nil, errors.WithStack(err)
-	}
+		c.OnEvent(func(eventType string, data interface{}) {
+			switch eventType {
+			case "select-slot":
+				g.SelectSlot(int(data.(float64)))
+			case "command":
+				gs.Command(g, commandFromString(data.(string)))
+			}
+		})
+		c.OnDisconnect(func() {
+			gs.RemoveGamepad(g)
+		})
+	})
 
-	if err := s.On("error", func(so socketio.Socket, err error) {
-		logrus.Errorf("%+v", errors.WithStack(err))
-	}); err != nil {
-		return nil, err
-	}
-
-	return s, nil
+	return s
 }
 
-func newGamepad(so socketio.Socket) *gamepad { return &gamepad{so, -1} }
+func newGamepad(so *websocket.Client) *gamepad { return &gamepad{so, -1} }
 
 type gamepad struct {
-	so   socketio.Socket
+	so   *websocket.Client
 	Slot int
 }
 
 func (g *gamepad) SelectSlot(slot int) {
 	g.Slot = slot
-	g.so.Emit("slot", slot)
+	g.so.Send("slot", slot)
 }

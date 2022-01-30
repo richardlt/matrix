@@ -2,10 +2,10 @@ reset:
 	rm -rf node_modules
 
 clean:
-	rm -rf client/public
+	rm -rf public
 
 install:
-	npm install
+	npm ci
 
 build:
 	npm run build

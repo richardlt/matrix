@@ -66,8 +66,8 @@ $ cd matrix-package && ./matrix-[REPLACE_DEPENDING_OS] start --log-level info --
 ## Development setup (linux/darwin)
 
 1. Requirements.
-* [Go](https://golang.org/dl/) (version 1.13+)
-* [Node.js](https://nodejs.org/en/download/) (with npm, version 10+)
+* [Go](https://golang.org/dl/) (version 1.17+)
+* [Node.js](https://nodejs.org/en/download/) (with npm, version 16+)
 
 2. Install JS projects dependencies.
 ```sh

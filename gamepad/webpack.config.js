@@ -13,7 +13,7 @@ const config = {
   mode: PRODUCTION ? "production" : "development",
   devtool: PRODUCTION ? "source-map" : "eval-source-map",
   entry: {
-    bundle: APP_DIR + "/app.tsx",
+    bundle: APP_DIR + "/matrix-gamepad-app.ts",
     vendor: Object.keys(packageJSON.dependencies)
   },
   output: {
@@ -23,14 +23,14 @@ const config = {
   optimization: {},
   plugins: [
     new HtmlWebpackPlugin({
-      title: "Matrix emulator" + (!PRODUCTION ? " dev" : ""),
+      title: "Matrix gamepad" + (!PRODUCTION ? " dev" : ""),
       template: APP_DIR + "/index.ejs"
     })
   ],
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.ts?$/,
         use: 'ts-loader',
         include: APP_DIR
       }
@@ -49,14 +49,14 @@ if (PRODUCTION) {
   ].concat(config.plugins);
 } else {
   config.devServer = {
-    port: 3001,
+    port: 4002,
     static: path.join(__dirname, "dist"),
     compress: true,
     proxy: [
       {
         context: ["/websocket"],
         ws: true,
-        target: "http://localhost:3000"
+        target: "http://localhost:4000"
       }
     ],
     historyApiFallback: true,

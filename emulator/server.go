@@ -3,13 +3,13 @@ package emulator
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
-	"github.com/googollee/go-socket.io"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
+	"github.com/richardlt/matrix/websocket"
 )
 
 type frame struct {
@@ -28,14 +28,11 @@ func Start(port int, uri string) error {
 	frameChannel := make(chan frame)
 	defer close(frameChannel)
 
-	s, err := newSocketIOServer()
-	if err != nil {
-		return err
-	}
+	s := websocket.NewServer()
 
 	go func() {
 		for f := range frameChannel {
-			s.BroadcastTo("display", "frame", f)
+			s.Broadcast("frame", f)
 		}
 	}()
 
@@ -46,7 +43,9 @@ func Start(port int, uri string) error {
 	}()
 
 	e := echo.New()
-	e.Any("/socket.io/", echo.WrapHandler(s))
+	e.HideBanner = true
+
+	e.Any("/websocket", echo.WrapHandler(s))
 	e.Static("/", "./emulator/public")
 
 	logrus.Infof("Start emulator on port %d\n", port)
@@ -68,26 +67,4 @@ func (e emulator) FramesReceived(fs []*common.Frame) {
 		}
 		e.frameChannel <- frame
 	}
-}
-
-func newSocketIOServer() (*socketio.Server, error) {
-	s, err := socketio.NewServer(nil)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if err := s.On("connection", func(so socketio.Socket) {
-		so.Join("display")
-		so.On("disconnection", func() {})
-	}); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	if err := s.On("error", func(so socketio.Socket, err error) {
-		logrus.Errorf("%+v", errors.WithStack(err))
-	}); err != nil {
-		return nil, err
-	}
-
-	return s, nil
 }

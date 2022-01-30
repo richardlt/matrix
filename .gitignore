@@ -1,5 +1,3 @@
-node_modules
-bower_components
 matrix-package
 matrix.zip
 .vscode
@@ -7,5 +5,4 @@ matrix.zip
 *.log
 report.xml
 build
-vendor
 target

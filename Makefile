@@ -19,10 +19,9 @@ clean:
 	rm -f matrix.zip
 	rm -f *.log
 	rm -rf build
-	rm -rf vendor
+	rm -f *.xml
 
 install:
-	GO111MODULE=off go clean -modcache || true
 	go mod tidy
 
 build:
@@ -47,8 +46,8 @@ package:
 	cp -R fonts matrix-package/
 	cp -R images matrix-package/
 	cp -R animations matrix-package/
-	cp -R gamepad/build/default/. matrix-package/gamepad/public/
-	cp -R emulator/client/public/. matrix-package/emulator/public/
+	cp -R gamepad/public/. matrix-package/gamepad/public/
+	cp -R emulator/public/. matrix-package/emulator/public/
 	zip -r matrix.zip matrix-package
 
 debpacker:
