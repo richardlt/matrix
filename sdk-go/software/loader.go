@@ -3,7 +3,6 @@ package software
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
@@ -70,7 +69,7 @@ func loadFonts() error {
 }
 
 func loadFiles(dir string) ([]file, error) {
-	files, err := ioutil.ReadDir("./" + dir)
+	files, err := os.ReadDir("./" + dir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -85,7 +84,7 @@ func loadFiles(dir string) ([]file, error) {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(fmt.Sprintf("./%s/%s", dir, f.Name()))
+		data, err := os.ReadFile(fmt.Sprintf("./%s/%s", dir, f.Name()))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

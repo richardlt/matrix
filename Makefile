@@ -20,6 +20,7 @@ clean:
 	rm -f *.log
 	rm -rf build
 	rm -f *.xml
+	rm -rf target
 
 install:
 	go mod tidy
