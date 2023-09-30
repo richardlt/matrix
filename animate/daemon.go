@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +25,7 @@ func Start(uri string) error {
 	// list animation headers and set index
 	if err := filepath.Walk("./animations", func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() && strings.HasSuffix(path, ".json") {
-			buf, err := ioutil.ReadFile(path)
+			buf, err := os.ReadFile(path)
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -168,7 +167,7 @@ func (a *animate) play() {
 
 	var anim animation
 	var err error
-	anim, err = ioutil.ReadFile(fmt.Sprintf("./animations/%s", a.headers[a.index].Name))
+	anim, err = os.ReadFile(fmt.Sprintf("./animations/%s", a.headers[a.index].Name))
 	if err != nil {
 		logrus.Error(errors.WithStack(err))
 		return
