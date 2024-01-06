@@ -58,7 +58,8 @@ debpacker:
 	-w /tmp/workspace richardleterrier/debpacker:v0.0.2 debpacker make
 
 test: 	
-	go test -race github.com/richardlt/matrix/... -v
+	go test -race github.com/richardlt/matrix/... -v | tee report.out
 
-test-with-report: 	
-	go test -race github.com/richardlt/matrix/... -v | go-junit-report > report.xml
+test-with-report: test	
+	go install github.com/jstemmer/go-junit-report@latest
+	cat report.out | go-junit-report > report.xml
