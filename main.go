@@ -18,13 +18,19 @@ import (
 	"github.com/richardlt/matrix/emulator"
 	"github.com/richardlt/matrix/gamepad"
 	"github.com/richardlt/matrix/getout"
+	"github.com/richardlt/matrix/light"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
-	"github.com/richardlt/matrix/light"
+)
+
+var (
+	//VERSION is set with -ldflags "-X github.com/richardlt/matrix.VERSION=$(VERSION)"
+	VERSION = "snapshot"
 )
 
 func main() {
 	app := cli.NewApp()
+	app.Version = VERSION
 
 	app.Commands = []cli.Command{{
 		Name:  "start",

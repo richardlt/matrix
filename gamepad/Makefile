@@ -5,7 +5,13 @@ clean:
 	rm -rf public
 
 install:
-	npm ci
+	docker run --rm \
+		-v $(PWD):/tmp/workspace -w /tmp/workspace \
+		node:20 \
+		npm ci
 
 build:
-	npm run build
+	docker run --rm \
+		-v $(PWD):/tmp/workspace -w /tmp/workspace \
+		node:20 \
+		npm run build
