@@ -17,16 +17,6 @@ jobs:
   requirements:
   - binary: git
   - model: shared.richardlt/xgo-1.13
-- job: all-binary-test
-  steps:
-  - checkout: '{{.cds.workspace}}'
-  - script:
-    - go get -u github.com/jstemmer/go-junit-report
-    - make test-with-report
-  - jUnitReport: report.xml
-  requirements:
-  - binary: git
-  - model: shared.richardlt/go-1.13
 - job: emulator-ui
   steps:
   - checkout: '{{.cds.workspace}}'

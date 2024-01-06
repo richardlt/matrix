@@ -4,5 +4,6 @@ matrix.zip
 .vagrant
 *.log
 report.xml
+report.out
 build
 target
