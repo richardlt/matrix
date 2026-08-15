@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	uuid "github.com/satori/go.uuid"
-	
+
 	"github.com/richardlt/matrix/core/drivers"
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/sdk-go/common"
@@ -313,7 +313,7 @@ func (s *SoftwareServer) getSoftwareByUUID(uuid string) *software {
 
 func newSoftware(connectResponseChannel chan softwareSDK.ConnectResponse) *software {
 	return &software{
-		UUID: uuid.NewV4().String(),
+		UUID:                   uuid.NewString(),
 		connectResponseChannel: connectResponseChannel,
 		matrix:                 render.NewMatrix(16, 9),
 		layers:                 make(map[string]*render.Frame),
@@ -415,13 +415,13 @@ func (s *software) Command(slot uint64, command common.Command) {
 }
 
 func (s *software) CreateLayer() string {
-	uuid := uuid.NewV4().String()
+	uuid := uuid.NewString()
 	s.layers[uuid] = s.matrix.NewFrame()
 	return uuid
 }
 
 func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRequest_DriverData) string {
-	uuid := uuid.NewV4().String()
+	uuid := uuid.NewString()
 
 	switch driverData.Type {
 	case softwareSDK.CreateRequest_DriverData_RANDOM:

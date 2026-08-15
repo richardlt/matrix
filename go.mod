@@ -4,11 +4,11 @@ go 1.25.0
 
 require (
 	github.com/golang/protobuf v1.5.4
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/karalabe/hid v1.0.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.10.0
 	github.com/stretchr/testify v1.11.1
 	go.bug.st/serial.v1 v0.0.0-20191202182710-24a6610f0541

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/sdk-go/common"
@@ -109,7 +109,7 @@ func (p *PlayerServer) processRequest(pl *player, req playerSDK.Request) {
 }
 
 func newPlayer(chRes chan playerSDK.Response) *player {
-	return &player{uuid.NewV4().String(), chRes}
+	return &player{uuid.NewString(), chRes}
 }
 
 type player struct {

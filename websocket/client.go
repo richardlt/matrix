@@ -3,15 +3,15 @@ package websocket
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
 
 func NewClient(conn *websocket.Conn) *Client {
 	return &Client{
-		ID:   uuid.NewV4().String(),
+		ID:   uuid.NewString(),
 		conn: conn,
 	}
 }

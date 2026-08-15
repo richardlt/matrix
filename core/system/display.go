@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/core/render"
@@ -104,7 +104,7 @@ func (d *DisplayServer) Print(fs []render.Frame) {
 }
 
 func newDisplay(chRes chan displaySDK.Response) display {
-	return display{uuid.NewV4().String(), chRes}
+	return display{uuid.NewString(), chRes}
 }
 
 type display struct {
