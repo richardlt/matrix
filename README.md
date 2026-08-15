@@ -57,7 +57,7 @@ $ dpkg -i matrix.deb # for Raspbian/Debian users
 $ service matrix status
 ```
 ```sh
-$ unzip matrix.zip # for others
+$ tar xzf matrix.tar.gz # for others
 $ cd matrix-package && ./matrix-linux-armv6 start --log-level info --gamepad-port 80 core device gamepad emulator demo zigzag yumyum clock draw blocks getout
 ```
 
@@ -71,7 +71,7 @@ with `make build`.
 
 1. Requirements.
 * [Go](https://golang.org/dl/) (version 1.25+)
-* [Node.js](https://nodejs.org/en/download/) (with npm, version 16+)
+* [Node.js](https://nodejs.org/en/download/) (with npm, version 20.19+ or 22.12+, required by Vite)
 
 2. Install JS projects dependencies.
 ```sh
@@ -90,9 +90,13 @@ $ (cd gamepad && npm start)
 ## Checks and release builds
 
 ```sh
-$ make check   # gofmt, go vet and errcheck
-$ make test    # unit tests with the race detector
+$ make check       # gofmt, go vet and errcheck
+$ make check-all   # the same, plus a TypeScript check of both web apps
+$ make test        # unit tests with the race detector
 ```
+
+The web apps are bundled with Vite, which transpiles without type checking, so
+`make check-all` is the only thing that rejects a TypeScript error.
 
 `make build-armv6` produces the release binary, a static ARMv6 build. It needs an ARMv6
 musl cross toolchain providing `armv6-linux-musleabihf-gcc`, which is not an apt package;

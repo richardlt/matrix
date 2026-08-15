@@ -1,21 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2020",
     "module": "esnext",
-    "moduleResolution": "node",
-    "noEmitOnError": true,
-    "lib": ["es2017", "dom"],
+    "moduleResolution": "bundler",
+    "lib": ["es2020", "dom"],
     "strict": true,
+    "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "outDir": "./dist/",
-    "sourceMap": true,
-    "inlineSources": true,
-    "rootDir": "./",
-    "incremental": true,
-    "jsx": "react"
+    // Vite transpiles each file on its own with esbuild and never type-checks, so the
+    // sources have to be safe to compile in isolation. Type checking is `npm run
+    // typecheck`, which emits nothing.
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
   },
-  "include": ["**/*.tsx"]
+  "include": ["src", "vite.config.ts"]
 }

@@ -9,7 +9,7 @@ ERRCHECK_VERSION := v1.20.0
 # Every target is a command rather than a file it produces. Without this, `make build`
 # does nothing once the build/ directory exists, because make considers the target
 # already up to date.
-.PHONY: reset-all clean-all install-all build-all clean install build \
+.PHONY: reset-all clean-all install-all build-all check-all clean install build \
 	build-armv6 check-armv6 package debpacker \
 	check fmt check-fmt vet errcheck test test-with-report
 
@@ -25,13 +25,19 @@ install-all: install
 	(cd gamepad && make install)
 	(cd emulator && make install)
 
-build-all: build
+# The web apps are built first because the Go binary embeds their output.
+build-all:
 	(cd gamepad && make build)
 	(cd emulator && make build)
+	$(MAKE) build
+
+check-all: check
+	(cd gamepad && make check)
+	(cd emulator && make check)
 
 clean:
 	rm -rf matrix-package
-	rm -f matrix.zip
+	rm -f matrix.tar.gz
 	rm -f *.log
 	rm -rf build
 	rm -f *.xml
@@ -75,18 +81,17 @@ build-armv6:
 check-armv6:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o /dev/null .
 
+# The web apps are embedded in the binary, so only the data the user can replace is
+# shipped alongside it.
 package:
 	rm -rf matrix-package
-	mkdir -p matrix-package/gamepad/public
-	mkdir -p matrix-package/emulator/public
+	mkdir -p matrix-package
 	cp build/matrix-* matrix-package/
 	cp -R themes matrix-package/
 	cp -R fonts matrix-package/
 	cp -R images matrix-package/
 	cp -R animations matrix-package/
-	cp -R gamepad/public/. matrix-package/gamepad/public/
-	cp -R emulator/public/. matrix-package/emulator/public/
-	zip -r matrix.zip matrix-package
+	tar czf matrix.tar.gz matrix-package
 
 debpacker:
 	rm -rf target

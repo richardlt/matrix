@@ -6,8 +6,6 @@ copy-files:
   - "./matrix-package/fonts/*:/var/lib/matrix/fonts"
   - "./matrix-package/images/*:/var/lib/matrix/images"
   - "./matrix-package/animations/*:/var/lib/matrix/animations"
-  - "./matrix-package/gamepad/public/*:/var/lib/matrix/gamepad/public"
-  - "./matrix-package/emulator/public/*:/var/lib/matrix/emulator/public"
 version: "0.0.1"
 description: "Matrix debian package"
 maintainer: "richard.le.terrier@gmail.com"

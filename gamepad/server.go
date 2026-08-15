@@ -1,7 +1,9 @@
 package gamepad
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"sync"
 	"time"
@@ -14,6 +16,14 @@ import (
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/richardlt/matrix/websocket"
 )
+
+// public holds the built web app, so the binary serves it without needing the files
+// next to it at runtime. `make build-all` runs the web build before the Go one, which
+// is the order this requires. The checked-in public/.gitkeep keeps this pattern
+// matching before any web build has run; the binary then starts and serves 404s.
+//
+//go:embed all:public
+var public embed.FS
 
 type frame struct {
 	Number int     `json:"number"`
@@ -55,9 +65,14 @@ func Start(port int, uri string) error {
 		}
 	}()
 
+	assets, err := fs.Sub(public, "public/app")
+	if err != nil {
+		return errors.Errorf("opening embedded assets: %w", err)
+	}
+
 	mux := http.NewServeMux()
 	mux.Handle("/websocket", s)
-	mux.Handle("/", http.FileServer(http.Dir("./gamepad/public")))
+	mux.Handle("/", http.FileServer(http.FS(assets)))
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
