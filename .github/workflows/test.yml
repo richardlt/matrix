@@ -7,9 +7,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          # 'stable' = latest released patch, so CI always picks up Go standard-library
-          # security fixes. go.mod's `go` directive is the *minimum* supported version;
-          # pinning CI to it (go-version-file) would freeze CI on an ageing patch release.
+          # Latest released patch. go.mod's `go` directive is the minimum supported
+          # version, not the one to test against.
           go-version: 'stable'
       - run: make test-with-report
       - uses: mikepenz/action-junit-report@v6
