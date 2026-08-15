@@ -58,13 +58,13 @@ func connect(uri string, s Software) error {
 		return errors.WithStack(err)
 	}
 
-	connectRequestChannel := make(chan ConnectRequest)
+	connectRequestChannel := make(chan *ConnectRequest)
 	defer close(connectRequestChannel)
 
 	// send event to the matrix core from channel
 	go func() {
 		for cr := range connectRequestChannel {
-			if err := st.Send(&cr); err != nil {
+			if err := st.Send(cr); err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 			}
 		}
@@ -102,7 +102,7 @@ func connect(uri string, s Software) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				connectRequestChannel <- ConnectRequest{Type: ConnectRequest_PING}
+				connectRequestChannel <- &ConnectRequest{Type: ConnectRequest_PING}
 			}
 		}
 	}()
@@ -124,7 +124,7 @@ func connect(uri string, s Software) error {
 		if res.Type == ConnectResponse_SOFTWARE {
 			processResponse(s, res)
 		} else {
-			ct.ReceiveConnectResponse(*res)
+			ct.ReceiveConnectResponse(res)
 		}
 	}
 }

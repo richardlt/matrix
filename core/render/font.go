@@ -10,26 +10,26 @@ import (
 )
 
 // GetFontCaracterByValue returns a font's caracter from given value.
-func GetFontCaracterByValue(f software.Font, value rune) software.Font_Caracter {
+func GetFontCaracterByValue(f *software.Font, value rune) *software.Font_Caracter {
 	for k, c := range f.Caracters {
 		if []rune(k)[0] == value {
-			return *c
+			return c
 		}
 	}
-	return software.Font_Caracter{}
+	return &software.Font_Caracter{}
 }
 
 // GetFontByName returns an loaded font in memory.
-func GetFontByName(name string) software.Font {
+func GetFontByName(name string) *software.Font {
 	for _, f := range fs {
 		if f.Name == name {
 			return f
 		}
 	}
-	return software.Font{}
+	return &software.Font{}
 }
 
-var fs []software.Font
+var fs []*software.Font
 
 func loadFonts() error {
 	files, err := loadFiles("fonts")
@@ -38,8 +38,8 @@ func loadFonts() error {
 	}
 
 	for _, file := range files {
-		var f software.Font
-		if err := json.Unmarshal(file.Data, &f); err != nil {
+		f := &software.Font{}
+		if err := json.Unmarshal(file.Data, f); err != nil {
 			return fmt.Errorf("Can't unmarshal %s font file", file.Name)
 		}
 		fs = append(fs, f)

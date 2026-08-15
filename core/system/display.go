@@ -19,6 +19,7 @@ func NewDisplayServer() *DisplayServer { return &DisplayServer{} }
 
 // DisplayServer expose RPC server for displays.
 type DisplayServer struct {
+	displaySDK.UnimplementedDisplayServer
 	displays    []display
 	displayLock sync.RWMutex
 	lastFrames  []render.Frame
@@ -26,7 +27,7 @@ type DisplayServer struct {
 
 // Connect display action.
 func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
-	chRes := make(chan displaySDK.Response)
+	chRes := make(chan *displaySDK.Response)
 	defer close(chRes)
 
 	di := newDisplay(chRes)
@@ -49,14 +50,14 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				chRes <- displaySDK.Response{Type: displaySDK.Response_PING}
+				chRes <- &displaySDK.Response{Type: displaySDK.Response_PING}
 			}
 		}
 	}()
 
 	go func() {
 		for r := range chRes {
-			if err := stream.Send(&r); err != nil {
+			if err := stream.Send(r); err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 			}
 		}
@@ -103,17 +104,17 @@ func (d *DisplayServer) Print(fs []render.Frame) {
 	d.displayLock.RUnlock()
 }
 
-func newDisplay(chRes chan displaySDK.Response) display {
+func newDisplay(chRes chan *displaySDK.Response) display {
 	return display{uuid.NewString(), chRes}
 }
 
 type display struct {
 	UUID            string
-	responseChannel chan displaySDK.Response
+	responseChannel chan *displaySDK.Response
 }
 
 func (d *display) Print(fs []render.Frame) {
-	r := displaySDK.Response{
+	r := &displaySDK.Response{
 		Type: displaySDK.Response_DISPLAY,
 		DisplayData: &displaySDK.Response_DisplayData{
 			Action: displaySDK.Response_DisplayData_FRAMES,

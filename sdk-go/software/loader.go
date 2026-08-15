@@ -8,9 +8,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-var is []Image
-var ts []Theme
-var fs []Font
+var is []*Image
+var ts []*Theme
+var fs []*Font
 
 type file struct {
 	Name string
@@ -24,8 +24,8 @@ func loadImages() error {
 	}
 
 	for _, file := range files {
-		var i Image
-		if err := json.Unmarshal(file.Data, &i); err != nil {
+		i := &Image{}
+		if err := json.Unmarshal(file.Data, i); err != nil {
 			return fmt.Errorf("Can't unmarshal %s image file", file.Name)
 		}
 		is = append(is, i)
@@ -41,8 +41,8 @@ func loadThemes() error {
 	}
 
 	for _, file := range files {
-		var t Theme
-		if err := json.Unmarshal(file.Data, &t); err != nil {
+		t := &Theme{}
+		if err := json.Unmarshal(file.Data, t); err != nil {
 			return fmt.Errorf("Can't unmarshal %s theme file", file.Name)
 		}
 		ts = append(ts, t)
@@ -58,8 +58,8 @@ func loadFonts() error {
 	}
 
 	for _, file := range files {
-		var f Font
-		if err := json.Unmarshal(file.Data, &f); err != nil {
+		f := &Font{}
+		if err := json.Unmarshal(file.Data, f); err != nil {
 			return fmt.Errorf("Can't unmarshal %s font file", file.Name)
 		}
 		fs = append(fs, f)

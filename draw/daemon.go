@@ -19,7 +19,7 @@ func Start(uri string) error {
 type draw struct {
 	api                    software.API
 	layerDraw, layerPlayer software.Layer
-	colors                 []common.Color
+	colors                 []*common.Color
 	players                []*player
 	playerCount            uint64
 }
@@ -31,8 +31,8 @@ func (d *draw) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("draw")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
 	})
@@ -46,7 +46,7 @@ func (d *draw) Init(a software.API) (err error) {
 		return err
 	}
 
-	d.colors = []common.Color{
+	d.colors = []*common.Color{
 		d.api.GetColorFromLocalThemeByName("flat", "turquoise_1"),
 		d.api.GetColorFromLocalThemeByName("flat", "green_1"),
 		d.api.GetColorFromLocalThemeByName("flat", "blue_1"),
@@ -80,7 +80,7 @@ func (d *draw) Start(playerCount uint64) {
 		}
 		d.players[i] = &player{
 			Color: 6,
-			Coord: common.Coord{X: x, Y: y},
+			Coord: &common.Coord{X: x, Y: y},
 		}
 		d.layerPlayer.SetWithCoord(d.players[i].Coord, d.colors[d.players[i].Color])
 	}
@@ -97,7 +97,7 @@ func (d *draw) ActionReceived(slot uint64, cmd common.Command) {
 		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, d.colors[d.players[pSlot].Color])
 		d.print()
 	case common.Command_B_UP:
-		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, common.Color{})
+		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, &common.Color{})
 		d.print()
 	case common.Command_X_UP:
 		if d.players[pSlot].Color < len(d.colors)-1 {
@@ -142,5 +142,5 @@ func (d *draw) print() {
 
 type player struct {
 	Color int
-	Coord common.Coord
+	Coord *common.Coord
 }

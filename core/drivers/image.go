@@ -16,14 +16,14 @@ type Image struct {
 }
 
 // Render prints the image in frame.
-func (i *Image) Render(im software.Image, c common.Coord) {
+func (i *Image) Render(im *software.Image, c *common.Coord) {
 	beginX, beginY := c.X-int64(im.Width)/2, c.Y-int64(im.Height)/2
 	endX, endY := beginX+int64(im.Width), beginY+int64(im.Height)
 
 	index := 0
 	for y := beginY; y < endY; y++ {
 		for x := beginX; x < endX; x++ {
-			i.frame.SetWithCoord(common.Coord{X: x, Y: y}, render.GetImagePixelWithIndex(im, index))
+			i.frame.SetWithCoord(&common.Coord{X: x, Y: y}, render.GetImagePixelWithIndex(im, index))
 			index++
 		}
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 // API allows the player to send events to the matrix core.
-type API struct{ requestChannel chan Request }
+type API struct{ requestChannel chan *Request }
 
 // Command send a command to the matrix core.
 func (a *API) Command(slot uint64, command common.Command) error {
@@ -15,7 +15,7 @@ func (a *API) Command(slot uint64, command common.Command) error {
 		return errors.New("API is closed")
 	}
 
-	a.requestChannel <- Request{
+	a.requestChannel <- &Request{
 		Type: Request_PLAYER,
 		PlayerData: &Request_PlayerData{
 			Action:  Request_PlayerData_COMMAND,

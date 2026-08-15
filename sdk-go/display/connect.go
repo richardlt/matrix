@@ -42,13 +42,13 @@ func connect(uri string, d Display) error {
 		return errors.WithStack(err)
 	}
 
-	requestChannel := make(chan Request)
+	requestChannel := make(chan *Request)
 	defer close(requestChannel)
 
 	// send event to the matrix core from channel
 	go func() {
 		for cr := range requestChannel {
-			if err := st.Send(&cr); err != nil {
+			if err := st.Send(cr); err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 			}
 		}
@@ -66,7 +66,7 @@ func connect(uri string, d Display) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				requestChannel <- Request{Type: Request_PING}
+				requestChannel <- &Request{Type: Request_PING}
 			}
 		}
 	}()

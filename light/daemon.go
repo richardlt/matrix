@@ -19,7 +19,7 @@ func Start(uri string) error {
 type light struct {
 	api      software.API
 	layer    software.Layer
-	colors   []common.Color
+	colors   []*common.Color
 	selected int
 }
 
@@ -30,8 +30,8 @@ func (l *light) Init(a software.API) (err error) {
 
 	logo := a.GetImageFromLocal("light")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &logo,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           logo,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
 	})
@@ -41,7 +41,7 @@ func (l *light) Init(a software.API) (err error) {
 		return err
 	}
 
-	l.colors = []common.Color{
+	l.colors = []*common.Color{
 		l.api.GetColorFromLocalThemeByName("flat", "white_1"),
 		l.api.GetColorFromLocalThemeByName("flat", "turquoise_1"),
 		l.api.GetColorFromLocalThemeByName("flat", "green_1"),
@@ -84,7 +84,7 @@ func (l *light) ActionReceived(slot uint64, cmd common.Command) {
 func (l *light) print() {
 	for x := 0; x < 16; x++ {
 		for y := 0; y < 9; y++ {
-			l.layer.SetWithCoord(common.Coord{
+			l.layer.SetWithCoord(&common.Coord{
 				X: int64(x),
 				Y: int64(y),
 			}, l.colors[l.selected])

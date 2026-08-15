@@ -41,14 +41,14 @@ func (s Software) Print() {
 
 	id := drivers.NewImage(s.frame)
 
-	var i software.Image
+	var i *software.Image
 	if len(s.softwaresMeta) == 0 {
 		i = render.GetImageByName("empty")
 	} else {
 		i = s.softwaresMeta[s.selected].Logo
 	}
 
-	id.Render(i, common.Coord{X: 8, Y: 4})
+	id.Render(i, &common.Coord{X: 8, Y: 4})
 
 	if s.printCallback != nil {
 		go s.printCallback()

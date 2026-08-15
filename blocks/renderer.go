@@ -32,7 +32,7 @@ func newRenderer(a software.API) (*renderer, error) {
 
 	return &renderer{
 		api: a, layerInfo: l3, layerPiece: l2, layerStack: l1, textDriver: td,
-		pieceColors: []common.Color{
+		pieceColors: []*common.Color{
 			a.GetColorFromLocalThemeByName("flat", "green_2"),
 			a.GetColorFromLocalThemeByName("flat", "blue_2"),
 			a.GetColorFromLocalThemeByName("flat", "violet_2"),
@@ -46,7 +46,7 @@ func newRenderer(a software.API) (*renderer, error) {
 
 type renderer struct {
 	api                               software.API
-	pieceColors                       []common.Color
+	pieceColors                       []*common.Color
 	layerInfo, layerPiece, layerStack software.Layer
 	textDriver                        *software.TextDriver
 }
@@ -60,14 +60,14 @@ func (r *renderer) Clean() {
 func (r *renderer) Print(stack map[coord]pieceType, p *piece) {
 	r.layerStack.Clean()
 	for c, t := range stack {
-		r.layerStack.SetWithCoord(common.Coord{X: int64(c.x), Y: int64(c.y)},
+		r.layerStack.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
 			r.pieceColors[int(t)])
 	}
 
 	r.layerPiece.Clean()
 	if p != nil {
 		for _, c := range p.ToCoords() {
-			r.layerPiece.SetWithCoord(common.Coord{X: int64(c.x), Y: int64(c.y)},
+			r.layerPiece.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
 				r.pieceColors[int(p.Type)])
 		}
 	}
@@ -77,15 +77,15 @@ func (r *renderer) Print(stack map[coord]pieceType, p *piece) {
 
 func (r *renderer) StartPrintScore(score int) {
 	r.layerInfo.Clean()
-	r.textDriver.Render(fmt.Sprintf("%d PTS", score), common.Coord{X: 10, Y: 4},
-		r.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{}, true)
+	r.textDriver.Render(fmt.Sprintf("%d PTS", score), &common.Coord{X: 10, Y: 4},
+		r.api.GetColorFromLocalThemeByName("flat", "red_2"), &common.Color{}, true)
 }
 
 func (r *renderer) StartPrintPaused() {
 	r.layerInfo.Clean()
-	r.textDriver.Render("PAUSED", common.Coord{X: 4, Y: 4},
+	r.textDriver.Render("PAUSED", &common.Coord{X: 4, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "dark_grey_2"),
-		common.Color{},
+		&common.Color{},
 		true)
 }
 

@@ -71,8 +71,8 @@ func (b *blocks) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("blocks")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
 	})

@@ -30,11 +30,11 @@ func (p *Player) Print() {
 	green := render.GetColorFromLocalThemeByName("flat", "green_2")
 
 	cdTBT := drivers.NewCaracter(p.frame, render.GetFontByName("ThreeByThree"))
-	cdTBT.Render('P', common.Coord{X: 11, Y: 5}, green, common.Color{})
+	cdTBT.Render('P', &common.Coord{X: 11, Y: 5}, green, &common.Color{})
 
 	cdFBF := drivers.NewCaracter(p.frame, render.GetFontByName("FiveByFive"))
-	cdFBF.Render([]rune(strconv.Itoa(int(p.selected + 1)))[0], common.Coord{X: 5, Y: 4}, green,
-		common.Color{})
+	cdFBF.Render([]rune(strconv.Itoa(int(p.selected + 1)))[0], &common.Coord{X: 5, Y: 4}, green,
+		&common.Color{})
 
 	if p.printCallback != nil {
 		p.printCallback()

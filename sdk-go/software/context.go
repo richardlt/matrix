@@ -7,7 +7,7 @@ import (
 	context "golang.org/x/net/context"
 )
 
-func newContext(connectRequestChannel chan ConnectRequest,
+func newContext(connectRequestChannel chan *ConnectRequest,
 	client SoftwareClient) *ctx {
 	return &ctx{
 		connectRequestChannel: connectRequestChannel,
@@ -19,7 +19,7 @@ func newContext(connectRequestChannel chan ConnectRequest,
 
 type ctx struct {
 	client                SoftwareClient
-	connectRequestChannel chan ConnectRequest
+	connectRequestChannel chan *ConnectRequest
 	layers                map[string]*layer
 	layerLock             sync.RWMutex
 	drivers               map[string]driver
@@ -38,7 +38,7 @@ func (c *ctx) AddLayer(uuid string, l *layer) {
 	c.layerLock.Unlock()
 }
 
-func (c *ctx) SendConnectRequest(req ConnectRequest) error {
+func (c *ctx) SendConnectRequest(req *ConnectRequest) error {
 	if c.connectRequestChannel == nil {
 		return errors.New("API is closed")
 	}
@@ -47,12 +47,12 @@ func (c *ctx) SendConnectRequest(req ConnectRequest) error {
 	return nil
 }
 
-func (c *ctx) SendCreateRequest(req CreateRequest) (*CreateResponse, error) {
+func (c *ctx) SendCreateRequest(req *CreateRequest) (*CreateResponse, error) {
 	if c.client == nil {
 		return nil, errors.New("API is closed")
 	}
 
-	res, err := c.client.Create(context.Background(), &req)
+	res, err := c.client.Create(context.Background(), req)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -60,12 +60,12 @@ func (c *ctx) SendCreateRequest(req CreateRequest) (*CreateResponse, error) {
 	return res, nil
 }
 
-func (c *ctx) SendLoadRequest(req LoadRequest) (*LoadResponse, error) {
+func (c *ctx) SendLoadRequest(req *LoadRequest) (*LoadResponse, error) {
 	if c.client == nil {
 		return nil, errors.New("API is closed")
 	}
 
-	res, err := c.client.Load(context.Background(), &req)
+	res, err := c.client.Load(context.Background(), req)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -78,7 +78,7 @@ func (c *ctx) Close() {
 	c.client = nil
 }
 
-func (c *ctx) ReceiveConnectResponse(res ConnectResponse) {
+func (c *ctx) ReceiveConnectResponse(res *ConnectResponse) {
 	switch res.Type {
 	case ConnectResponse_DRIVER:
 		c.driverLock.RLock()

@@ -14,13 +14,13 @@ func newRenderer(a software.API) (*renderer, error) {
 	return &renderer{
 		api:   a,
 		layer: l,
-		playersColor: []common.Color{
+		playersColor: []*common.Color{
 			a.GetColorFromLocalThemeByName("yumyum", "player1"),
 			a.GetColorFromLocalThemeByName("yumyum", "player2"),
 			a.GetColorFromLocalThemeByName("yumyum", "player3"),
 			a.GetColorFromLocalThemeByName("yumyum", "player4"),
 		},
-		candiesColor: []common.Color{
+		candiesColor: []*common.Color{
 			a.GetColorFromLocalThemeByName("yumyum", "candy1"),
 			a.GetColorFromLocalThemeByName("yumyum", "candy2"),
 		},
@@ -29,8 +29,8 @@ func newRenderer(a software.API) (*renderer, error) {
 
 type renderer struct {
 	api          software.API
-	playersColor []common.Color
-	candiesColor []common.Color
+	playersColor []*common.Color
+	candiesColor []*common.Color
 	layer        software.Layer
 }
 

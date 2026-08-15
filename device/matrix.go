@@ -27,7 +27,7 @@ func newMatrix() *matrix {
 
 type matrix struct {
 	api         software.API
-	frame       common.Frame
+	frame       *common.Frame
 	brightness  uint8
 	buffer      []byte
 	layer       software.Layer
@@ -36,7 +36,7 @@ type matrix struct {
 
 func (m *matrix) FramesReceived(fs []*common.Frame) {
 	if len(fs) > 0 {
-		m.frame = *fs[0]
+		m.frame = fs[0]
 		m.updateBuffer()
 	}
 }
@@ -46,8 +46,8 @@ func (m *matrix) Init(a software.API) (err error) {
 
 	i := a.GetImageFromLocal("device")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &i,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
 	})
@@ -69,8 +69,8 @@ func (m *matrix) Init(a software.API) (err error) {
 func (m *matrix) Start(uint64) { m.print() }
 
 func (m *matrix) print() {
-	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-left"), common.Coord{X: 2, Y: 4})
-	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-right"), common.Coord{X: 13, Y: 4})
+	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-left"), &common.Coord{X: 2, Y: 4})
+	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-right"), &common.Coord{X: 13, Y: 4})
 
 	grey := m.api.GetColorFromLocalThemeByName("flat", "grey_2")
 	c := m.api.GetColorFromLocalThemeByName("flat", "yellow_2")
@@ -78,41 +78,41 @@ func (m *matrix) print() {
 	if m.brightness < 51 {
 		c = grey
 	}
-	m.layer.SetWithCoord(common.Coord{X: 5, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 5, Y: 6}, c)
 
 	if m.brightness < 102 {
 		c = grey
 	}
-	m.layer.SetWithCoord(common.Coord{X: 6, Y: 6}, c)
-	m.layer.SetWithCoord(common.Coord{X: 6, Y: 5}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 6, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 6, Y: 5}, c)
 
 	if m.brightness < 153 {
 		c = grey
 	}
-	m.layer.SetWithCoord(common.Coord{X: 7, Y: 6}, c)
-	m.layer.SetWithCoord(common.Coord{X: 7, Y: 5}, c)
-	m.layer.SetWithCoord(common.Coord{X: 7, Y: 4}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 5}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 4}, c)
 
 	if m.brightness < 204 {
 		c = grey
 	}
-	m.layer.SetWithCoord(common.Coord{X: 8, Y: 6}, c)
-	m.layer.SetWithCoord(common.Coord{X: 8, Y: 5}, c)
-	m.layer.SetWithCoord(common.Coord{X: 8, Y: 4}, c)
-	m.layer.SetWithCoord(common.Coord{X: 8, Y: 3}, c)
-	m.layer.SetWithCoord(common.Coord{X: 9, Y: 6}, c)
-	m.layer.SetWithCoord(common.Coord{X: 9, Y: 5}, c)
-	m.layer.SetWithCoord(common.Coord{X: 9, Y: 4}, c)
-	m.layer.SetWithCoord(common.Coord{X: 9, Y: 3}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 5}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 4}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 3}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 5}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 4}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 3}, c)
 
 	if m.brightness < 255 {
 		c = grey
 	}
-	m.layer.SetWithCoord(common.Coord{X: 10, Y: 6}, c)
-	m.layer.SetWithCoord(common.Coord{X: 10, Y: 5}, c)
-	m.layer.SetWithCoord(common.Coord{X: 10, Y: 4}, c)
-	m.layer.SetWithCoord(common.Coord{X: 10, Y: 3}, c)
-	m.layer.SetWithCoord(common.Coord{X: 10, Y: 2}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 6}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 5}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 4}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 3}, c)
+	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 2}, c)
 
 	m.api.Print()
 }

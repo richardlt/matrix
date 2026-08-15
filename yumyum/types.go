@@ -10,7 +10,7 @@ type coord struct{ X, Y uint64 }
 
 func (c coord) Equals(o coord) bool { return c.X == o.X && c.Y == o.Y }
 
-func (c coord) Convert() common.Coord { return common.Coord{X: int64(c.X), Y: int64(c.Y)} }
+func (c coord) Convert() *common.Coord { return &common.Coord{X: int64(c.X), Y: int64(c.Y)} }
 
 func newCandy(c coord) *candy {
 	return &candy{

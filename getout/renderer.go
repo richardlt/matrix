@@ -54,8 +54,8 @@ func (r *renderer) printGrid(grid [][]int) {
 	for x, column := range grid {
 		for y, cell := range column {
 			if cell == 0 || cell == 2 {
-				r.layerGrid.SetWithCoord(common.Coord{X: int64(x), Y: int64(y)},
-					common.Color{R: 255, G: 255, B: 255, A: 1})
+				r.layerGrid.SetWithCoord(&common.Coord{X: int64(x), Y: int64(y)},
+					&common.Color{R: 255, G: 255, B: 255, A: 1})
 			}
 		}
 	}
@@ -64,18 +64,18 @@ func (r *renderer) printGrid(grid [][]int) {
 
 func (r *renderer) printPlayer(player, end coord) {
 	r.layerPlayer.Clean()
-	r.layerPlayer.SetWithCoord(common.Coord{X: int64(end.x), Y: int64(end.y)},
+	r.layerPlayer.SetWithCoord(&common.Coord{X: int64(end.x), Y: int64(end.y)},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"))
-	r.layerPlayer.SetWithCoord(common.Coord{X: int64(player.x), Y: int64(player.y)},
+	r.layerPlayer.SetWithCoord(&common.Coord{X: int64(player.x), Y: int64(player.y)},
 		r.api.GetColorFromLocalThemeByName("flat", "blue_2"))
 	r.api.Print()
 }
 
 func (r *renderer) startPrintGameOver() {
 	r.layerInfo.Clean()
-	r.textDriver.Render("GAME OVER", common.Coord{X: 10, Y: 4},
+	r.textDriver.Render("GAME OVER", &common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"),
-		common.Color{A: 1}, true)
+		&common.Color{A: 1}, true)
 }
 
 func (r *renderer) stopPrintGameOver() { r.textDriver.Stop() }

@@ -11,19 +11,19 @@ import (
 )
 
 // GetImagePixelWithIndex returns the color of a image at index.
-func GetImagePixelWithIndex(i software.Image, id int) common.Color { return *i.Colors[i.Mask[id]] }
+func GetImagePixelWithIndex(i *software.Image, id int) *common.Color { return i.Colors[i.Mask[id]] }
 
 // GetImageByName returns an loaded image in memory.
-func GetImageByName(name string) software.Image {
+func GetImageByName(name string) *software.Image {
 	for _, i := range is {
 		if i.Name == name {
 			return i
 		}
 	}
-	return software.Image{}
+	return &software.Image{}
 }
 
-var is []software.Image
+var is []*software.Image
 
 func loadImages() error {
 	files, err := loadFiles("images")
@@ -32,8 +32,8 @@ func loadImages() error {
 	}
 
 	for _, file := range files {
-		var i software.Image
-		if err := json.Unmarshal(file.Data, &i); err != nil {
+		i := &software.Image{}
+		if err := json.Unmarshal(file.Data, i); err != nil {
 			return fmt.Errorf("Can't unmarshal %s image file", file.Name)
 		}
 		is = append(is, i)

@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package display;
 
-import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+option go_package = "github.com/richardlt/matrix/sdk-go/display;display";
+
+import "common/types.proto";
 
 service Display {
   rpc Connect (stream Request) returns (stream Response);

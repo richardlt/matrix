@@ -11,7 +11,7 @@ import (
 )
 
 // NewText returns a new text driver.
-func NewText(fr *render.Frame, fo software.Font) *Text {
+func NewText(fr *render.Frame, fo *software.Font) *Text {
 	return &Text{
 		frame: fr,
 		font:  fo,
@@ -21,14 +21,14 @@ func NewText(fr *render.Frame, fo software.Font) *Text {
 // Text allows to render a given text in frame.
 type Text struct {
 	frame        *render.Frame
-	font         software.Font
+	font         *software.Font
 	ticker       *time.Ticker
 	endCallback  func()
 	stepCallback func(total, current uint64)
 }
 
 // Render displays given text from left to right with scroll effect if too long.
-func (t *Text) Render(text string, center common.Coord, color, background common.Color, repeat bool) {
+func (t *Text) Render(text string, center *common.Coord, color, background *common.Color, repeat bool) {
 	if t.ticker != nil {
 		t.ticker.Stop()
 	}
@@ -54,7 +54,7 @@ func (t *Text) Render(text string, center common.Coord, color, background common
 	offset := int64(0)
 	for _, c := range text {
 		caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
-		cd.Render(c, common.Coord{
+		cd.Render(c, &common.Coord{
 			X: offset + int64(caracterWidth-caracterWidth/2) - 1,
 			Y: center.Y,
 		}, color, background)

@@ -7,10 +7,10 @@ import (
 type Layer interface {
 	Clean() error
 	Remove() error
-	SetWithCoord(common.Coord, common.Color) error
+	SetWithCoord(*common.Coord, *common.Color) error
 	NewRandomDriver() (*RandomDriver, error)
-	NewCaracterDriver(Font) (*CaracterDriver, error)
-	NewTextDriver(Font) (*TextDriver, error)
+	NewCaracterDriver(*Font) (*CaracterDriver, error)
+	NewTextDriver(*Font) (*TextDriver, error)
 	NewImageDriver() (*ImageDriver, error)
 }
 
@@ -22,7 +22,7 @@ type layer struct {
 
 // Clean set all layer's pixels to default color.
 func (l *layer) Clean() error {
-	return l.ctx.SendConnectRequest(ConnectRequest{
+	return l.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_LAYER,
 		LayerData: &ConnectRequest_LayerData{
 			Action: ConnectRequest_LayerData_CLEAN,
@@ -33,7 +33,7 @@ func (l *layer) Clean() error {
 
 // Remove an existing layer.
 func (l *layer) Remove() error {
-	return l.ctx.SendConnectRequest(ConnectRequest{
+	return l.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_LAYER,
 		LayerData: &ConnectRequest_LayerData{
 			Action: ConnectRequest_LayerData_REMOVE,
@@ -43,20 +43,20 @@ func (l *layer) Remove() error {
 }
 
 // SetWithCoord allows to change the color of a given pixel.
-func (l *layer) SetWithCoord(coord common.Coord, color common.Color) error {
-	return l.ctx.SendConnectRequest(ConnectRequest{
+func (l *layer) SetWithCoord(coord *common.Coord, color *common.Color) error {
+	return l.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_LAYER,
 		LayerData: &ConnectRequest_LayerData{
 			Action: ConnectRequest_LayerData_SET_WITH_COORD,
-			Coord:  &coord,
-			Color:  &color,
+			Coord:  coord,
+			Color:  color,
 			UUID:   l.uuid,
 		},
 	})
 }
 
 func (l *layer) NewRandomDriver() (*RandomDriver, error) {
-	res, err := l.ctx.SendCreateRequest(CreateRequest{
+	res, err := l.ctx.SendCreateRequest(&CreateRequest{
 		Type: CreateRequest_DRIVER,
 		DriverData: &CreateRequest_DriverData{
 			Type:         CreateRequest_DriverData_RANDOM,
@@ -74,14 +74,14 @@ func (l *layer) NewRandomDriver() (*RandomDriver, error) {
 	return rd, nil
 }
 
-func (l *layer) NewCaracterDriver(font Font) (*CaracterDriver, error) {
-	res, err := l.ctx.SendCreateRequest(CreateRequest{
+func (l *layer) NewCaracterDriver(font *Font) (*CaracterDriver, error) {
+	res, err := l.ctx.SendCreateRequest(&CreateRequest{
 		Type: CreateRequest_DRIVER,
 		DriverData: &CreateRequest_DriverData{
 			Type:         CreateRequest_DriverData_CARACTER,
 			LayerUUID:    l.uuid,
 			SoftwareUUID: l.softwareUUID,
-			Font:         &font,
+			Font:         font,
 		},
 	})
 	if err != nil {
@@ -94,14 +94,14 @@ func (l *layer) NewCaracterDriver(font Font) (*CaracterDriver, error) {
 	return cd, nil
 }
 
-func (l *layer) NewTextDriver(font Font) (*TextDriver, error) {
-	res, err := l.ctx.SendCreateRequest(CreateRequest{
+func (l *layer) NewTextDriver(font *Font) (*TextDriver, error) {
+	res, err := l.ctx.SendCreateRequest(&CreateRequest{
 		Type: CreateRequest_DRIVER,
 		DriverData: &CreateRequest_DriverData{
 			Type:         CreateRequest_DriverData_TEXT,
 			LayerUUID:    l.uuid,
 			SoftwareUUID: l.softwareUUID,
-			Font:         &font,
+			Font:         font,
 		},
 	})
 	if err != nil {
@@ -115,7 +115,7 @@ func (l *layer) NewTextDriver(font Font) (*TextDriver, error) {
 }
 
 func (l *layer) NewImageDriver() (*ImageDriver, error) {
-	res, err := l.ctx.SendCreateRequest(CreateRequest{
+	res, err := l.ctx.SendCreateRequest(&CreateRequest{
 		Type: CreateRequest_DRIVER,
 		DriverData: &CreateRequest_DriverData{
 			Type:         CreateRequest_DriverData_IMAGE,

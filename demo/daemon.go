@@ -37,8 +37,8 @@ func (d *demo) Init(a software.API) (err error) {
 
 	i := a.GetImageFromLocal("demo")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &i,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
 	})
@@ -145,12 +145,12 @@ func (d *demo) playRandom(ctx context.Context) {
 }
 
 func (d *demo) playCaracter() {
-	d.caracterDriver.Render('A', common.Coord{X: 5, Y: 3},
-		d.api.GetColorFromLocalThemeByName("flat", "red_2"), common.Color{})
-	d.caracterDriver.Render('B', common.Coord{X: 8, Y: 4},
-		d.api.GetColorFromLocalThemeByName("flat", "orange_2"), common.Color{})
-	d.caracterDriver.Render('C', common.Coord{X: 10, Y: 5},
-		d.api.GetColorFromLocalThemeByName("flat", "green_2"), common.Color{})
+	d.caracterDriver.Render('A', &common.Coord{X: 5, Y: 3},
+		d.api.GetColorFromLocalThemeByName("flat", "red_2"), &common.Color{})
+	d.caracterDriver.Render('B', &common.Coord{X: 8, Y: 4},
+		d.api.GetColorFromLocalThemeByName("flat", "orange_2"), &common.Color{})
+	d.caracterDriver.Render('C', &common.Coord{X: 10, Y: 5},
+		d.api.GetColorFromLocalThemeByName("flat", "green_2"), &common.Color{})
 }
 
 func (d *demo) playText() {
@@ -162,20 +162,20 @@ func (d *demo) playText() {
 			d.layer.Clean()
 			d.playText()
 		})
-		d.textDriver.Render("SOFTWARE", common.Coord{X: 0, Y: 6},
+		d.textDriver.Render("SOFTWARE", &common.Coord{X: 0, Y: 6},
 			d.api.GetColorFromLocalThemeByName("flat", "green_2"),
-			common.Color{}, false)
+			&common.Color{}, false)
 	})
-	d.textDriver.Render("EXAMPLE", common.Coord{X: 0, Y: 2},
+	d.textDriver.Render("EXAMPLE", &common.Coord{X: 0, Y: 2},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
-		common.Color{}, false)
+		&common.Color{}, false)
 }
 
 func (d *demo) playTextRepeat() {
 	d.textDriver.OnEnd(func() {})
-	d.textDriver.Render("REPEAT", common.Coord{X: 10, Y: 4},
+	d.textDriver.Render("REPEAT", &common.Coord{X: 10, Y: 4},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
-		common.Color{}, true)
+		&common.Color{}, true)
 }
 
 func (d *demo) playImage(ctx context.Context) {
@@ -183,10 +183,10 @@ func (d *demo) playImage(ctx context.Context) {
 		d.layer.Clean()
 		if nb == 0 {
 			d.imageDriver.Render(d.api.GetImageFromLocal("monster-one"),
-				common.Coord{X: 6, Y: 4})
+				&common.Coord{X: 6, Y: 4})
 		} else {
 			d.imageDriver.Render(d.api.GetImageFromLocal("monster-two"),
-				common.Coord{X: 11, Y: 5})
+				&common.Coord{X: 11, Y: 5})
 		}
 	}
 

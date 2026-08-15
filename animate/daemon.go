@@ -54,7 +54,7 @@ type header struct {
 
 type animation []byte
 
-func (a animation) readFrame(width, height, index int) software.Image {
+func (a animation) readFrame(width, height, index int) *software.Image {
 	pixels := 3 * width * height
 	start := index * pixels
 	end := start + pixels
@@ -65,7 +65,7 @@ func (a animation) readFrame(width, height, index int) software.Image {
 	mask := make([]uint64, width*height)
 	var cursor int
 	for i := range mask {
-		c := common.Color{
+		c := &common.Color{
 			R: uint64(buf[cursor]),
 			G: uint64(buf[cursor+1]),
 			B: uint64(buf[cursor+2]),
@@ -73,7 +73,7 @@ func (a animation) readFrame(width, height, index int) software.Image {
 		}
 		key := fmt.Sprintf("%d%d%d", c.R, c.G, c.B)
 		if v, ok := mapColors[key]; !ok {
-			colors = append(colors, &c)
+			colors = append(colors, c)
 			mask[i] = uint64(len(colors) - 1)
 			mapColors[key] = mask[i]
 		} else {
@@ -82,7 +82,7 @@ func (a animation) readFrame(width, height, index int) software.Image {
 		cursor += 3
 	}
 
-	return software.Image{
+	return &software.Image{
 		Width:  uint64(width),
 		Height: uint64(height),
 		Colors: colors,
@@ -106,8 +106,8 @@ func (a *animate) Init(api software.API) (err error) {
 
 	i := api.GetImageFromLocal("animate")
 
-	api.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &i,
+	api.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
 	})
@@ -189,7 +189,7 @@ func (a *animate) play() {
 		case <-ticker.C:
 			a.imageDriver.Render(
 				anim.readFrame(h.Width, h.Height, index),
-				common.Coord{X: 8, Y: 4}, // middle of the screen
+				&common.Coord{X: 8, Y: 4}, // middle of the screen
 			)
 			if index+1 == maxIndex {
 				index = 0

@@ -20,6 +20,7 @@ func NewSoftwareServer() *SoftwareServer { return &SoftwareServer{} }
 
 // SoftwareServer exposes RPC server for softwares.
 type SoftwareServer struct {
+	softwareSDK.UnimplementedSoftwareServer
 	softwares              []*software
 	softwareLock           sync.RWMutex
 	current                *software
@@ -133,7 +134,7 @@ func (s *SoftwareServer) RemoveSoftware(so *software) {
 
 // Connect software action.
 func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) error {
-	chRes := make(chan softwareSDK.ConnectResponse)
+	chRes := make(chan *softwareSDK.ConnectResponse)
 	defer close(chRes)
 
 	so := newSoftware(chRes)
@@ -177,14 +178,14 @@ func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) erro
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				chRes <- softwareSDK.ConnectResponse{Type: softwareSDK.ConnectResponse_PING}
+				chRes <- &softwareSDK.ConnectResponse{Type: softwareSDK.ConnectResponse_PING}
 			}
 		}
 	}()
 
 	go func() {
 		for r := range chRes {
-			if err := stream.Send(&r); err != nil {
+			if err := stream.Send(r); err != nil {
 				logrus.Errorf("%+v", errors.WithStack(err))
 			}
 		}
@@ -204,7 +205,7 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 	case softwareSDK.ConnectRequest_SOFTWARE:
 		switch req.SoftwareData.Action {
 		case softwareSDK.ConnectRequest_SoftwareData_SET_CONFIG:
-			so.SetConfig(*req.SoftwareData.Config)
+			so.SetConfig(req.SoftwareData.Config)
 		case softwareSDK.ConnectRequest_SoftwareData_READY:
 			so.Ready = true
 			s.notifyChanges()
@@ -216,7 +217,7 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 	case softwareSDK.ConnectRequest_LAYER:
 		switch req.LayerData.Action {
 		case softwareSDK.ConnectRequest_LayerData_SET_WITH_COORD:
-			so.LayerSetWithCoord(req.LayerData.UUID, *req.LayerData.Coord, *req.LayerData.Color)
+			so.LayerSetWithCoord(req.LayerData.UUID, req.LayerData.Coord, req.LayerData.Color)
 		case softwareSDK.ConnectRequest_LayerData_CLEAN:
 			so.LayerClean(req.LayerData.UUID)
 		case softwareSDK.ConnectRequest_LayerData_REMOVE:
@@ -229,16 +230,16 @@ func (s *SoftwareServer) processRequest(so *software, req *softwareSDK.ConnectRe
 				rd.Render()
 			}
 			if cd, ok := so.caracterDrivers[req.DriverData.UUID]; ok {
-				cd.Render([]rune(req.DriverData.Caracter)[0], *req.DriverData.Coord,
-					*req.DriverData.Color, *req.DriverData.Background)
+				cd.Render([]rune(req.DriverData.Caracter)[0], req.DriverData.Coord,
+					req.DriverData.Color, req.DriverData.Background)
 			}
 			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
-				td.Render(req.DriverData.Text, *req.DriverData.Coord,
-					*req.DriverData.Color, *req.DriverData.Background,
+				td.Render(req.DriverData.Text, req.DriverData.Coord,
+					req.DriverData.Color, req.DriverData.Background,
 					req.DriverData.Repeat)
 			}
 			if id, ok := so.imageDrivers[req.DriverData.UUID]; ok {
-				id.Render(*req.DriverData.Image, *req.DriverData.Coord)
+				id.Render(req.DriverData.Image, req.DriverData.Coord)
 			}
 		case softwareSDK.ConnectRequest_DriverData_STOP:
 			if td, ok := so.textDrivers[req.DriverData.UUID]; ok {
@@ -264,7 +265,7 @@ func (s *SoftwareServer) Create(ctx context.Context,
 			if l := so.GetLayerByUUID(req.DriverData.LayerUUID); l != nil {
 				res = &softwareSDK.CreateResponse{
 					Type: softwareSDK.CreateResponse_DRIVER,
-					UUID: so.CreateDriver(l, *req.DriverData),
+					UUID: so.CreateDriver(l, req.DriverData),
 				}
 			}
 		}
@@ -280,20 +281,20 @@ func (s *SoftwareServer) Load(ctx context.Context,
 		i := render.GetImageByName(req.ImageData.Name)
 		res = &softwareSDK.LoadResponse{
 			Type:  softwareSDK.LoadResponse_IMAGE,
-			Image: &i,
+			Image: i,
 		}
 	case softwareSDK.LoadRequest_COLOR:
 		c := render.GetColorFromLocalThemeByName(req.ColorData.ThemeName,
 			req.ColorData.Name)
 		res = &softwareSDK.LoadResponse{
 			Type:  softwareSDK.LoadResponse_COLOR,
-			Color: &c,
+			Color: c,
 		}
 	case softwareSDK.LoadRequest_FONT:
 		f := render.GetFontByName(req.FontData.Name)
 		res = &softwareSDK.LoadResponse{
 			Type: softwareSDK.LoadResponse_FONT,
-			Font: &f,
+			Font: f,
 		}
 	}
 	return
@@ -311,7 +312,7 @@ func (s *SoftwareServer) getSoftwareByUUID(uuid string) *software {
 	return nil
 }
 
-func newSoftware(connectResponseChannel chan softwareSDK.ConnectResponse) *software {
+func newSoftware(connectResponseChannel chan *softwareSDK.ConnectResponse) *software {
 	return &software{
 		UUID:                   uuid.NewString(),
 		connectResponseChannel: connectResponseChannel,
@@ -326,9 +327,9 @@ func newSoftware(connectResponseChannel chan softwareSDK.ConnectResponse) *softw
 
 type software struct {
 	UUID                           string
-	Logo                           softwareSDK.Image
+	Logo                           *softwareSDK.Image
 	MinPlayerCount, MaxPlayerCount uint64
-	connectResponseChannel         chan softwareSDK.ConnectResponse
+	connectResponseChannel         chan *softwareSDK.ConnectResponse
 	Ready                          bool
 	matrix                         *render.Matrix
 	layers                         map[string]*render.Frame
@@ -358,7 +359,7 @@ func (s software) GetTopFrame() render.Frame {
 	return s.matrix.GetTopFrame()
 }
 
-func (s *software) LayerSetWithCoord(layerUUID string, coord common.Coord, col common.Color) {
+func (s *software) LayerSetWithCoord(layerUUID string, coord *common.Coord, col *common.Color) {
 	if l, ok := s.layers[layerUUID]; ok {
 		l.SetWithCoord(coord, col)
 	}
@@ -376,16 +377,16 @@ func (s *software) LayerRemove(layerUUID string) {
 	}
 }
 
-func (s *software) SetConfig(c softwareSDK.ConnectRequest_SoftwareData_Config) {
+func (s *software) SetConfig(c *softwareSDK.ConnectRequest_SoftwareData_Config) {
 	if c.Logo != nil {
-		s.Logo = *c.Logo
+		s.Logo = c.Logo
 		s.MinPlayerCount = c.MinPlayerCount
 		s.MaxPlayerCount = c.MaxPlayerCount
 	}
 }
 
 func (s *software) Start(playerCount uint64) {
-	s.connectResponseChannel <- softwareSDK.ConnectResponse{
+	s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 		Type: softwareSDK.ConnectResponse_SOFTWARE,
 		SoftwareData: &softwareSDK.ConnectResponse_SoftwareData{
 			Action:      softwareSDK.ConnectResponse_SoftwareData_START,
@@ -395,7 +396,7 @@ func (s *software) Start(playerCount uint64) {
 }
 
 func (s *software) Close() {
-	s.connectResponseChannel <- softwareSDK.ConnectResponse{
+	s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 		Type: softwareSDK.ConnectResponse_SOFTWARE,
 		SoftwareData: &softwareSDK.ConnectResponse_SoftwareData{
 			Action: softwareSDK.ConnectResponse_SoftwareData_CLOSE,
@@ -404,7 +405,7 @@ func (s *software) Close() {
 }
 
 func (s *software) Command(slot uint64, command common.Command) {
-	s.connectResponseChannel <- softwareSDK.ConnectResponse{
+	s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 		Type: softwareSDK.ConnectResponse_SOFTWARE,
 		SoftwareData: &softwareSDK.ConnectResponse_SoftwareData{
 			Action:  softwareSDK.ConnectResponse_SoftwareData_PLAYER_COMMAND,
@@ -420,14 +421,14 @@ func (s *software) CreateLayer() string {
 	return uuid
 }
 
-func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRequest_DriverData) string {
+func (s *software) CreateDriver(l *render.Frame, driverData *softwareSDK.CreateRequest_DriverData) string {
 	uuid := uuid.NewString()
 
 	switch driverData.Type {
 	case softwareSDK.CreateRequest_DriverData_RANDOM:
 		rd := drivers.NewRandom(l)
 		rd.OnEnd(func() {
-			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+			s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
 				DriverData: &softwareSDK.ConnectResponse_DriverData{
 					Action: softwareSDK.ConnectResponse_DriverData_END,
@@ -437,9 +438,9 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 		})
 		s.randomDrivers[uuid] = rd
 	case softwareSDK.CreateRequest_DriverData_CARACTER:
-		cd := drivers.NewCaracter(l, *driverData.Font)
+		cd := drivers.NewCaracter(l, driverData.Font)
 		cd.OnEnd(func() {
-			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+			s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
 				DriverData: &softwareSDK.ConnectResponse_DriverData{
 					Action: softwareSDK.ConnectResponse_DriverData_END,
@@ -449,9 +450,9 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 		})
 		s.caracterDrivers[uuid] = cd
 	case softwareSDK.CreateRequest_DriverData_TEXT:
-		td := drivers.NewText(l, *driverData.Font)
+		td := drivers.NewText(l, driverData.Font)
 		td.OnEnd(func() {
-			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+			s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
 				DriverData: &softwareSDK.ConnectResponse_DriverData{
 					Action: softwareSDK.ConnectResponse_DriverData_END,
@@ -460,7 +461,7 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 			}
 		})
 		td.OnStep(func(total, current uint64) {
-			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+			s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
 				DriverData: &softwareSDK.ConnectResponse_DriverData{
 					Action:  softwareSDK.ConnectResponse_DriverData_STEP,
@@ -474,7 +475,7 @@ func (s *software) CreateDriver(l *render.Frame, driverData softwareSDK.CreateRe
 	case softwareSDK.CreateRequest_DriverData_IMAGE:
 		id := drivers.NewImage(l)
 		id.OnEnd(func() {
-			s.connectResponseChannel <- softwareSDK.ConnectResponse{
+			s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 				Type: softwareSDK.ConnectResponse_DRIVER,
 				DriverData: &softwareSDK.ConnectResponse_DriverData{
 					Action: softwareSDK.ConnectResponse_DriverData_END,
@@ -499,6 +500,6 @@ func (s *software) GetLayerByUUID(uuid string) *render.Frame {
 // SoftwareMeta contains metadata for a software.
 type SoftwareMeta struct {
 	UUID                           string
-	Logo                           softwareSDK.Image
+	Logo                           *softwareSDK.Image
 	MinPlayerCount, MaxPlayerCount uint64
 }

@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package software;
 
-import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+option go_package = "github.com/richardlt/matrix/sdk-go/software;software";
+
+import "common/types.proto";
 
 service Software {
   rpc Connect (stream ConnectRequest) returns (stream ConnectResponse);

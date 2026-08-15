@@ -35,8 +35,8 @@ func (z *zigzag) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("zigzag")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
 	})
