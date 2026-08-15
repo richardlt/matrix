@@ -1,6 +1,27 @@
 name: test
 on: [push]
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+      - run: make check
+
+  # Catch a break in the release target on the branch rather than at tag time. This only
+  # compiles for ARMv6; producing the shippable binary needs the cross toolchain and
+  # happens in the release workflow.
+  armv6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+      - run: make check-armv6
+
   test:
     runs-on: ubuntu-latest
     steps:

@@ -58,8 +58,12 @@ $ service matrix status
 ```
 ```sh
 $ unzip matrix.zip # for others
-$ cd matrix-package && ./matrix-[REPLACE_DEPENDING_OS] start --log-level info --gamepad-port 80 core device gamepad emulator demo zigzag yumyum clock draw blocks getout # select the right executable depending on your os 
+$ cd matrix-package && ./matrix-linux-armv6 start --log-level info --gamepad-port 80 core device gamepad emulator demo zigzag yumyum clock draw blocks getout
 ```
+
+The release binary targets ARMv6 and also runs on later ARMv7 hardware. It is statically
+linked, so it does not depend on the system's libc. On anything else, build from source
+with `make build`.
 
 3. Install firmware on the Arduino from file in Matrix source code (inside folder at ./device/firmware/firmware.ino). Source code can be downloaded from [release](https://github.com/richardlt/matrix/releases).
 
@@ -82,3 +86,23 @@ $ (cd gamepad && npm start)
 ```
 
 4. Open emulator at http://localhost:3001 and/or gamepad at http://localhost:4002.
+
+## Checks and release builds
+
+```sh
+$ make check   # gofmt, go vet and errcheck
+$ make test    # unit tests with the race detector
+```
+
+`make build-armv6` produces the release binary, a static ARMv6 build. It needs an ARMv6
+musl cross toolchain providing `armv6-linux-musleabihf-gcc`, which is not an apt package;
+point the build at another one with `make build-armv6 ARMV6_CC=<compiler>`.
+
+Both halves of the build have to target ARMv6. The Go side is `GOARM=6`, and the C side
+matters just as much, because the device component reaches USB controllers through
+[karalabe/hid](https://github.com/karalabe/hid), which compiles a vendored copy of
+libusb. Debian's `arm-linux-gnueabihf` defaults to ARMv7, so building with it would leave
+an ARMv7 C payload inside an otherwise ARMv6 binary.
+
+`make check-armv6` compiles for ARMv6 without the toolchain. It is a compile check only:
+cgo is off, so the result has no controller support and is not shippable.
