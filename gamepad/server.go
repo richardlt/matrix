@@ -2,9 +2,10 @@ package gamepad
 
 import (
 	"fmt"
+	"net/http"
 	"sync"
+	"time"
 
-	"github.com/labstack/echo"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -52,14 +53,18 @@ func Start(port int, uri string) error {
 		}
 	}()
 
-	e := echo.New()
-	e.HideBanner = true
+	mux := http.NewServeMux()
+	mux.Handle("/websocket", s)
+	mux.Handle("/", http.FileServer(http.Dir("./gamepad/public")))
 
-	e.Any("/websocket", echo.WrapHandler(s))
-	e.Static("/", "./gamepad/public")
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	logrus.Infof("Start gamepad on port %d\n", port)
-	return errors.WithStack(e.Start(fmt.Sprintf(":%d", port)))
+	return errors.WithStack(srv.ListenAndServe())
 }
 
 type gamepadServer struct {
