@@ -30,11 +30,13 @@ func (l *light) Init(a software.API) (err error) {
 
 	logo := a.GetImageFromLocal("light")
 
-	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
 		Logo:           logo,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
-	})
+	}); err != nil {
+		return err
+	}
 
 	l.layer, err = l.api.NewLayer()
 	if err != nil {
@@ -84,11 +86,11 @@ func (l *light) ActionReceived(slot uint64, cmd common.Command) {
 func (l *light) print() {
 	for x := 0; x < 16; x++ {
 		for y := 0; y < 9; y++ {
-			l.layer.SetWithCoord(&common.Coord{
+			_ = l.layer.SetWithCoord(&common.Coord{
 				X: int64(x),
 				Y: int64(y),
 			}, l.colors[l.selected])
 		}
 	}
-	l.api.Print()
+	_ = l.api.Print()
 }

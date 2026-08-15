@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/websocket"
@@ -33,13 +33,15 @@ func Start(port int, uri string) error {
 
 	go func() {
 		for f := range frameChannel {
-			s.Broadcast("frame", f)
+			if err := s.Broadcast("frame", f); err != nil {
+				logrus.Errorf("%+v", err)
+			}
 		}
 	}()
 
 	go func() {
 		if err := display.Connect(uri, emulator{frameChannel}, true); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("connecting emulator display to %s: %w", uri, err))
 		}
 	}()
 
@@ -54,7 +56,10 @@ func Start(port int, uri string) error {
 	}
 
 	logrus.Infof("Start emulator on port %d\n", port)
-	return errors.WithStack(srv.ListenAndServe())
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Errorf("serving emulator on port %d: %w", port, err)
+	}
+	return nil
 }
 
 type emulator struct{ frameChannel chan frame }

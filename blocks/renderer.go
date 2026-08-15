@@ -28,7 +28,7 @@ func newRenderer(a software.API) (*renderer, error) {
 		return nil, err
 	}
 
-	td.OnStep(func(total, current uint64) { a.Print() })
+	td.OnStep(func(total, current uint64) { _ = a.Print() })
 
 	return &renderer{
 		api: a, layerInfo: l3, layerPiece: l2, layerStack: l1, textDriver: td,
@@ -52,44 +52,44 @@ type renderer struct {
 }
 
 func (r *renderer) Clean() {
-	r.layerPiece.Clean()
-	r.layerStack.Clean()
-	r.layerInfo.Clean()
+	_ = r.layerPiece.Clean()
+	_ = r.layerStack.Clean()
+	_ = r.layerInfo.Clean()
 }
 
 func (r *renderer) Print(stack map[coord]pieceType, p *piece) {
-	r.layerStack.Clean()
+	_ = r.layerStack.Clean()
 	for c, t := range stack {
-		r.layerStack.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
+		_ = r.layerStack.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
 			r.pieceColors[int(t)])
 	}
 
-	r.layerPiece.Clean()
+	_ = r.layerPiece.Clean()
 	if p != nil {
 		for _, c := range p.ToCoords() {
-			r.layerPiece.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
+			_ = r.layerPiece.SetWithCoord(&common.Coord{X: int64(c.x), Y: int64(c.y)},
 				r.pieceColors[int(p.Type)])
 		}
 	}
 
-	r.api.Print()
+	_ = r.api.Print()
 }
 
 func (r *renderer) StartPrintScore(score int) {
-	r.layerInfo.Clean()
-	r.textDriver.Render(fmt.Sprintf("%d PTS", score), &common.Coord{X: 10, Y: 4},
+	_ = r.layerInfo.Clean()
+	_ = r.textDriver.Render(fmt.Sprintf("%d PTS", score), &common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"), &common.Color{}, true)
 }
 
 func (r *renderer) StartPrintPaused() {
-	r.layerInfo.Clean()
-	r.textDriver.Render("PAUSED", &common.Coord{X: 4, Y: 4},
+	_ = r.layerInfo.Clean()
+	_ = r.textDriver.Render("PAUSED", &common.Coord{X: 4, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "dark_grey_2"),
 		&common.Color{},
 		true)
 }
 
 func (r *renderer) StopPrintInfo() {
-	r.layerInfo.Clean()
-	r.textDriver.Stop()
+	_ = r.layerInfo.Clean()
+	_ = r.textDriver.Stop()
 }

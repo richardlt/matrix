@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	serial "go.bug.st/serial.v1"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
@@ -46,11 +46,13 @@ func (m *matrix) Init(a software.API) (err error) {
 
 	i := a.GetImageFromLocal("device")
 
-	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
 		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
-	})
+	}); err != nil {
+		return err
+	}
 
 	m.layer, err = a.NewLayer()
 	if err != nil {
@@ -62,15 +64,14 @@ func (m *matrix) Init(a software.API) (err error) {
 		return err
 	}
 
-	a.Ready()
-	return nil
+	return a.Ready()
 }
 
 func (m *matrix) Start(uint64) { m.print() }
 
 func (m *matrix) print() {
-	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-left"), &common.Coord{X: 2, Y: 4})
-	m.imageDriver.Render(m.api.GetImageFromLocal("arrow-right"), &common.Coord{X: 13, Y: 4})
+	_ = m.imageDriver.Render(m.api.GetImageFromLocal("arrow-left"), &common.Coord{X: 2, Y: 4})
+	_ = m.imageDriver.Render(m.api.GetImageFromLocal("arrow-right"), &common.Coord{X: 13, Y: 4})
 
 	grey := m.api.GetColorFromLocalThemeByName("flat", "grey_2")
 	c := m.api.GetColorFromLocalThemeByName("flat", "yellow_2")
@@ -78,43 +79,43 @@ func (m *matrix) print() {
 	if m.brightness < 51 {
 		c = grey
 	}
-	m.layer.SetWithCoord(&common.Coord{X: 5, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 5, Y: 6}, c)
 
 	if m.brightness < 102 {
 		c = grey
 	}
-	m.layer.SetWithCoord(&common.Coord{X: 6, Y: 6}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 6, Y: 5}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 6, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 6, Y: 5}, c)
 
 	if m.brightness < 153 {
 		c = grey
 	}
-	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 6}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 5}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 7, Y: 4}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 7, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 7, Y: 5}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 7, Y: 4}, c)
 
 	if m.brightness < 204 {
 		c = grey
 	}
-	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 6}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 5}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 4}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 8, Y: 3}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 6}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 5}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 4}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 9, Y: 3}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 8, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 8, Y: 5}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 8, Y: 4}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 8, Y: 3}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 9, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 9, Y: 5}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 9, Y: 4}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 9, Y: 3}, c)
 
 	if m.brightness < 255 {
 		c = grey
 	}
-	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 6}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 5}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 4}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 3}, c)
-	m.layer.SetWithCoord(&common.Coord{X: 10, Y: 2}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 10, Y: 6}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 10, Y: 5}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 10, Y: 4}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 10, Y: 3}, c)
+	_ = m.layer.SetWithCoord(&common.Coord{X: 10, Y: 2}, c)
 
-	m.api.Print()
+	_ = m.api.Print()
 }
 
 func (m *matrix) Close() {}
@@ -155,7 +156,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 
 			paths, err := serial.GetPortsList()
 			if err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("listing serial ports: %w", err))
 				defered()
 				continue
 			}
@@ -180,7 +181,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 							logrus.Debugf("Port at %s is not available", path)
 							newInvalid[path] = struct{}{}
 						} else {
-							logrus.Errorf("%+v", errors.WithStack(err))
+							logrus.Errorf("%+v", errors.Errorf("opening serial port %s: %w", path, err))
 						}
 						continue
 					}
@@ -245,7 +246,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 									}
 
 									if _, err := port.Write(buffer); err != nil {
-										logrus.Errorf("%+v", errors.WithStack(err))
+										logrus.Errorf("%+v", errors.Errorf("writing frame to serial port %s: %w", path, err))
 										return
 									}
 
@@ -253,7 +254,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 									ack := make([]byte, 1)
 									_, err = port.Read(ack)
 									if err != nil {
-										logrus.Errorf("%+v", errors.WithStack(err))
+										logrus.Errorf("%+v", errors.Errorf("reading ack from serial port %s: %w", path, err))
 										return
 									}
 								}

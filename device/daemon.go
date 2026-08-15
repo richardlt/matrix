@@ -2,7 +2,7 @@ package device
 
 import (
 	"context"
-	
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/sdk-go/display"

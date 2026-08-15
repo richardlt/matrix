@@ -3,10 +3,11 @@ package player
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
+
+	"github.com/richardlt/matrix/internal/errors"
 )
 
 type Player interface {
@@ -29,15 +30,15 @@ func Connect(uri string, p Player, reconnect bool) error {
 func connect(uri string, p Player) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewPlayerClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening player stream to %s: %w", uri, err)
 	}
 
 	requestChannel := make(chan *Request)
@@ -50,7 +51,7 @@ func connect(uri string, p Player) error {
 	go func() {
 		for cr := range requestChannel {
 			if err := st.Send(cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending player request: %w", err))
 			}
 		}
 	}()
@@ -79,7 +80,7 @@ func connect(uri string, p Player) error {
 	for {
 		_, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving player response: %w", err)
 		}
 	}
 }

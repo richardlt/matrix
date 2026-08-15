@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
@@ -37,7 +37,9 @@ func Start(port int, uri string) error {
 
 	go func() {
 		for f := range frameChannel {
-			s.Broadcast("frame", f)
+			if err := s.Broadcast("frame", f); err != nil {
+				logrus.Errorf("%+v", err)
+			}
 		}
 	}()
 
@@ -64,7 +66,10 @@ func Start(port int, uri string) error {
 	}
 
 	logrus.Infof("Start gamepad on port %d\n", port)
-	return errors.WithStack(srv.ListenAndServe())
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Errorf("serving gamepad on port %d: %w", port, err)
+	}
+	return nil
 }
 
 type gamepadServer struct {
@@ -114,7 +119,9 @@ func (g *gamepadServer) RemoveGamepad(gp *gamepad) {
 
 func (g *gamepadServer) Command(gp *gamepad, cmd common.Command) {
 	if 0 <= gp.Slot {
-		g.playerAPI.Command(uint64(gp.Slot), cmd)
+		if err := g.playerAPI.Command(uint64(gp.Slot), cmd); err != nil {
+			logrus.Errorf("%+v", err)
+		}
 	}
 }
 
@@ -149,5 +156,7 @@ type gamepad struct {
 
 func (g *gamepad) SelectSlot(slot int) {
 	g.Slot = slot
-	g.so.Send("slot", slot)
+	if err := g.so.Send("slot", slot); err != nil {
+		logrus.Errorf("%+v", err)
+	}
 }

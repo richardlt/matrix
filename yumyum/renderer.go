@@ -35,14 +35,14 @@ type renderer struct {
 }
 
 func (r renderer) Print(ps []player, cs []candy) {
-	r.layer.Clean()
+	_ = r.layer.Clean()
 	for i, p := range ps {
-		r.layer.SetWithCoord(p.Coord.Convert(), r.playersColor[i])
+		_ = r.layer.SetWithCoord(p.Coord.Convert(), r.playersColor[i])
 	}
 	for _, c := range cs {
 		if c.State {
-			r.layer.SetWithCoord(c.Coord.Convert(), r.candiesColor[c.Points])
+			_ = r.layer.SetWithCoord(c.Coord.Convert(), r.candiesColor[c.Points])
 		}
 	}
-	r.api.Print()
+	_ = r.api.Print()
 }

@@ -31,11 +31,13 @@ func (y *yumyum) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("yumyum")
 
-	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
 		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
-	})
+	}); err != nil {
+		return err
+	}
 
 	return a.Ready()
 }

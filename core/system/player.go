@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	playerSDK "github.com/richardlt/matrix/sdk-go/player"
 )
@@ -83,7 +83,7 @@ func (p *PlayerServer) Connect(stream playerSDK.Player_ConnectServer) error {
 	go func() {
 		for r := range chRes {
 			if err := stream.Send(r); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending response to player %s: %w", pl.UUID, err))
 			}
 		}
 	}()
@@ -91,7 +91,7 @@ func (p *PlayerServer) Connect(stream playerSDK.Player_ConnectServer) error {
 	for {
 		req, err := stream.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving from player %s: %w", pl.UUID, err)
 		}
 		p.processRequest(pl, req)
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/richardlt/matrix/emulator"
 	"github.com/richardlt/matrix/gamepad"
 	"github.com/richardlt/matrix/getout"
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/light"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
@@ -66,14 +66,14 @@ func (c component) run(cancel func()) {
 func startAction(ctx context.Context, cmd *cli.Command) error {
 	level, err := logrus.ParseLevel(cmd.String("log-level"))
 	if err != nil {
-		return errors.Wrap(err, "Invalid given log level")
+		return errors.Errorf("invalid given log level: %w", err)
 	}
 	logrus.SetLevel(level)
 
 	args := cmd.Args()
 
 	if args.Len() < 1 {
-		return errors.New("Missing component name")
+		return errors.Errorf("missing component name, expected at least one of %s", cmd.ArgsUsage)
 	}
 
 	var cs []component
@@ -106,7 +106,7 @@ func startAction(ctx context.Context, cmd *cli.Command) error {
 		case "light":
 			cs = append(cs, component(func() error { return light.Start(cmd.String("core-uri")) }))
 		default:
-			return errors.New("Invalid given component name")
+			return errors.Errorf("invalid component name %q, expected one of %s", arg, cmd.ArgsUsage)
 		}
 	}
 

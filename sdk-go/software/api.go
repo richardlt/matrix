@@ -1,7 +1,7 @@
 package software
 
 import (
-	"github.com/pkg/errors"
+	"github.com/richardlt/matrix/internal/errors"
 	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
@@ -74,7 +74,7 @@ func (a *api) GetImageFromRemote(name string) (*Image, error) {
 		ImageData: &LoadRequest_ImageData{Name: name},
 	})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("loading image %q from core: %w", name, err)
 	}
 	return res.Image, nil
 }
@@ -98,7 +98,7 @@ func (a *api) GetFontFromRemote(name string) (*Font, error) {
 		FontData: &LoadRequest_FontData{Name: name},
 	})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("loading font %q from core: %w", name, err)
 	}
 	return res.Font, nil
 }
@@ -126,7 +126,7 @@ func (a *api) GetColorFromRemoteThemeByName(themeName, name string) (*common.Col
 		ColorData: &LoadRequest_ColorData{Name: name, ThemeName: themeName},
 	})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("loading color %q from theme %q: %w", name, themeName, err)
 	}
 	return res.Color, nil
 }
@@ -138,7 +138,7 @@ func (a *api) NewLayer() (Layer, error) {
 		LayerData: &CreateRequest_LayerData{SoftwareUUID: a.softwareUUID},
 	})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("creating layer for software %s: %w", a.softwareUUID, err)
 	}
 
 	l := &layer{

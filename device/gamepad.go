@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/karalabe/hid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/player"
 )
@@ -114,7 +114,9 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 			return nil
 		case a := <-cAction:
 			if g.api != nil {
-				g.api.Command(uint64(a.Slot), a.Command)
+				if err := g.api.Command(uint64(a.Slot), a.Command); err != nil {
+					logrus.Errorf("%+v", err)
+				}
 			}
 		}
 	}
@@ -125,12 +127,12 @@ func (g *gamepad) listenDevice(cAction chan action, dev *device) {
 
 	d, err := dev.HID.Open()
 	if err != nil {
-		logrus.Errorf("%+v", errors.WithStack(err))
+		logrus.Errorf("%+v", errors.Errorf("opening controller at %s: %w", dev.HID.Path, err))
 		return
 	}
 	defer func() {
 		if err := d.Close(); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("closing controller at %s: %w", dev.HID.Path, err))
 		}
 	}()
 
@@ -141,7 +143,7 @@ func (g *gamepad) listenDevice(cAction chan action, dev *device) {
 	buf := make([]byte, 7)
 	for {
 		if _, err := d.Read(buf); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("reading from controller at %s: %w", dev.HID.Path, err))
 			return
 		}
 		if a := handler(buf); a != nil {

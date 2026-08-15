@@ -2,10 +2,8 @@ package render
 
 import (
 	"encoding/json"
-	"fmt"
 
-	"github.com/pkg/errors"
-
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
 
@@ -34,13 +32,13 @@ var fs []*software.Font
 func loadFonts() error {
 	files, err := loadFiles("fonts")
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("loading fonts files: %w", err)
 	}
 
 	for _, file := range files {
 		f := &software.Font{}
 		if err := json.Unmarshal(file.Data, f); err != nil {
-			return fmt.Errorf("Can't unmarshal %s font file", file.Name)
+			return errors.Errorf("unmarshaling font file %s: %w", file.Name, err)
 		}
 		fs = append(fs, f)
 	}

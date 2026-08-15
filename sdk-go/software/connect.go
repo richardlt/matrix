@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/richardlt/matrix/internal/errors"
 	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
@@ -47,15 +47,15 @@ func Connect(uri string, s Software, reconnect bool) error {
 func connect(uri string, s Software) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewSoftwareClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening software stream to %s: %w", uri, err)
 	}
 
 	connectRequestChannel := make(chan *ConnectRequest)
@@ -65,7 +65,7 @@ func connect(uri string, s Software) error {
 	go func() {
 		for cr := range connectRequestChannel {
 			if err := st.Send(cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending connect request: %w", err))
 			}
 		}
 	}()
@@ -77,17 +77,17 @@ func connect(uri string, s Software) error {
 			Action: ConnectRequest_SoftwareData_REGISTER,
 		},
 	}); err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("registering software: %w", err)
 	}
 
 	// wait for the first response to obtain software uuid
 	res, err := st.Recv()
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("receiving software init response: %w", err)
 	}
 	if res.Type != ConnectResponse_SOFTWARE ||
 		res.SoftwareData.Action != ConnectResponse_SoftwareData_INIT {
-		return errors.New("Error init software")
+		return errors.Errorf("unexpected response while initialising software: type %s", res.Type)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -118,7 +118,7 @@ func connect(uri string, s Software) error {
 	for {
 		res, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving software response: %w", err)
 		}
 
 		if res.Type == ConnectResponse_SOFTWARE {

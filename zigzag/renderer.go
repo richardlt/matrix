@@ -23,7 +23,7 @@ func newRenderer(a software.API) (*renderer, error) {
 		return nil, err
 	}
 
-	td.OnStep(func(total, current uint64) { a.Print() })
+	td.OnStep(func(total, current uint64) { _ = a.Print() })
 
 	return &renderer{
 		api: a, layerInfo: l2, layer: l1, textDriver: td,
@@ -48,12 +48,12 @@ type renderer struct {
 }
 
 func (r *renderer) Clean() {
-	r.layerInfo.Clean()
-	r.layer.Clean()
+	_ = r.layerInfo.Clean()
+	_ = r.layer.Clean()
 }
 
 func (r *renderer) Print(ss []snake, cs []candy) {
-	r.layer.Clean()
+	_ = r.layer.Clean()
 	for i, s := range ss {
 		for j, b := range s.Body {
 			color := r.snakesColor[i]
@@ -62,19 +62,19 @@ func (r *renderer) Print(ss []snake, cs []candy) {
 				color.G -= 40
 				color.B -= 40
 			}
-			r.layer.SetWithCoord(b.Convert(), color)
+			_ = r.layer.SetWithCoord(b.Convert(), color)
 		}
 	}
 	for _, c := range cs {
 		if c.State {
-			r.layer.SetWithCoord(c.Coord.Convert(), r.candiesColor[c.Points])
+			_ = r.layer.SetWithCoord(c.Coord.Convert(), r.candiesColor[c.Points])
 		}
 	}
-	r.api.Print()
+	_ = r.api.Print()
 }
 
 func (r *renderer) StartPrintWinners(winners []int) {
-	r.layerInfo.Clean()
+	_ = r.layerInfo.Clean()
 
 	var text string
 	if len(winners) > 1 {
@@ -87,9 +87,9 @@ func (r *renderer) StartPrintWinners(winners []int) {
 		text = fmt.Sprintf("PLAYER %d WON", winners[0]+1)
 	}
 
-	r.textDriver.Render(text, &common.Coord{X: 10, Y: 4},
+	_ = r.textDriver.Render(text, &common.Coord{X: 10, Y: 4},
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		&common.Color{}, true)
 }
 
-func (r *renderer) StopPrintWinners() { r.textDriver.Stop() }
+func (r *renderer) StopPrintWinners() { _ = r.textDriver.Stop() }

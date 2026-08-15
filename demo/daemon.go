@@ -37,11 +37,13 @@ func (d *demo) Init(a software.API) (err error) {
 
 	i := a.GetImageFromLocal("demo")
 
-	a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
 		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
-	})
+	}); err != nil {
+		return err
+	}
 
 	d.layer, err = a.NewLayer()
 	if err != nil {
@@ -52,25 +54,25 @@ func (d *demo) Init(a software.API) (err error) {
 	if err != nil {
 		return err
 	}
-	d.randomDriver.OnEnd(func() { d.api.Print() })
+	d.randomDriver.OnEnd(func() { _ = d.api.Print() })
 
 	d.caracterDriver, err = d.layer.NewCaracterDriver(a.GetFontFromLocal("FiveByFive"))
 	if err != nil {
 		return err
 	}
-	d.caracterDriver.OnEnd(func() { d.api.Print() })
+	d.caracterDriver.OnEnd(func() { _ = d.api.Print() })
 
 	d.textDriver, err = d.layer.NewTextDriver(a.GetFontFromLocal("FiveByFive"))
 	if err != nil {
 		return err
 	}
-	d.textDriver.OnStep(func(total, current uint64) { d.api.Print() })
+	d.textDriver.OnStep(func(total, current uint64) { _ = d.api.Print() })
 
 	d.imageDriver, err = d.layer.NewImageDriver()
 	if err != nil {
 		return err
 	}
-	d.imageDriver.OnEnd(func() { d.api.Print() })
+	d.imageDriver.OnEnd(func() { _ = d.api.Print() })
 
 	return a.Ready()
 }
@@ -103,15 +105,15 @@ func (d *demo) reset() {
 		d.cancel()
 	}
 	if d.textDriver != nil {
-		d.textDriver.Stop()
+		_ = d.textDriver.Stop()
 	}
 }
 
 func (d *demo) play() {
 	d.reset()
 
-	d.layer.Clean()
-	d.api.Print()
+	_ = d.layer.Clean()
+	_ = d.api.Print()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	d.cancel = cancel
@@ -133,59 +135,59 @@ func (d *demo) play() {
 func (d *demo) playRandom(ctx context.Context) {
 	ticker := time.NewTicker(time.Millisecond * 25)
 	defer ticker.Stop()
-	d.randomDriver.Render()
+	_ = d.randomDriver.Render()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			d.randomDriver.Render()
+			_ = d.randomDriver.Render()
 		}
 	}
 }
 
 func (d *demo) playCaracter() {
-	d.caracterDriver.Render('A', &common.Coord{X: 5, Y: 3},
+	_ = d.caracterDriver.Render('A', &common.Coord{X: 5, Y: 3},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"), &common.Color{})
-	d.caracterDriver.Render('B', &common.Coord{X: 8, Y: 4},
+	_ = d.caracterDriver.Render('B', &common.Coord{X: 8, Y: 4},
 		d.api.GetColorFromLocalThemeByName("flat", "orange_2"), &common.Color{})
-	d.caracterDriver.Render('C', &common.Coord{X: 10, Y: 5},
+	_ = d.caracterDriver.Render('C', &common.Coord{X: 10, Y: 5},
 		d.api.GetColorFromLocalThemeByName("flat", "green_2"), &common.Color{})
 }
 
 func (d *demo) playText() {
 	d.textDriver.OnEnd(func() {
 		time.Sleep(500 * time.Millisecond)
-		d.layer.Clean()
+		_ = d.layer.Clean()
 		d.textDriver.OnEnd(func() {
 			time.Sleep(500 * time.Millisecond)
-			d.layer.Clean()
+			_ = d.layer.Clean()
 			d.playText()
 		})
-		d.textDriver.Render("SOFTWARE", &common.Coord{X: 0, Y: 6},
+		_ = d.textDriver.Render("SOFTWARE", &common.Coord{X: 0, Y: 6},
 			d.api.GetColorFromLocalThemeByName("flat", "green_2"),
 			&common.Color{}, false)
 	})
-	d.textDriver.Render("EXAMPLE", &common.Coord{X: 0, Y: 2},
+	_ = d.textDriver.Render("EXAMPLE", &common.Coord{X: 0, Y: 2},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		&common.Color{}, false)
 }
 
 func (d *demo) playTextRepeat() {
 	d.textDriver.OnEnd(func() {})
-	d.textDriver.Render("REPEAT", &common.Coord{X: 10, Y: 4},
+	_ = d.textDriver.Render("REPEAT", &common.Coord{X: 10, Y: 4},
 		d.api.GetColorFromLocalThemeByName("flat", "red_2"),
 		&common.Color{}, true)
 }
 
 func (d *demo) playImage(ctx context.Context) {
 	exec := func(nb int) {
-		d.layer.Clean()
+		_ = d.layer.Clean()
 		if nb == 0 {
-			d.imageDriver.Render(d.api.GetImageFromLocal("monster-one"),
+			_ = d.imageDriver.Render(d.api.GetImageFromLocal("monster-one"),
 				&common.Coord{X: 6, Y: 4})
 		} else {
-			d.imageDriver.Render(d.api.GetImageFromLocal("monster-two"),
+			_ = d.imageDriver.Render(d.api.GetImageFromLocal("monster-two"),
 				&common.Coord{X: 11, Y: 5})
 		}
 	}

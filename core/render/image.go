@@ -2,10 +2,8 @@ package render
 
 import (
 	"encoding/json"
-	"fmt"
 
-	"github.com/pkg/errors"
-
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
@@ -28,13 +26,13 @@ var is []*software.Image
 func loadImages() error {
 	files, err := loadFiles("images")
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("loading images files: %w", err)
 	}
 
 	for _, file := range files {
 		i := &software.Image{}
 		if err := json.Unmarshal(file.Data, i); err != nil {
-			return fmt.Errorf("Can't unmarshal %s image file", file.Name)
+			return errors.Errorf("unmarshaling image file %s: %w", file.Name, err)
 		}
 		is = append(is, i)
 	}

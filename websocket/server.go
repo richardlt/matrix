@@ -5,8 +5,9 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/richardlt/matrix/internal/errors"
 )
 
 var Upgrader = websocket.Upgrader{
@@ -35,9 +36,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Serve(w http.ResponseWriter, r *http.Request) error {
 	c, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("upgrading %s to a websocket: %w", r.RemoteAddr, err)
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	client := NewClient(c)
 

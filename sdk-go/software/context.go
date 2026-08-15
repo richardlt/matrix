@@ -3,9 +3,14 @@ package software
 import (
 	"sync"
 
-	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
+
+	"github.com/richardlt/matrix/internal/errors"
 )
+
+// ErrAPIClosed is returned once the API can no longer reach the matrix core.
+// It is a sentinel so callers can match it with errors.Is.
+var ErrAPIClosed = errors.New("software api is closed")
 
 func newContext(connectRequestChannel chan *ConnectRequest,
 	client SoftwareClient) *ctx {
@@ -40,7 +45,7 @@ func (c *ctx) AddLayer(uuid string, l *layer) {
 
 func (c *ctx) SendConnectRequest(req *ConnectRequest) error {
 	if c.connectRequestChannel == nil {
-		return errors.New("API is closed")
+		return ErrAPIClosed
 	}
 
 	c.connectRequestChannel <- req
@@ -49,12 +54,12 @@ func (c *ctx) SendConnectRequest(req *ConnectRequest) error {
 
 func (c *ctx) SendCreateRequest(req *CreateRequest) (*CreateResponse, error) {
 	if c.client == nil {
-		return nil, errors.New("API is closed")
+		return nil, ErrAPIClosed
 	}
 
 	res, err := c.client.Create(context.Background(), req)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("sending create request: %w", err)
 	}
 
 	return res, nil
@@ -62,12 +67,12 @@ func (c *ctx) SendCreateRequest(req *CreateRequest) (*CreateResponse, error) {
 
 func (c *ctx) SendLoadRequest(req *LoadRequest) (*LoadResponse, error) {
 	if c.client == nil {
-		return nil, errors.New("API is closed")
+		return nil, ErrAPIClosed
 	}
 
 	res, err := c.client.Load(context.Background(), req)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("sending load request: %w", err)
 	}
 
 	return res, nil

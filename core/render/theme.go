@@ -2,10 +2,8 @@ package render
 
 import (
 	"encoding/json"
-	"fmt"
 
-	"github.com/pkg/errors"
-
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
@@ -29,13 +27,13 @@ var ts []*software.Theme
 func loadThemes() error {
 	files, err := loadFiles("themes")
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("loading themes files: %w", err)
 	}
 
 	for _, file := range files {
 		t := &software.Theme{}
 		if err := json.Unmarshal(file.Data, t); err != nil {
-			return fmt.Errorf("Can't unmarshal %s theme file", file.Name)
+			return errors.Errorf("unmarshaling theme file %s: %w", file.Name, err)
 		}
 		ts = append(ts, t)
 	}

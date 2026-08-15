@@ -5,8 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/richardlt/matrix/internal/errors"
 )
 
 func NewClient(conn *websocket.Conn) *Client {
@@ -33,7 +34,7 @@ func (c *Client) Listen(ctx context.Context) error {
 		var m message
 		if err := c.conn.ReadJSON(&m); err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				return errors.WithStack(err)
+				return errors.Errorf("reading websocket message from client %s: %w", c.ID, err)
 			}
 			logrus.Debugf("%+v", err)
 			break
@@ -51,7 +52,7 @@ func (c *Client) Send(eventType string, data interface{}) error {
 		Type: eventType,
 		Data: data,
 	}); err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("sending %q event to client %s: %w", eventType, c.ID, err)
 	}
 	return nil
 }

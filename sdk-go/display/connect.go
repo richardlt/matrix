@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/richardlt/matrix/internal/errors"
 	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
@@ -31,15 +31,15 @@ func Connect(uri string, d Display, reconnect bool) error {
 func connect(uri string, d Display) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewDisplayClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening display stream to %s: %w", uri, err)
 	}
 
 	requestChannel := make(chan *Request)
@@ -49,7 +49,7 @@ func connect(uri string, d Display) error {
 	go func() {
 		for cr := range requestChannel {
 			if err := st.Send(cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending display request: %w", err))
 			}
 		}
 	}()
@@ -74,7 +74,7 @@ func connect(uri string, d Display) error {
 	for {
 		res, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving display response: %w", err)
 		}
 
 		processResponse(d, res)

@@ -5,12 +5,12 @@ import (
 	"net"
 
 	"github.com/sirupsen/logrus"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	
+
 	"github.com/richardlt/matrix/core/os"
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/core/system"
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/richardlt/matrix/sdk-go/software"
@@ -26,7 +26,7 @@ func Start(port int) error {
 
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("listening on port %d: %w", port, err)
 	}
 
 	s := grpc.NewServer()
@@ -43,5 +43,8 @@ func Start(port int) error {
 
 	os.StartContext(c)
 
-	return errors.WithStack(s.Serve(ln))
+	if err := s.Serve(ln); err != nil {
+		return errors.Errorf("serving core on port %d: %w", port, err)
+	}
+	return nil
 }

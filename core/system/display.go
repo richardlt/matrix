@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/core/render"
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	displaySDK "github.com/richardlt/matrix/sdk-go/display"
 )
@@ -58,7 +58,7 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 	go func() {
 		for r := range chRes {
 			if err := stream.Send(r); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending response to display %s: %w", di.UUID, err))
 			}
 		}
 	}()
@@ -68,7 +68,7 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 
 	for {
 		if _, err := stream.Recv(); err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving from display %s: %w", di.UUID, err)
 		}
 	}
 }

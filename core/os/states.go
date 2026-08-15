@@ -1,6 +1,8 @@
 package os
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"github.com/richardlt/matrix/core/menus"
 	"github.com/richardlt/matrix/core/render"
 	"github.com/richardlt/matrix/core/system"
@@ -133,7 +135,9 @@ func (s *softwareState) Init(ctx *Context) {
 		}
 	})
 
-	ctx.softwareServer.StartSoftware(s.meta, s.playerCount)
+	if err := ctx.softwareServer.StartSoftware(s.meta, s.playerCount); err != nil {
+		logrus.Errorf("%+v", err)
+	}
 }
 
 func (s *softwareState) catchAction(a system.Action) {

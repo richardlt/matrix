@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/core/drivers"
 	"github.com/richardlt/matrix/core/render"
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	softwareSDK "github.com/richardlt/matrix/sdk-go/software"
 )
@@ -55,7 +55,7 @@ func (s *SoftwareServer) StartSoftware(meta SoftwareMeta, playerCount uint64) er
 	}
 
 	if new == nil {
-		return errors.New("Invalid given software meta")
+		return errors.Errorf("no registered software with uuid %s", meta.UUID)
 	}
 
 	if s.current != nil {
@@ -148,11 +148,11 @@ func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) erro
 	// wait for the register request
 	req, err := stream.Recv()
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("receiving register request from software %s: %w", so.UUID, err)
 	}
 	if req.Type != softwareSDK.ConnectRequest_SOFTWARE ||
 		req.SoftwareData.Action != softwareSDK.ConnectRequest_SoftwareData_REGISTER {
-		return errors.New("error register software")
+		return errors.Errorf("software %s sent %s instead of a register request", so.UUID, req.Type)
 	}
 
 	// init the software with a random uuid
@@ -163,7 +163,7 @@ func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) erro
 			UUID:   so.UUID,
 		},
 	}); err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("sending init response to software %s: %w", so.UUID, err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -186,7 +186,7 @@ func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) erro
 	go func() {
 		for r := range chRes {
 			if err := stream.Send(r); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+				logrus.Errorf("%+v", errors.Errorf("sending response to software %s: %w", so.UUID, err))
 			}
 		}
 	}()
@@ -194,7 +194,7 @@ func (s *SoftwareServer) Connect(stream softwareSDK.Software_ConnectServer) erro
 	for {
 		req, err := stream.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving from software %s: %w", so.UUID, err)
 		}
 		s.processRequest(so, req)
 	}
