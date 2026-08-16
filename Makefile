@@ -10,7 +10,7 @@ ERRCHECK_VERSION := v1.20.0
 # does nothing once the build/ directory exists, because make considers the target
 # already up to date.
 .PHONY: reset-all clean-all install-all build-all check-all clean install build \
-	build-armv6 check-armv6 package debpacker \
+	build-web build-armv6 build-armv7 check-armv6 package deb \
 	check fmt check-fmt vet errcheck test test-with-report
 
 reset-all:
@@ -25,10 +25,12 @@ install-all: install
 	(cd gamepad && make install)
 	(cd emulator && make install)
 
-# The web apps are built first because the Go binary embeds their output.
-build-all:
+build-web:
 	(cd gamepad && make build)
 	(cd emulator && make build)
+
+# The web apps are built first because the Go binary embeds their output.
+build-all: build-web
 	$(MAKE) build
 
 check-all: check
@@ -42,6 +44,7 @@ clean:
 	rm -rf build
 	rm -f *.xml
 	rm -rf target
+	rm -rf alpine-card
 
 install:
 	go mod tidy
@@ -49,55 +52,109 @@ install:
 build:
 	go build -o build/matrix-local .
 
-# --- Release build --------------------------------------------------------------------
+# --- Release builds -------------------------------------------------------------------
 #
-# One artifact: a static linux/ARMv6 binary.
+# Two artifacts, one per generation of board:
+#
+#   ARMv6, as a tarball   for boards too small to carry a full distribution, installed by
+#                         writing an SD card. See scripts/prepare-alpine-card.sh.
+#   ARMv7, as a .deb      installed with dpkg and run as a systemd service.
+#
+# ARMv6 also runs on ARMv7 hardware, so the split is about the packaging rather than the
+# instruction set: where a full distribution fits, a service that starts at boot and
+# survives a crash is worth more than the last few percent of the CPU.
+#
+# Both are built the same way:
 #
 #   CGO_ENABLED=1  the device component reaches USB controllers through
 #                  github.com/karalabe/hid, which is only compiled in under cgo. A
 #                  cgo-less binary still builds and runs, but hid.Supported() reports
 #                  false and no controller is ever found.
-#   GOARM=6        ARMv6 is the baseline; the result also runs on later ARMv7 hardware.
-#   CC             an ARMv6 musl toolchain. The C half of the build matters as much as
-#                  the Go half: hid compiles a vendored libusb, and Debian's
-#                  arm-linux-gnueabihf targets ARMv7 by default, which would leave an
-#                  ARMv7 C payload inside an otherwise ARMv6 binary.
+#   CC             a musl toolchain. The C half of the build matters as much as the Go
+#                  half: hid compiles a vendored libusb, so the C flags below pin the
+#                  architecture rather than trusting the compiler's default. Debian's
+#                  arm-linux-gnueabihf, for one, targets ARMv7, which would otherwise
+#                  leave an ARMv7 C payload inside an ARMv6 binary.
+#   CGO_CFLAGS     -O2 -g are Go's own defaults, repeated because setting this replaces
+#                  them rather than adding to them.
 #   -static        with libc linked in, the artifact does not depend on glibc or musl at
-#                  runtime.
+#                  runtime, which is what lets one binary serve Alpine and Raspberry Pi OS.
 #   netgo          use the pure Go resolver rather than the cgo one, which is what makes
 #                  a static link safe.
 #
-# Install the toolchain first; it is not an apt package. See the README.
+# Both targets use the same cross compiler: armhf is one triple, and the architecture
+# comes from the flags. Install the toolchain first; it is not an apt package. See
+# docs/development.md.
 ARMV6_CC ?= armv6-linux-musleabihf-gcc
+ARMV6_CFLAGS ?= -O2 -g -march=armv6 -mfpu=vfp
+ARMV7_CC ?= $(ARMV6_CC)
+ARMV7_CFLAGS ?= -O2 -g -march=armv7-a -mfpu=vfpv3-d16
+
+GO_RELEASE_FLAGS := -trimpath -tags netgo -ldflags '-extldflags "-static"'
 
 build-armv6:
-	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 CC=$(ARMV6_CC) \
-		go build -trimpath -tags netgo -ldflags '-extldflags "-static"' \
-		-o build/matrix-linux-armv6 .
+	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 \
+		CC=$(ARMV6_CC) CGO_CFLAGS="$(ARMV6_CFLAGS)" \
+		go build $(GO_RELEASE_FLAGS) -o build/matrix-linux-armv6 .
+
+build-armv7:
+	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=7 \
+		CC=$(ARMV7_CC) CGO_CFLAGS="$(ARMV7_CFLAGS)" \
+		go build $(GO_RELEASE_FLAGS) -o build/matrix-linux-armv7 .
 
 # Compile-check the release target without the cross toolchain. This proves the code
-# builds for ARMv6; it does not produce a shippable binary, since cgo is off and the
+# builds for ARM; it does not produce a shippable binary, since cgo is off and the
 # controller support is therefore missing.
 check-armv6:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o /dev/null .
 
-# The web apps are embedded in the binary, so only the data the user can replace is
-# shipped alongside it.
+# --- Release packaging ----------------------------------------------------------------
+
+# The web apps are embedded in the binary, so what ships beside it is only the data a user
+# may want to replace, plus the card-staging script the Alpine install is built around.
+#
+# They are rebuilt as a recipe step rather than a prerequisite so the order is guaranteed
+# even under make -j. It matters: the embedded directory carries a .gitkeep, so a binary
+# built before them compiles happily and then serves nothing.
 package:
+	$(MAKE) build-web
+	$(MAKE) build-armv6
 	rm -rf matrix-package
 	mkdir -p matrix-package
-	cp build/matrix-* matrix-package/
-	cp -R themes matrix-package/
-	cp -R fonts matrix-package/
-	cp -R images matrix-package/
-	cp -R animations matrix-package/
+	cp build/matrix-linux-armv6 matrix-package/
+	cp -R themes fonts images animations matrix-package/
+	cp scripts/prepare-alpine-card.sh matrix-package/
 	tar czf matrix.tar.gz matrix-package
 
-debpacker:
-	rm -rf target
-	docker run -it \
-	-v $(PWD):/tmp/workspace \
-	-w /tmp/workspace richardleterrier/debpacker:v0.0.2 debpacker make
+# The .deb, assembled with dpkg-deb rather than a packaging framework: the payload is one
+# static binary, four data directories and a unit file, which is less than any of them
+# would cost to configure.
+#
+# --root-owner-group is what makes the result reproducible from an unprivileged build.
+# Without it every file in the package is owned by whoever ran make.
+#
+# /etc/default/matrix is listed as a conffile so dpkg keeps an edited component list
+# across an upgrade instead of overwriting it.
+DEB_VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo 0.0.0)
+DEB_ARCH := armhf
+DEB_ROOT := target/deb
+
+deb:
+	$(MAKE) build-web
+	$(MAKE) build-armv7
+	rm -rf $(DEB_ROOT)
+	mkdir -p $(DEB_ROOT)/DEBIAN $(DEB_ROOT)/usr/bin $(DEB_ROOT)/etc/default \
+		$(DEB_ROOT)/var/lib/matrix $(DEB_ROOT)/lib/systemd/system
+	sed -e 's/@VERSION@/$(DEB_VERSION)/' -e 's/@ARCH@/$(DEB_ARCH)/' \
+		packaging/deb/control > $(DEB_ROOT)/DEBIAN/control
+	install -m 755 packaging/deb/postinst packaging/deb/prerm packaging/deb/postrm \
+		$(DEB_ROOT)/DEBIAN/
+	install -m 755 build/matrix-linux-armv7 $(DEB_ROOT)/usr/bin/matrix
+	install -m 644 packaging/deb/matrix.service $(DEB_ROOT)/lib/systemd/system/
+	install -m 644 packaging/deb/default $(DEB_ROOT)/etc/default/matrix
+	echo /etc/default/matrix > $(DEB_ROOT)/DEBIAN/conffiles
+	cp -R themes fonts images animations $(DEB_ROOT)/var/lib/matrix/
+	dpkg-deb --build --root-owner-group $(DEB_ROOT) target/matrix_$(DEB_VERSION)_$(DEB_ARCH).deb
 
 # --- Checks ---------------------------------------------------------------------------
 

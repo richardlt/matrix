@@ -43,70 +43,21 @@ There are 3 main types that exists in Matrix's sdk:
 | Gamepad | A web application that contains a virtual controller with display. |
 | Emulator | A web application built for development purpose. It displays Matrix main screen and player's screens. |
 
-## Production setup
+## Install
 
-Matrix is designed to run on a Raspberry Pi (at least model 3), it is composed by multiple softwares (core, device, gamepad...). All softwares can run on the Raspberry Pi but you can also start a software on your desk that will communicate remotely with the Matrix's core (with flag --core-uri).
+Matrix runs on a Raspberry Pi. On a Pi 2 or later there is a `.deb` in the
+[releases](https://github.com/richardlt/matrix/releases) that installs a service starting
+at boot; ARMv6 boards get an SD card staged by a script. Either way the Arduino has to be
+flashed first.
 
-Here are the few steps to install your own Matrix:
+- [Installing matrix](./docs/install.md)
+- [Installing on an ARMv6 board, with Alpine](./docs/install-alpine.md)
+- [Flashing the Arduino](./docs/arduino.md)
 
-1. Download Matrix latest release [here](https://github.com/richardlt/matrix/releases). If you want to install it on Raspbian or Debian there is a .deb file available that will create a service to start Matrix automatically at boot.
+All components can run on the Pi, but any software can equally run on your desk against a
+remote core with `--core-uri`.
 
-2. Extract/install and run Matrix package.
-```sh
-$ dpkg -i matrix.deb # for Raspbian/Debian users
-$ service matrix status
-```
-```sh
-$ tar xzf matrix.tar.gz # for others
-$ cd matrix-package && ./matrix-linux-armv6 start --log-level info --gamepad-port 80 core device gamepad emulator demo zigzag yumyum clock draw blocks getout
-```
+## Contributing
 
-The release binary targets ARMv6 and also runs on later ARMv7 hardware. It is statically
-linked, so it does not depend on the system's libc. On anything else, build from source
-with `make build`.
-
-3. Install firmware on the Arduino from file in Matrix source code (inside folder at ./device/firmware/firmware.ino). Source code can be downloaded from [release](https://github.com/richardlt/matrix/releases).
-
-## Development setup (linux/darwin)
-
-1. Requirements.
-* [Go](https://golang.org/dl/) (version 1.25+)
-* [Node.js](https://nodejs.org/en/download/) (with npm, version 20.19+ or 22.12+, required by Vite)
-
-2. Install JS projects dependencies.
-```sh
-$ make install-all
-```
-
-3. Run it.
-```sh
-$ go run main.go start --log-level info core gamepad emulator demo # you can start all other softwares by adding their names
-$ (cd emulator && npm start)
-$ (cd gamepad && npm start)
-```
-
-4. Open emulator at http://localhost:3001 and/or gamepad at http://localhost:4002.
-
-## Checks and release builds
-
-```sh
-$ make check       # gofmt, go vet and errcheck
-$ make check-all   # the same, plus a TypeScript check of both web apps
-$ make test        # unit tests with the race detector
-```
-
-The web apps are bundled with Vite, which transpiles without type checking, so
-`make check-all` is the only thing that rejects a TypeScript error.
-
-`make build-armv6` produces the release binary, a static ARMv6 build. It needs an ARMv6
-musl cross toolchain providing `armv6-linux-musleabihf-gcc`, which is not an apt package;
-point the build at another one with `make build-armv6 ARMV6_CC=<compiler>`.
-
-Both halves of the build have to target ARMv6. The Go side is `GOARM=6`, and the C side
-matters just as much, because the device component reaches USB controllers through
-[karalabe/hid](https://github.com/karalabe/hid), which compiles a vendored copy of
-libusb. Debian's `arm-linux-gnueabihf` defaults to ARMv7, so building with it would leave
-an ARMv7 C payload inside an otherwise ARMv6 binary.
-
-`make check-armv6` compiles for ARMv6 without the toolchain. It is a compile check only:
-cgo is off, so the result has no controller support and is not shippable.
+See [development.md](./docs/development.md) for the development setup, the checks and how
+the release artifacts are built.

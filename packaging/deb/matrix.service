@@ -1,0 +1,23 @@
+[Unit]
+Description=Matrix video game console
+Documentation=https://github.com/richardlt/matrix
+After=network.target
+
+[Service]
+Type=simple
+# Root, because the device component talks to USB controllers through libusb and to the
+# panel over a serial port. Anything less needs udev rules for hardware that varies from
+# one console to the next.
+User=root
+# core reads themes/, fonts/, images/ and animations/ from the working directory, and
+# tolerates them missing without saying so. Starting anywhere else renders nothing.
+WorkingDirectory=/var/lib/matrix
+EnvironmentFile=/etc/default/matrix
+# $MATRIX_COMPONENTS is deliberately unbraced: systemd splits a bare $VAR into separate
+# arguments, which is what turns the list into one argument per component.
+ExecStart=/usr/bin/matrix start --log-level ${MATRIX_LOG_LEVEL} --gamepad-port ${MATRIX_GAMEPAD_PORT} $MATRIX_COMPONENTS
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

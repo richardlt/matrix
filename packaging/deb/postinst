@@ -1,0 +1,13 @@
+#!/bin/sh
+# Start matrix at boot, which is the point of installing it as a package rather than
+# unpacking the tarball.
+set -e
+
+if [ "$1" = configure ] && [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+    systemctl enable matrix.service >/dev/null 2>&1 || true
+    # restart rather than start, so an upgrade picks up the new binary.
+    systemctl restart matrix.service || true
+fi
+
+exit 0

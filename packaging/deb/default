@@ -1,0 +1,15 @@
+# Configuration for the matrix service. Edited copies survive an upgrade.
+
+# What to start. `core` is required. `device` drives the LED panel over serial and reads
+# USB controllers, so a console needs it; leave it out to run the games against a remote
+# core. The rest are the two web apps and the games.
+#
+# Every component is a separate process-worth of goroutines and one gRPC connection, so
+# on a small board it is worth trimming this to what you actually play.
+MATRIX_COMPONENTS="core device gamepad emulator demo zigzag yumyum clock draw blocks getout animate light"
+
+# Port for the gamepad web app, the virtual controller played from a phone.
+MATRIX_GAMEPAD_PORT=80
+
+# debug logs every frame and every port scan, which is a lot on a running console.
+MATRIX_LOG_LEVEL=info

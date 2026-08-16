@@ -22,8 +22,8 @@ jobs:
       - run: (cd gamepad && make install check build)
 
   # Catch a break in the release target on the branch rather than at tag time. This only
-  # compiles for ARMv6; producing the shippable binary needs the cross toolchain and
-  # happens in the release workflow.
+  # compiles for ARMv6: producing a shippable binary needs the ARM musl cross toolchain,
+  # which is not an apt package, so the release artifacts are still built by hand.
   armv6:
     runs-on: ubuntu-latest
     steps:

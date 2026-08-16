@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = remove ] && [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+fi
+
+# Themes, fonts, images and animations belong to the package, but anything the user added
+# beside them does not, so the directory can outlive a plain remove. Purge means purge.
+if [ "$1" = purge ]; then
+    rm -rf /var/lib/matrix
+fi
+
+exit 0
