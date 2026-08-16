@@ -81,14 +81,6 @@ func (r *renderer) StartPrintScore(score int) {
 		r.api.GetColorFromLocalThemeByName("flat", "red_2"), &common.Color{}, true)
 }
 
-func (r *renderer) StartPrintPaused() {
-	_ = r.layerInfo.Clean()
-	_ = r.textDriver.Render("PAUSED", &common.Coord{X: 4, Y: 4},
-		r.api.GetColorFromLocalThemeByName("flat", "dark_grey_2"),
-		&common.Color{},
-		true)
-}
-
 func (r *renderer) StopPrintInfo() {
 	_ = r.layerInfo.Clean()
 	_ = r.textDriver.Stop()

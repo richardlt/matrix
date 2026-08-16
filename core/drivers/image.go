@@ -15,8 +15,13 @@ type Image struct {
 	endCallback func()
 }
 
-// Render prints the image in frame.
+// Render prints the image in frame. A nil image draws nothing rather than panicking,
+// since an image that could not be loaded is a missing file, not a programming error.
 func (i *Image) Render(im *software.Image, c *common.Coord) {
+	if im == nil {
+		return
+	}
+
 	beginX, beginY := c.X-int64(im.Width)/2, c.Y-int64(im.Height)/2
 	endX, endY := beginX+int64(im.Width), beginY+int64(im.Height)
 

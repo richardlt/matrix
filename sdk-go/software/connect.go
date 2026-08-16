@@ -19,6 +19,14 @@ type Software interface {
 	ActionReceived(uint64, common.Command)
 }
 
+// Pausable is an optional companion to Software, for one that keeps a clock of its own.
+// The core owns the pause: it holds the screen and stops forwarding player commands, so
+// a software driven only by those commands has nothing to implement and just declares
+// itself pausable in its config. One with a game loop implements this to hold it.
+type Pausable interface {
+	Paused(bool)
+}
+
 func init() {
 	if err := loadImages(); err != nil {
 		logrus.Errorf("%+v", err)
@@ -39,6 +47,9 @@ func Connect(uri string, s Software, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Software will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, s, true)
@@ -139,6 +150,14 @@ func processResponse(s Software, res *ConnectResponse) {
 			go s.Close()
 		case ConnectResponse_SoftwareData_PLAYER_COMMAND:
 			go s.ActionReceived(res.SoftwareData.Slot, res.SoftwareData.Command)
+		case ConnectResponse_SoftwareData_PAUSE:
+			// Delivered on this goroutine, unlike the rest: pausing and resuming only
+			// mean anything in the order they were sent, and handing each to its own
+			// goroutine would let a resume overtake the pause it follows and leave the
+			// software stopped for good. Implementations are expected to return at once.
+			if p, ok := s.(Pausable); ok {
+				p.Paused(res.SoftwareData.Paused)
+			}
 		}
 	}
 }

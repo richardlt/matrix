@@ -8,6 +8,14 @@
 #define PIN 10
 #define NUMPIXELS 144
 
+// Must match serialBaudRate in device/matrix.go. A mismatch is not silent: the signature
+// handshake below fails and the host never recognises the board as a matrix.
+//
+// A frame is NUMPIXELS*3+1 = 433 bytes, so the wire time at 8N1 is 4330/baud seconds.
+// The ATmega's U2X divisor hits 500000 exactly, with none of the error it carries at
+// 115200.
+#define BAUD_RATE 500000
+
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 void setup()
@@ -18,7 +26,7 @@ void setup()
   splash();
   pixels.show();
 
-  Serial.begin(115200); // setup serial port
+  Serial.begin(BAUD_RATE); // setup serial port
   while (!Serial)
   {
     ; // wait for serial port to connect

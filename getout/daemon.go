@@ -35,6 +35,7 @@ func (g *getout) Init(a software.API) (err error) {
 		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
+		Pausable:       true,
 	}); err != nil {
 		return err
 	}

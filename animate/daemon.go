@@ -60,26 +60,29 @@ func (a animation) readFrame(width, height, index int) *software.Image {
 	end := start + pixels
 	buf := a[start:end]
 
-	var colors []*common.Color
-	mapColors := map[string]uint64{}
+	// The palette key packs the channels into one integer. Formatting it as a string
+	// instead costs a reflection-based format and an allocation for every pixel of every
+	// frame, which on this hardware is the bulk of the work of decoding one.
+	// Frames tend to reuse a handful of colours, so the palette is sized for that rather
+	// than grown from empty a pixel at a time.
+	colors := make([]*common.Color, 0, 32)
+	mapColors := make(map[uint64]uint64, 32)
 	mask := make([]uint64, width*height)
 	var cursor int
 	for i := range mask {
-		c := &common.Color{
-			R: uint64(buf[cursor]),
-			G: uint64(buf[cursor+1]),
-			B: uint64(buf[cursor+2]),
-			A: 1,
-		}
-		key := fmt.Sprintf("%d%d%d", c.R, c.G, c.B)
-		if v, ok := mapColors[key]; !ok {
-			colors = append(colors, c)
-			mask[i] = uint64(len(colors) - 1)
-			mapColors[key] = mask[i]
-		} else {
-			mask[i] = v
-		}
+		r, g, b := uint64(buf[cursor]), uint64(buf[cursor+1]), uint64(buf[cursor+2])
 		cursor += 3
+
+		key := r<<16 | g<<8 | b
+		if v, ok := mapColors[key]; ok {
+			mask[i] = v
+			continue
+		}
+
+		// Only a colour the frame has not used yet needs its own value.
+		colors = append(colors, &common.Color{R: r, G: g, B: b, A: 1})
+		mask[i] = uint64(len(colors) - 1)
+		mapColors[key] = mask[i]
 	}
 
 	return &software.Image{

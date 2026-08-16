@@ -35,6 +35,7 @@ func (d *draw) Init(a software.API) (err error) {
 		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
+		Pausable:       true,
 	}); err != nil {
 		return err
 	}

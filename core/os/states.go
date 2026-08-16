@@ -85,10 +85,14 @@ func (p *playerMenuState) Init(ctx *Context) {
 
 func newSoftwareState(meta system.SoftwareMeta, count uint64) *softwareState {
 	mp := software.NewMultiPress(common.Button_SELECT, common.Button_START)
+	f := render.NewFrame(16, 9)
+	pa := menus.NewPause(&f)
 	st := &softwareState{
 		meta:                  meta,
 		playerCount:           count,
 		multiPressSelectStart: mp,
+		pause:                 &pa,
+		pauseFrame:            &f,
 	}
 
 	mp.OnAction(func(slot uint64) {
@@ -107,6 +111,10 @@ type softwareState struct {
 	meta                  system.SoftwareMeta
 	playerCount           uint64
 	multiPressSelectStart software.ActionGenerator
+	pause                 *menus.Pause
+	pauseFrame            *render.Frame
+	paused                bool
+	left                  bool
 	ctx                   *Context
 }
 
@@ -114,8 +122,15 @@ func (s *softwareState) Init(ctx *Context) {
 	s.ctx = ctx
 
 	ctx.softwareServer.OnPrint(func(f render.Frame) {
+		// A software told to pause may still have a frame in flight, and it must not
+		// paint over the paused screen the core is holding up.
+		if s.paused {
+			return
+		}
 		ctx.displayServer.Print([]render.Frame{f})
 	})
+
+	s.pause.OnPrint(func() { ctx.displayServer.Print([]render.Frame{*s.pauseFrame}) })
 
 	ctx.playerServer.OnAction(func(a system.Action) {
 		s.multiPressSelectStart.SendAction(a.Slot, a.Command)
@@ -131,6 +146,7 @@ func (s *softwareState) Init(ctx *Context) {
 			}
 		}
 		if !found {
+			s.leave()
 			ctx.SetState(newSoftMenuState(ctx.GetSoftwareMeta()))
 		}
 	})
@@ -141,11 +157,68 @@ func (s *softwareState) Init(ctx *Context) {
 }
 
 func (s *softwareState) catchAction(a system.Action) {
+	// An action already on its way when the state handed over must not restart anything
+	// here, or the paused screen would end up drawing over the menu.
+	if s.left {
+		return
+	}
+
 	switch a.Command {
 	case commandSelectStart:
+		s.leave()
 		s.ctx.softwareServer.CloseSoftware()
 		s.ctx.SetState(newSoftMenuState(s.ctx.GetSoftwareMeta()))
+	case common.Command_START_UP:
+		// Pause belongs to the core: it owns the button, the screen it holds up and the
+		// state displays are told about. A software only declares that it can be paused.
+		if s.meta.Pausable {
+			s.setPaused(!s.paused)
+		} else {
+			s.ctx.softwareServer.Command(a.Slot, a.Command)
+		}
 	default:
-		s.ctx.softwareServer.Command(a.Slot, a.Command)
+		// A paused software receives nothing, so play cannot advance behind the screen
+		// the core is holding up.
+		if !s.paused {
+			s.ctx.softwareServer.Command(a.Slot, a.Command)
+		}
 	}
 }
+
+func (s *softwareState) setPaused(paused bool) {
+	if s.paused == paused {
+		return
+	}
+	s.paused = paused
+
+	// A paused software is not drawing, so for displays it counts as a menu: work they
+	// hold back during play resumes, which is what allows a controller that dropped out
+	// to be picked up again without leaving the game.
+	s.ctx.softwareServer.SetPaused(paused)
+	s.ctx.displayServer.SetSoftwareRunning(!paused)
+
+	if paused {
+		s.pause.Start()
+	} else {
+		s.pause.Stop()
+		s.ctx.softwareServer.PrintCurrent()
+	}
+}
+
+// leave stops what this state owns before it hands over, so no animation is left
+// drawing over whatever comes next.
+func (s *softwareState) leave() {
+	// A software on its way out is told that play resumed, so it is never left holding a
+	// pause that nothing is going to lift.
+	if s.paused {
+		s.ctx.softwareServer.SetPaused(false)
+	}
+
+	s.left = true
+	s.paused = false
+	s.pause.Stop()
+}
+
+func (s *softMenuState) SoftwareRunning() bool   { return false }
+func (p *playerMenuState) SoftwareRunning() bool { return false }
+func (s *softwareState) SoftwareRunning() bool   { return !s.paused }

@@ -15,6 +15,14 @@ type Display interface {
 	FramesReceived([]*common.Frame)
 }
 
+// StateAware is an optional companion to Display. A display that implements it is told
+// whether the core is showing a menu or running a software, which lets it hold off work
+// that would compete with the frames it is about to receive. Displays that do not
+// implement it are unaffected.
+type StateAware interface {
+	SoftwareRunning(bool)
+}
+
 // Connect initializes a new connection.
 func Connect(uri string, d Display, reconnect bool) error {
 	err := connect(uri, d)
@@ -23,6 +31,9 @@ func Connect(uri string, d Display, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Display will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, d, true)
@@ -87,6 +98,10 @@ func processResponse(d Display, res *Response) {
 		switch res.DisplayData.Action {
 		case Response_DisplayData_FRAMES:
 			d.FramesReceived(res.DisplayData.Frames)
+		}
+	case Response_STATE:
+		if sa, ok := d.(StateAware); ok && res.StateData != nil {
+			sa.SoftwareRunning(res.StateData.State == Response_StateData_SOFTWARE)
 		}
 	}
 }

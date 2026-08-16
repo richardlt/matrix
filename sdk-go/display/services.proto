@@ -21,14 +21,25 @@ message Response {
   enum Type {
     PING = 0;
     DISPLAY = 1;
+    STATE = 2;
   }
   message DisplayData {
     enum Action {
       FRAMES = 0;
     }
     Action action = 1;
-    repeated common.Frame frames = 2;	
+    repeated common.Frame frames = 2;
+  }
+  // StateData tells a display what the core is doing, so it can leave the hardware
+  // alone while a software is drawing. Sent on every change and once on connect.
+  message StateData {
+    enum State {
+      MENU = 0;
+      SOFTWARE = 1;
+    }
+    State state = 1;
   }
   Type type = 1;
   DisplayData displayData = 2;
+  StateData stateData = 3;
 }

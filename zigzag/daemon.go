@@ -2,6 +2,7 @@ package zigzag
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,7 @@ type zigzag struct {
 	engine   *engine
 	renderer *renderer
 	cancel   func()
+	paused   atomic.Bool
 }
 
 func (z *zigzag) Init(a software.API) (err error) {
@@ -39,6 +41,7 @@ func (z *zigzag) Init(a software.API) (err error) {
 		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
+		Pausable:       true,
 	}); err != nil {
 		return err
 	}
@@ -47,6 +50,7 @@ func (z *zigzag) Init(a software.API) (err error) {
 }
 
 func (z *zigzag) Start(playerCount uint64) {
+	z.paused.Store(false)
 	z.engine = newEngine(playerCount, 16, 9)
 	z.print()
 
@@ -63,6 +67,9 @@ func (z *zigzag) Start(playerCount uint64) {
 			case <-ctx.Done():
 				return
 			case <-t.C:
+				if z.paused.Load() {
+					continue
+				}
 				z.engine.MovePlayers()
 				z.print()
 				gameOver = z.engine.IsGameOver()
@@ -80,6 +87,10 @@ func (z *zigzag) Close() {
 	z.renderer.Clean()
 	z.renderer.StopPrintWinners()
 }
+
+// Paused satisfies software.Pausable: the core suspends play, and the snakes have to
+// stop moving for as long as it lasts.
+func (z *zigzag) Paused(paused bool) { z.paused.Store(paused) }
 
 func (z *zigzag) ActionReceived(slot uint64, cmd common.Command) {
 	pSlot := int(slot)

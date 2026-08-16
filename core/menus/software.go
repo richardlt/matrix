@@ -47,6 +47,11 @@ func (s Software) Print() {
 	} else {
 		i = s.softwaresMeta[s.selected].Logo
 	}
+	// A software may register without a logo, and an entirely blank screen gives no clue
+	// that anything is running.
+	if i == nil {
+		i = render.GetImageByName("empty")
+	}
 
 	id.Render(i, &common.Coord{X: 8, Y: 4})
 

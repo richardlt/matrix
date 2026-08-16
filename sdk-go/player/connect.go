@@ -22,6 +22,9 @@ func Connect(uri string, p Player, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Player will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, p, true)

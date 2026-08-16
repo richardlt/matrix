@@ -23,6 +23,9 @@ type DisplayServer struct {
 	displays    []display
 	displayLock sync.RWMutex
 	lastFrames  []render.Frame
+	// softwareRunning is replayed to each display as it connects, so one that joins
+	// mid-game is not left assuming a menu is showing.
+	softwareRunning bool
 }
 
 // Connect display action.
@@ -63,8 +66,9 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 		}
 	}()
 
-	// print last frames on connect
+	// bring the new display up to date on connect
 	di.Print(d.lastFrames)
+	di.SoftwareRunning(d.softwareRunning)
 
 	for {
 		if _, err := stream.Recv(); err != nil {
@@ -104,6 +108,20 @@ func (d *DisplayServer) Print(fs []render.Frame) {
 	d.displayLock.RUnlock()
 }
 
+// SetSoftwareRunning records whether a software is drawing rather than a menu being
+// shown, and tells every connected display. A display that drives hardware uses it to
+// keep housekeeping out of the way of the frames.
+func (d *DisplayServer) SetSoftwareRunning(running bool) {
+	d.displayLock.RLock()
+	defer d.displayLock.RUnlock()
+
+	d.softwareRunning = running
+	logrus.Debugf("Software running %t, notifying %d displays", running, len(d.displays))
+	for _, di := range d.displays {
+		di.SoftwareRunning(running)
+	}
+}
+
 func newDisplay(chRes chan *displaySDK.Response) display {
 	return display{uuid.NewString(), chRes}
 }
@@ -134,4 +152,16 @@ func (d *display) Print(fs []render.Frame) {
 		r.DisplayData.Frames = append(r.DisplayData.Frames, frame)
 	}
 	d.responseChannel <- r
+}
+
+// SoftwareRunning forwards the core's state to this display.
+func (d *display) SoftwareRunning(running bool) {
+	state := displaySDK.Response_StateData_MENU
+	if running {
+		state = displaySDK.Response_StateData_SOFTWARE
+	}
+	d.responseChannel <- &displaySDK.Response{
+		Type:      displaySDK.Response_STATE,
+		StateData: &displaySDK.Response_StateData{State: state},
+	}
 }

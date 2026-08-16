@@ -83,6 +83,24 @@ func (s *SoftwareServer) Command(slot uint64, cmd common.Command) {
 	}
 }
 
+// SetPaused suspends or resumes the running software. Only a software with a clock of
+// its own has anything to do with it: the core stops sending player commands and holds
+// the screen for as long as the pause lasts.
+func (s *SoftwareServer) SetPaused(paused bool) {
+	if s.current != nil {
+		s.current.SetPaused(paused)
+	}
+}
+
+// PrintCurrent puts the running software's frame back on screen without waiting for it
+// to draw. Leaving a pause needs it: the core held the screen meanwhile, and a software
+// that only draws when something moves would leave the paused label up.
+func (s *SoftwareServer) PrintCurrent() {
+	if s.current != nil && s.printCallback != nil {
+		s.printCallback(s.current.GetTopFrame())
+	}
+}
+
 func (s *SoftwareServer) notifyChanges() {
 	if s.softwareChangeCallback != nil {
 		go s.softwareChangeCallback(s.GetSoftwaresMeta())
@@ -331,6 +349,8 @@ type software struct {
 	MinPlayerCount, MaxPlayerCount uint64
 	connectResponseChannel         chan *softwareSDK.ConnectResponse
 	Ready                          bool
+	Pausable                       bool
+	Paused                         bool
 	matrix                         *render.Matrix
 	layers                         map[string]*render.Frame
 	randomDrivers                  map[string]*drivers.Random
@@ -351,6 +371,7 @@ func (s software) GetMeta() SoftwareMeta {
 		Logo:           s.Logo,
 		MinPlayerCount: s.MinPlayerCount,
 		MaxPlayerCount: s.MaxPlayerCount,
+		Pausable:       s.Pausable,
 	}
 }
 
@@ -377,15 +398,35 @@ func (s *software) LayerRemove(layerUUID string) {
 	}
 }
 
+// SetConfig records what a software reports about itself. The player counts are applied
+// even when no logo came with them: the logo is decoration, while the counts decide
+// whether selecting the software goes straight to it or via the player menu, and a
+// software whose logo file is missing would otherwise register as needing zero players.
 func (s *software) SetConfig(c *softwareSDK.ConnectRequest_SoftwareData_Config) {
-	if c.Logo != nil {
-		s.Logo = c.Logo
-		s.MinPlayerCount = c.MinPlayerCount
-		s.MaxPlayerCount = c.MaxPlayerCount
+	s.Logo = c.Logo
+	s.MinPlayerCount = c.MinPlayerCount
+	s.MaxPlayerCount = c.MaxPlayerCount
+	s.Pausable = c.Pausable
+}
+
+// SetPaused tells the software that play is suspended or resumed. It is only told so it
+// can hold whatever runs on its own; everything the player sees is the core's doing.
+func (s *software) SetPaused(paused bool) {
+	s.Paused = paused
+
+	s.connectResponseChannel <- &softwareSDK.ConnectResponse{
+		Type: softwareSDK.ConnectResponse_SOFTWARE,
+		SoftwareData: &softwareSDK.ConnectResponse_SoftwareData{
+			Action: softwareSDK.ConnectResponse_SoftwareData_PAUSE,
+			Paused: paused,
+		},
 	}
 }
 
 func (s *software) Start(playerCount uint64) {
+	// A software that was left paused must not start out looking paused.
+	s.Paused = false
+
 	s.connectResponseChannel <- &softwareSDK.ConnectResponse{
 		Type: softwareSDK.ConnectResponse_SOFTWARE,
 		SoftwareData: &softwareSDK.ConnectResponse_SoftwareData{
@@ -502,4 +543,5 @@ type SoftwareMeta struct {
 	UUID                           string
 	Logo                           *softwareSDK.Image
 	MinPlayerCount, MaxPlayerCount uint64
+	Pausable                       bool
 }

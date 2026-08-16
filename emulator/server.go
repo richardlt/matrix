@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -41,8 +42,34 @@ func Start(port int, uri string) error {
 
 	s := websocket.NewServer()
 
+	// Core only sends frames when something changes, so a browser opened after startup
+	// would otherwise sit on a blank screen until a player pressed a button. Keep the
+	// most recent frame per screen and replay them to each new client.
+	var (
+		lastLock   sync.RWMutex
+		lastFrames = map[int]frame{}
+	)
+
+	s.OnConnect(func(c *websocket.Client) {
+		lastLock.RLock()
+		defer lastLock.RUnlock()
+		for i := 0; i < len(lastFrames); i++ {
+			f, ok := lastFrames[i]
+			if !ok {
+				continue
+			}
+			if err := c.Send("frame", f); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("replaying frame %d to a new client: %w", i, err))
+			}
+		}
+	})
+
 	go func() {
 		for f := range frameChannel {
+			lastLock.Lock()
+			lastFrames[f.Number] = f
+			lastLock.Unlock()
+
 			if err := s.Broadcast("frame", f); err != nil {
 				logrus.Errorf("%+v", err)
 			}

@@ -15,23 +15,45 @@ import (
 	"github.com/richardlt/matrix/sdk-go/software"
 )
 
-const refreshDelay = time.Millisecond * 30
+// serialBaudRate must match Serial.begin() in device/firmware/firmware.ino. A mismatch
+// is not silent: the signature handshake fails and the port is simply never recognised
+// as a matrix, so no display appears.
+//
+// A frame is NUMPIXELS*3+1 = 433 bytes, so at 8N1 the wire time is 4330/baud seconds:
+// 37.6ms at 115200, 8.7ms at 500000. The panel's own show() adds a further 4.3ms with
+// interrupts disabled, and the write waits for an ack, so the two do not overlap.
+const serialBaudRate = 500000
+
+// refreshDelay paces the writes. It has to stay above the per-frame wire time plus
+// show(), around 13ms at this baud rate, or the writer simply queues behind the link.
+const refreshDelay = time.Millisecond * 15
+
 const defaultBrightness = 204
 
-func newMatrix() *matrix {
+func newMatrix(a *coreState) *matrix {
 	return &matrix{
+		state:      a,
 		brightness: defaultBrightness,
 		buffer:     []byte{defaultBrightness},
 	}
 }
 
 type matrix struct {
+	state       *coreState
 	api         software.API
 	frame       *common.Frame
 	brightness  uint8
 	buffer      []byte
 	layer       software.Layer
 	imageDriver *software.ImageDriver
+}
+
+// SoftwareRunning satisfies display.StateAware: the core tells this display when a
+// software takes over from the menus, and both pollers in this package hold off while
+// one is drawing.
+func (m *matrix) SoftwareRunning(running bool) {
+	logrus.Debugf("Core reports software running: %t", running)
+	m.state.setSoftwareRunning(running)
 }
 
 func (m *matrix) FramesReceived(fs []*common.Frame) {
@@ -137,21 +159,50 @@ func (m *matrix) ActionReceived(slot uint64, cmd common.Command) {
 	}
 }
 
+// Port discovery polls, and every poll walks the ports the system knows about. Once a
+// panel is attached there is rarely a second one coming, so the interval eases off and
+// only returns to the minimum when the set of ports changes.
+const (
+	portPollMin = time.Second
+	portPollMax = 8 * time.Second
+)
+
 func (m *matrix) OpenPorts(ctx context.Context) error {
 	connected := map[string]struct{}{}
 	invalid := map[string]struct{}{}
 	mutex := new(sync.Mutex)
 
 	go func() {
+		poll := portPollMin
+
 		for {
 			if ctx.Err() != nil {
 				return
 			}
 
+			// Scanning walks every port and opens any it has not seen, which competes with
+			// the frames already going out over one of them. Nothing to gain while a
+			// software is drawing.
+			if !m.state.idle() {
+				time.Sleep(portPollMin)
+				continue
+			}
+
+			before := len(connected)
+
 			mutex.Lock()
 			defered := func() {
+				// A newly attached panel means another may follow, so look again soon.
+				if len(connected) != before {
+					poll = portPollMin
+				} else if poll < portPollMax {
+					poll *= 2
+					if poll > portPollMax {
+						poll = portPollMax
+					}
+				}
 				mutex.Unlock()
-				time.Sleep(time.Second)
+				time.Sleep(poll)
 			}
 
 			paths, err := serial.GetPortsList()
@@ -175,7 +226,7 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 				if _, ok := connected[path]; !ok {
 					logrus.Debugf("Try to open port at %s", path)
 
-					port, err := serial.Open(path, &serial.Mode{BaudRate: 115200})
+					port, err := serial.Open(path, &serial.Mode{BaudRate: serialBaudRate})
 					if err != nil {
 						if err.Error() == "Serial port busy" {
 							logrus.Debugf("Port at %s is not available", path)
@@ -274,7 +325,12 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 }
 
 func (m *matrix) updateBuffer() {
-	buffer := []byte{m.brightness}
+	// Sized up front: growing from one byte reallocates about ten times per frame, and at
+	// this frame rate that is a meaningful share of what the collector has to chase. It
+	// stays a fresh slice each call, because the writer compares it against the previous
+	// one to decide whether to send.
+	buffer := make([]byte, 0, len(m.frame.Pixels)*3+1)
+	buffer = append(buffer, m.brightness)
 
 	for _, p := range m.frame.Pixels {
 		if p.A > 0 {
