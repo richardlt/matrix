@@ -53,11 +53,9 @@ func Start(port int, uri string) error {
 	s.OnConnect(func(c *websocket.Client) {
 		lastLock.RLock()
 		defer lastLock.RUnlock()
-		for i := 0; i < len(lastFrames); i++ {
-			f, ok := lastFrames[i]
-			if !ok {
-				continue
-			}
+		// Each frame carries the screen it belongs to, so the client sorts them out and
+		// the order they go over the socket in does not matter.
+		for i, f := range lastFrames {
 			if err := c.Send("frame", f); err != nil {
 				logrus.Errorf("%+v", errors.Errorf("replaying frame %d to a new client: %w", i, err))
 			}

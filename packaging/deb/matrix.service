@@ -12,6 +12,12 @@ User=root
 # core reads themes/, fonts/, images/ and animations/ from the working directory, and
 # tolerates them missing without saying so. Starting anywhere else renders nothing.
 WorkingDirectory=/var/lib/matrix
+# Defaults for what /etc/default/matrix sets, which overrides them. Without them a line
+# commented out there expands to an empty argument, and the service does nothing but fail
+# and restart.
+Environment="MATRIX_COMPONENTS=core device"
+Environment=MATRIX_GAMEPAD_PORT=80
+Environment=MATRIX_LOG_LEVEL=info
 EnvironmentFile=/etc/default/matrix
 # $MATRIX_COMPONENTS is deliberately unbraced: systemd splits a bare $VAR into separate
 # arguments, which is what turns the list into one argument per component.

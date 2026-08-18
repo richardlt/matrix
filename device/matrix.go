@@ -188,9 +188,12 @@ func (m *matrix) OpenPorts(ctx context.Context) error {
 				continue
 			}
 
+			mutex.Lock()
+
+			// Under the lock, since a port that drops off is deleted from this map by the
+			// goroutine reading it.
 			before := len(connected)
 
-			mutex.Lock()
 			defered := func() {
 				// A newly attached panel means another may follow, so look again soon.
 				if len(connected) != before {

@@ -1,6 +1,8 @@
 package os
 
 import (
+	"sync/atomic"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/core/menus"
@@ -107,14 +109,17 @@ func newSoftwareState(meta system.SoftwareMeta, count uint64) *softwareState {
 
 const commandSelectStart = 100
 
+// paused and left are read and written from different goroutines: player commands arrive
+// on the player stream, frames on the software stream, and SetState asks about them from
+// wherever the handover happened.
 type softwareState struct {
 	meta                  system.SoftwareMeta
 	playerCount           uint64
 	multiPressSelectStart software.ActionGenerator
 	pause                 *menus.Pause
 	pauseFrame            *render.Frame
-	paused                bool
-	left                  bool
+	paused                atomic.Bool
+	left                  atomic.Bool
 	ctx                   *Context
 }
 
@@ -124,7 +129,7 @@ func (s *softwareState) Init(ctx *Context) {
 	ctx.softwareServer.OnPrint(func(f render.Frame) {
 		// A software told to pause may still have a frame in flight, and it must not
 		// paint over the paused screen the core is holding up.
-		if s.paused {
+		if s.paused.Load() {
 			return
 		}
 		ctx.displayServer.Print([]render.Frame{f})
@@ -159,7 +164,7 @@ func (s *softwareState) Init(ctx *Context) {
 func (s *softwareState) catchAction(a system.Action) {
 	// An action already on its way when the state handed over must not restart anything
 	// here, or the paused screen would end up drawing over the menu.
-	if s.left {
+	if s.left.Load() {
 		return
 	}
 
@@ -172,24 +177,25 @@ func (s *softwareState) catchAction(a system.Action) {
 		// Pause belongs to the core: it owns the button, the screen it holds up and the
 		// state displays are told about. A software only declares that it can be paused.
 		if s.meta.Pausable {
-			s.setPaused(!s.paused)
+			s.setPaused(!s.paused.Load())
 		} else {
 			s.ctx.softwareServer.Command(a.Slot, a.Command)
 		}
 	default:
 		// A paused software receives nothing, so play cannot advance behind the screen
 		// the core is holding up.
-		if !s.paused {
+		if !s.paused.Load() {
 			s.ctx.softwareServer.Command(a.Slot, a.Command)
 		}
 	}
 }
 
 func (s *softwareState) setPaused(paused bool) {
-	if s.paused == paused {
+	// Two players can hit the button at once, and only the press that flips the state does
+	// the work that goes with it.
+	if !s.paused.CompareAndSwap(!paused, paused) {
 		return
 	}
-	s.paused = paused
 
 	// A paused software is not drawing, so for displays it counts as a menu: work they
 	// hold back during play resumes, which is what allows a controller that dropped out
@@ -208,17 +214,19 @@ func (s *softwareState) setPaused(paused bool) {
 // leave stops what this state owns before it hands over, so no animation is left
 // drawing over whatever comes next.
 func (s *softwareState) leave() {
+	// Marked first, so an action arriving alongside this one turns back at the top of
+	// catchAction rather than acting on a state that is halfway out.
+	s.left.Store(true)
+
 	// A software on its way out is told that play resumed, so it is never left holding a
 	// pause that nothing is going to lift.
-	if s.paused {
+	if s.paused.Swap(false) {
 		s.ctx.softwareServer.SetPaused(false)
 	}
 
-	s.left = true
-	s.paused = false
 	s.pause.Stop()
 }
 
 func (s *softMenuState) SoftwareRunning() bool   { return false }
 func (p *playerMenuState) SoftwareRunning() bool { return false }
-func (s *softwareState) SoftwareRunning() bool   { return !s.paused }
+func (s *softwareState) SoftwareRunning() bool   { return !s.paused.Load() }

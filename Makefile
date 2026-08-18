@@ -24,6 +24,10 @@ GIT_VERSION := $(shell git describe --tags --dirty 2>/dev/null \
 VERSION ?= $(if $(GIT_VERSION),$(GIT_VERSION),0.0.0)
 VERSION_LDFLAGS := -X main.version=$(VERSION)
 
+# A bare `make` builds. Without this it would run the first target in the file, which
+# deletes both node_modules trees.
+.DEFAULT_GOAL := build
+
 # Every target is a command rather than a file it produces. Without this, `make build`
 # does nothing once the build/ directory exists, because make considers the target
 # already up to date.

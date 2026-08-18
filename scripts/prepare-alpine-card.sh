@@ -25,7 +25,10 @@ set -euo pipefail
 ALPINE_VERSION="${ALPINE_VERSION:-3.24.1}"
 ALPINE_ARCH=armhf                                   # Alpine's name for ARMv6
 ALPINE_TARBALL="alpine-rpi-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz"
-ALPINE_BASE="https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/${ALPINE_ARCH}"
+# The release series' own directory, v3.24 for 3.24.1, rather than latest-stable: that one
+# holds only whatever is current, so a pinned version stops being downloadable the day
+# Alpine cuts the next release.
+ALPINE_BASE="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION%.*}/releases/${ALPINE_ARCH}"
 
 # Everything is relative to the working directory rather than to the script, so this
 # behaves the same run from a checkout, where `make package` writes matrix.tar.gz to the
