@@ -1,0 +1,41 @@
+name: release
+
+# Tagging is the release. Push a tag and this builds the two artifacts and publishes them;
+# there is nothing else to run and nothing to click. Both `1.2.3` and `v1.2.3` are
+# accepted, since the tags already on the repository carry no prefix.
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# To create the release and attach the artifacts to it.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The version the artifacts carry comes from `git describe`, which needs the tag
+          # this run was started by, and the default checkout fetches no tags at all.
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - uses: ./.github/actions/release-artifacts
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            matrix.tar.gz
+            target/matrix_*_armhf.deb
+          # Rather than publish a release missing half of what it promises.
+          fail_on_unmatched_files: true
+          generate_release_notes: true

@@ -16,6 +16,7 @@ Install Raspberry Pi OS yourself, then download the package from the
 ```sh
 sudo dpkg -i matrix_<version>_armhf.deb
 systemctl status matrix
+matrix --version
 ```
 
 That puts a static ARMv7 binary at `/usr/bin/matrix`, the data it renders from under

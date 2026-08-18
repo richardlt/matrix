@@ -67,6 +67,15 @@ make package ARMV6_CC=<your arm musl gcc>
 make deb ARMV7_CC=<your arm musl gcc>
 ```
 
+CI uses `arm-unknown-linux-musleabihf` from
+[musl-cross](https://github.com/musl-cross/musl-cross/releases), pinned to a release and a
+checksum in [`.github/actions/release-artifacts`](../.github/actions/release-artifacts).
+Unpacking one of those tarballs gives you the same compiler CI builds with:
+
+```sh
+make package ARMV6_CC=arm-unknown-linux-musleabihf-gcc
+```
+
 Check the result targets what you expect with:
 
 ```sh
@@ -76,9 +85,51 @@ readelf -A build/matrix-linux-armv6 | grep Tag_CPU_arch
 `make check-armv6` compiles for ARMv6 without the toolchain. It is a compile check only:
 cgo is off, so the result has no controller support and is not shippable.
 
-`make deb` takes its version from the latest git tag; override with
-`make deb DEB_VERSION=1.2.3`. The package contents are under
-[`packaging/deb/`](../packaging/deb); `/etc/default/matrix` is a conffile, so a user's
-edits to the component list survive an upgrade.
+The package contents are under [`packaging/deb/`](../packaging/deb);
+`/etc/default/matrix` is a conffile, so a user's edits to the component list survive an
+upgrade.
 
 The Makefile explains why the builds are put together the way they are.
+
+## Versions
+
+The version is taken from the tags and stamped into the binary, so it reports the same
+thing the `.deb` around it claims:
+
+```sh
+make print-version        # 0.2.3+18.g8736069, what a build here would carry
+./build/matrix-local --version
+```
+
+A tagged commit gives the tag alone, `0.2.3`, which is what a release is. Anywhere else
+`git describe`'s suffix says how far past the tag the build sits and which commit it is,
+with `.dirty` on the end if the tree had uncommitted changes. Pass `VERSION=1.2.3` to
+override, and note that a checkout with no tag in reach — a shallow clone, for one — has
+nothing to describe and falls back to `0.0.0`.
+
+A binary built with a bare `go build` reports `dev`: the version is a linker flag, and
+only the Makefile passes it.
+
+## CI and releases
+
+[`ci.yml`](../.github/workflows/ci.yml) runs on every push: the Go checks, a TypeScript
+check of both web apps, the tests, and the two release artifacts. The artifacts are
+attached to the run, so any commit can be written to a card without a cross toolchain on
+your own machine, and each carries the describe version of the commit it came from.
+
+Nothing runs on a pull request, so a fork cannot start a workflow here.
+
+Tagging is the release:
+
+```sh
+git tag 1.2.3
+git push origin 1.2.3
+```
+
+[`release.yml`](../.github/workflows/release.yml) then builds the same two artifacts, which
+this time report the tag, and publishes them as a GitHub release. Nothing is built by hand
+and nothing is uploaded by hand.
+
+Both workflows share [`.github/actions/release-artifacts`](../.github/actions/release-artifacts),
+which installs the toolchain, builds the two artifacts and checks the architecture, the
+static linking and the stamped version of each before anything is published.

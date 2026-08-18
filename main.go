@@ -23,8 +23,15 @@ import (
 	"github.com/richardlt/matrix/zigzag"
 )
 
+// version is stamped in at build time from the git tag, by the Makefile. A binary built
+// with a bare `go build` carries the default instead.
+var version = "dev"
+
 func main() {
 	cmd := &cli.Command{
+		Name:    "matrix",
+		Usage:   "video game console operating system for a 16x9 RGB LED matrix",
+		Version: version,
 		Commands: []*cli.Command{{
 			Name:  "start",
 			Usage: "start the matrix components",

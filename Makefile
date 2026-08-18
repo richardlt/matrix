@@ -6,11 +6,29 @@ SHELL := /bin/bash
 GO_JUNIT_REPORT_VERSION := v2.1.0
 ERRCHECK_VERSION := v1.20.0
 
+# What the binary reports as its version and what the .deb carries, from the tags:
+#
+#   0.2.3                    the tagged commit itself, which is what a release is
+#   0.2.3+18.g8736069        eighteen commits past that tag
+#   0.2.3+18.g8736069.dirty  ... with uncommitted changes on top
+#
+# describe joins its suffix with hyphens, and dpkg reads everything after the last hyphen
+# as a package revision, which would make a snapshot look like a repackaged 0.2.3. Joined
+# with + and . instead, the whole string is one upstream version and sorts above the
+# release it followed.
+#
+# A checkout with no tag in reach, a shallow clone for one, has nothing to describe and
+# falls back to 0.0.0. Pass VERSION to override the lot.
+GIT_VERSION := $(shell git describe --tags --dirty 2>/dev/null \
+	| sed -e 's/^v//' -e 's/-\([0-9][0-9]*\)-g/+\1.g/' -e 's/-dirty/.dirty/')
+VERSION ?= $(if $(GIT_VERSION),$(GIT_VERSION),0.0.0)
+VERSION_LDFLAGS := -X main.version=$(VERSION)
+
 # Every target is a command rather than a file it produces. Without this, `make build`
 # does nothing once the build/ directory exists, because make considers the target
 # already up to date.
 .PHONY: reset-all clean-all install-all build-all check-all clean install build \
-	build-web build-armv6 build-armv7 check-armv6 package deb \
+	build-web build-armv6 build-armv7 check-armv6 package deb print-version \
 	check fmt check-fmt vet errcheck test test-with-report
 
 reset-all:
@@ -50,7 +68,7 @@ install:
 	go mod tidy
 
 build:
-	go build -o build/matrix-local .
+	go build -ldflags '$(VERSION_LDFLAGS)' -o build/matrix-local .
 
 # --- Release builds -------------------------------------------------------------------
 #
@@ -90,7 +108,12 @@ ARMV6_CFLAGS ?= -O2 -g -march=armv6 -mfpu=vfp
 ARMV7_CC ?= $(ARMV6_CC)
 ARMV7_CFLAGS ?= -O2 -g -march=armv7-a -mfpu=vfpv3-d16
 
-GO_RELEASE_FLAGS := -trimpath -tags netgo -ldflags '-extldflags "-static"'
+GO_RELEASE_FLAGS := -trimpath -tags netgo -ldflags '-extldflags "-static" $(VERSION_LDFLAGS)'
+
+# What `matrix --version` will print, and the version in the .deb's name. CI reads this to
+# stamp the same string into everything it builds and to check what came out.
+print-version:
+	@echo $(VERSION)
 
 build-armv6:
 	CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 \
@@ -135,7 +158,6 @@ package:
 #
 # /etc/default/matrix is listed as a conffile so dpkg keeps an edited component list
 # across an upgrade instead of overwriting it.
-DEB_VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo 0.0.0)
 DEB_ARCH := armhf
 DEB_ROOT := target/deb
 
@@ -145,7 +167,7 @@ deb:
 	rm -rf $(DEB_ROOT)
 	mkdir -p $(DEB_ROOT)/DEBIAN $(DEB_ROOT)/usr/bin $(DEB_ROOT)/etc/default \
 		$(DEB_ROOT)/var/lib/matrix $(DEB_ROOT)/lib/systemd/system
-	sed -e 's/@VERSION@/$(DEB_VERSION)/' -e 's/@ARCH@/$(DEB_ARCH)/' \
+	sed -e 's/@VERSION@/$(VERSION)/' -e 's/@ARCH@/$(DEB_ARCH)/' \
 		packaging/deb/control > $(DEB_ROOT)/DEBIAN/control
 	install -m 755 packaging/deb/postinst packaging/deb/prerm packaging/deb/postrm \
 		$(DEB_ROOT)/DEBIAN/
@@ -154,7 +176,7 @@ deb:
 	install -m 644 packaging/deb/default $(DEB_ROOT)/etc/default/matrix
 	echo /etc/default/matrix > $(DEB_ROOT)/DEBIAN/conffiles
 	cp -R themes fonts images animations $(DEB_ROOT)/var/lib/matrix/
-	dpkg-deb --build --root-owner-group $(DEB_ROOT) target/matrix_$(DEB_VERSION)_$(DEB_ARCH).deb
+	dpkg-deb --build --root-owner-group $(DEB_ROOT) target/matrix_$(VERSION)_$(DEB_ARCH).deb
 
 # --- Checks ---------------------------------------------------------------------------
 

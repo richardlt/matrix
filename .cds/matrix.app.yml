@@ -1,6 +1,0 @@
-version: v1.0
-name: matrix
-vcs_server: github
-repo: richardlt/matrix
-vcs_connection_type: ssh
-vcs_ssh_key: proj-matrix
