@@ -3,19 +3,28 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      gomod:
+        patterns:
+          - "*"
 
   - package-ecosystem: npm
-    directory: /emulator
+    directories:
+      - /emulator
+      - /gamepad
     schedule:
-      interval: weekly
-
-  - package-ecosystem: npm
-    directory: /gamepad
-    schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      npm:
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
