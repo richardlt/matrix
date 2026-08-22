@@ -29,6 +29,10 @@ ALPINE_TARBALL="alpine-rpi-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz"
 # holds only whatever is current, so a pinned version stops being downloadable the day
 # Alpine cuts the next release.
 ALPINE_BASE="https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION%.*}/releases/${ALPINE_ARCH}"
+# Checksum of the tarball named above, kept here rather than read from the .sha256 beside
+# it on the mirror: that file travels with whatever the mirror serves, so it would confirm
+# a replaced asset instead of rejecting it. A different ALPINE_VERSION needs its own.
+ALPINE_SHA256="${ALPINE_SHA256:-1b32841873b4ff6b7a2f7247d65867545253bf9aa39a3c72be1c33eea9ab4ecd}"
 
 # Everything is relative to the working directory rather than to the script, so this
 # behaves the same run from a checkout, where `make package` writes matrix.tar.gz to the
@@ -81,16 +85,16 @@ checkout:
 
 say "Fetching Alpine $ALPINE_VERSION for $ALPINE_ARCH"
 mkdir -p "$CACHE"
-for f in "$ALPINE_TARBALL" "$ALPINE_TARBALL.sha256"; do
-    if [ ! -f "$CACHE/$f" ]; then
-        curl -fSL --progress-bar -o "$CACHE/$f" "$ALPINE_BASE/$f"
-    else
-        echo "cached: $f"
-    fi
-done
+if [ ! -f "$CACHE/$ALPINE_TARBALL" ]; then
+    curl -fSL --progress-bar -o "$CACHE/$ALPINE_TARBALL" "$ALPINE_BASE/$ALPINE_TARBALL"
+else
+    echo "cached: $ALPINE_TARBALL"
+fi
 
-( cd "$CACHE" && sha256sum -c "$ALPINE_TARBALL.sha256" ) \
-    || die "checksum mismatch — delete $CACHE and retry"
+echo "$ALPINE_SHA256  $CACHE/$ALPINE_TARBALL" | sha256sum --check --quiet \
+    || die "checksum mismatch on $ALPINE_TARBALL.
+Delete $CACHE and retry. A version other than $ALPINE_VERSION needs ALPINE_SHA256 set to
+that release's checksum as well."
 
 # --- 2. Stage the card contents ----------------------------------------------------------
 
