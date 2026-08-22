@@ -1,9 +1,3 @@
-# `test` pipes go test through tee, and tee's exit status would otherwise hide a
-# failing test from make.
-SHELL := /bin/bash
-.SHELLFLAGS := -o pipefail -c
-
-GO_JUNIT_REPORT_VERSION := v2.1.0
 ERRCHECK_VERSION := v1.20.0
 
 # What the binary reports as its version and what the .deb carries, from the tags:
@@ -33,7 +27,7 @@ VERSION_LDFLAGS := -X main.version=$(VERSION)
 # already up to date.
 .PHONY: reset-all clean-all install-all build-all check-all clean install build \
 	build-web build-armv6 build-armv7 check-armv6 package deb print-version \
-	check fmt check-fmt vet errcheck test test-with-report
+	check fmt check-fmt vet errcheck test
 
 reset-all:
 	(cd gamepad && make reset)
@@ -205,8 +199,4 @@ errcheck:
 	go run github.com/kisielk/errcheck@$(ERRCHECK_VERSION) -ignoretests ./...
 
 test:
-	go test -race github.com/richardlt/matrix/... -v | tee report.out
-
-test-with-report: test
-	go run github.com/jstemmer/go-junit-report/v2@$(GO_JUNIT_REPORT_VERSION) \
-		< report.out > report.xml
+	go test -race github.com/richardlt/matrix/... -v

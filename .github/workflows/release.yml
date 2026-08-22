@@ -29,16 +29,20 @@ jobs:
         with:
           node-version: '24'
 
-      - uses: ./.github/actions/release-artifacts
+      - id: build
+        uses: ./.github/actions/release-artifacts
 
-      # Pinned to a commit rather than to a tag, which can be moved to different code: this
-      # step publishes with a token that can write to the repository. The trailing comment
-      # says which version it is, and dependabot moves both together.
-      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
-        with:
-          files: |
-            matrix.tar.gz
-            target/matrix_*_armhf.deb
-          # Rather than publish a release missing half of what it promises.
-          fail_on_unmatched_files: true
-          generate_release_notes: true
+      # The gh CLI is GitHub's own and is on the runner already, so the step that writes to
+      # the repository is not someone else's code.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # What was actually built, rather than the tag reworked into a file name.
+          VERSION: ${{ steps.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Both artifacts named rather than globbed: a name that matches nothing is a
+          # missing artifact, and gh refuses it, rather than publishing a release with half
+          # of what it promises.
+          gh release create "$GITHUB_REF_NAME" --generate-notes \
+            matrix.tar.gz "target/matrix_${VERSION}_armhf.deb"
