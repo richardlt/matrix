@@ -6,7 +6,7 @@
 #
 # Every component is a separate process-worth of goroutines and one gRPC connection, so
 # on a small board it is worth trimming this to what you actually play.
-MATRIX_COMPONENTS="core device gamepad emulator demo zigzag yumyum clock draw blocks getout animate light"
+MATRIX_COMPONENTS="core device gamepad emulator demo zigzag yumyum clock draw blocks getout animate light rollupdice"
 
 # Port for the gamepad web app, the virtual controller played from a phone.
 MATRIX_GAMEPAD_PORT=80

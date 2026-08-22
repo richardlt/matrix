@@ -46,7 +46,7 @@ DEBUG=0
 # core and device, plus every game. gamepad and emulator are left out: gamepad is the web
 # controller, unreachable without a network, and emulator is a development tool. Trim this
 # with --components if memory gets tight.
-COMPONENTS="core device demo zigzag yumyum clock draw blocks getout animate light"
+COMPONENTS="core device demo zigzag yumyum clock draw blocks getout animate light rollupdice"
 # Go's collector shares the single core with rendering, and the frame path allocates on
 # every frame, so the default collection rate shows up as a periodic stutter. Trading
 # memory for fewer collections is the right way round on a board that does nothing else.

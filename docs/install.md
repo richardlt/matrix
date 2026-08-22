@@ -25,7 +25,7 @@ That puts a static ARMv7 binary at `/usr/bin/matrix`, the data it renders from u
 Choose what it runs in `/etc/default/matrix`:
 
 ```sh
-MATRIX_COMPONENTS="core device gamepad emulator demo zigzag yumyum clock draw blocks getout animate light"
+MATRIX_COMPONENTS="core device gamepad emulator demo zigzag yumyum clock draw blocks getout animate light rollupdice"
 MATRIX_GAMEPAD_PORT=80
 MATRIX_LOG_LEVEL=info
 ```
