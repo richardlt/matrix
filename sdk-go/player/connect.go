@@ -3,10 +3,11 @@ package player
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
+
+	"github.com/richardlt/matrix/internal/errors"
 )
 
 type Player interface {
@@ -21,6 +22,9 @@ func Connect(uri string, p Player, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Player will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, p, true)
@@ -29,18 +33,18 @@ func Connect(uri string, p Player, reconnect bool) error {
 func connect(uri string, p Player) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewPlayerClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening player stream to %s: %w", uri, err)
 	}
 
-	requestChannel := make(chan Request)
+	requestChannel := make(chan *Request)
 	defer close(requestChannel)
 
 	api := &API{requestChannel: requestChannel}
@@ -49,8 +53,8 @@ func connect(uri string, p Player) error {
 	// send event to the matrix core from channel
 	go func() {
 		for cr := range requestChannel {
-			if err := st.Send(&cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+			if err := st.Send(cr); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("sending player request: %w", err))
 			}
 		}
 	}()
@@ -67,7 +71,7 @@ func connect(uri string, p Player) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				requestChannel <- Request{Type: Request_PING}
+				requestChannel <- &Request{Type: Request_PING}
 			}
 		}
 	}()
@@ -79,7 +83,7 @@ func connect(uri string, p Player) error {
 	for {
 		_, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving player response: %w", err)
 		}
 	}
 }

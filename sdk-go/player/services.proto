@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package player;
 
-import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+option go_package = "github.com/richardlt/matrix/sdk-go/player;player";
+
+import "common/types.proto";
 
 service Player {
   rpc Connect (stream Request) returns (stream Response);

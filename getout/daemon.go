@@ -31,11 +31,14 @@ func (g *getout) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("getout")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
-	})
+		Pausable:       true,
+	}); err != nil {
+		return err
+	}
 
 	return a.Ready()
 }

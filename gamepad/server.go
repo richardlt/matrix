@@ -1,18 +1,29 @@
 package gamepad
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
+	"net/http"
 	"sync"
+	"time"
 
-	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/sdk-go/player"
 	"github.com/richardlt/matrix/websocket"
 )
+
+// public holds the built web app, so the binary serves it without needing the files
+// next to it at runtime. `make build-all` runs the web build before the Go one, which
+// is the order this requires. The checked-in public/.gitkeep keeps this pattern
+// matching before any web build has run; the binary then starts and serves 404s.
+//
+//go:embed all:public
+var public embed.FS
 
 type frame struct {
 	Number int     `json:"number"`
@@ -36,7 +47,9 @@ func Start(port int, uri string) error {
 
 	go func() {
 		for f := range frameChannel {
-			s.Broadcast("frame", f)
+			if err := s.Broadcast("frame", f); err != nil {
+				logrus.Errorf("%+v", err)
+			}
 		}
 	}()
 
@@ -52,14 +65,26 @@ func Start(port int, uri string) error {
 		}
 	}()
 
-	e := echo.New()
-	e.HideBanner = true
+	assets, err := fs.Sub(public, "public/app")
+	if err != nil {
+		return errors.Errorf("opening embedded assets: %w", err)
+	}
 
-	e.Any("/websocket", echo.WrapHandler(s))
-	e.Static("/", "./gamepad/public")
+	mux := http.NewServeMux()
+	mux.Handle("/websocket", s)
+	mux.Handle("/", http.FileServer(http.FS(assets)))
+
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	logrus.Infof("Start gamepad on port %d\n", port)
-	return errors.WithStack(e.Start(fmt.Sprintf(":%d", port)))
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Errorf("serving gamepad on port %d: %w", port, err)
+	}
+	return nil
 }
 
 type gamepadServer struct {
@@ -109,7 +134,9 @@ func (g *gamepadServer) RemoveGamepad(gp *gamepad) {
 
 func (g *gamepadServer) Command(gp *gamepad, cmd common.Command) {
 	if 0 <= gp.Slot {
-		g.playerAPI.Command(uint64(gp.Slot), cmd)
+		if err := g.playerAPI.Command(uint64(gp.Slot), cmd); err != nil {
+			logrus.Errorf("%+v", err)
+		}
 	}
 }
 
@@ -144,5 +171,7 @@ type gamepad struct {
 
 func (g *gamepad) SelectSlot(slot int) {
 	g.Slot = slot
-	g.so.Send("slot", slot)
+	if err := g.so.Send("slot", slot); err != nil {
+		logrus.Errorf("%+v", err)
+	}
 }

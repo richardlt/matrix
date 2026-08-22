@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"github.com/karalabe/hid"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/player"
 )
 
-func newGamepad() *gamepad {
+func newGamepad(a *coreState) *gamepad {
 	m := map[string]config{}
 
 	for _, c := range configs {
@@ -26,10 +26,11 @@ func newGamepad() *gamepad {
 		m[fmt.Sprintf("%d_%d", c.VendorID, c.ProductID)] = c
 	}
 
-	return &gamepad{configs: m}
+	return &gamepad{configs: m, state: a}
 }
 
 type gamepad struct {
+	state   *coreState
 	api     *player.API
 	configs map[string]config
 }
@@ -51,6 +52,16 @@ type action struct {
 	Command common.Command
 }
 
+// Controller discovery polls, and each poll is more expensive than it looks: hidapi opens
+// every matching device to read its string descriptors, which is a run of USB control
+// transfers. On a board where the panel's serial adapter shares the bus, doing that every
+// second is enough to stutter the display, so the interval backs off once the set of
+// controllers has settled and snaps back the moment it changes.
+const (
+	devicePollMin = time.Second
+	devicePollMax = 8 * time.Second
+)
+
 func (g *gamepad) OpenDevices(ctx context.Context) error {
 	cAction := make(chan action)
 	defer close(cAction)
@@ -60,6 +71,7 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 	go func() {
 		connected := map[string]*device{}
 		mutex := new(sync.Mutex)
+		poll := devicePollMin
 
 		for {
 			if ctx.Err() != nil {
@@ -79,10 +91,21 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 				}
 			}
 
-			if len(freeSlots) > 0 {
+			// With every slot taken there is nothing to discover, so the bus is left alone
+			// entirely until a controller drops off. Nor is it worth looking while a
+			// software is drawing: the poll competes with the frames for the same bus, and
+			// a player joins from the menu, where the picture is still.
+			switch {
+			case len(freeSlots) == 0:
+				poll = devicePollMax
+			case !g.state.idle():
+				poll = devicePollMin
+			default:
+				var found bool
 				devs := hid.Enumerate(vid, pid)
 				for i := 0; i < len(devs) && i < len(freeSlots); i++ {
 					if _, ok := connected[devs[i].Path]; !ok {
+						found = true
 						key := fmt.Sprintf("%d_%d", devs[i].VendorID, devs[i].ProductID)
 						d := &device{
 							HID:    devs[i],
@@ -101,10 +124,21 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 						}(d)
 					}
 				}
+
+				// A change means more may be arriving, so look again promptly; otherwise
+				// ease off towards the maximum.
+				if found {
+					poll = devicePollMin
+				} else if poll < devicePollMax {
+					poll *= 2
+					if poll > devicePollMax {
+						poll = devicePollMax
+					}
+				}
 			}
 
 			mutex.Unlock()
-			time.Sleep(time.Second)
+			time.Sleep(poll)
 		}
 	}()
 
@@ -114,7 +148,9 @@ func (g *gamepad) OpenDevices(ctx context.Context) error {
 			return nil
 		case a := <-cAction:
 			if g.api != nil {
-				g.api.Command(uint64(a.Slot), a.Command)
+				if err := g.api.Command(uint64(a.Slot), a.Command); err != nil {
+					logrus.Errorf("%+v", err)
+				}
 			}
 		}
 	}
@@ -125,12 +161,12 @@ func (g *gamepad) listenDevice(cAction chan action, dev *device) {
 
 	d, err := dev.HID.Open()
 	if err != nil {
-		logrus.Errorf("%+v", errors.WithStack(err))
+		logrus.Errorf("%+v", errors.Errorf("opening controller at %s: %w", dev.HID.Path, err))
 		return
 	}
 	defer func() {
 		if err := d.Close(); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("closing controller at %s: %w", dev.HID.Path, err))
 		}
 	}()
 
@@ -141,7 +177,7 @@ func (g *gamepad) listenDevice(cAction chan action, dev *device) {
 	buf := make([]byte, 7)
 	for {
 		if _, err := d.Read(buf); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("reading from controller at %s: %w", dev.HID.Path, err))
 			return
 		}
 		if a := handler(buf); a != nil {

@@ -20,7 +20,7 @@ type Random struct {
 func (r *Random) Render() {
 	for y := int64(0); y < int64(r.frame.Height); y++ {
 		for x := int64(0); x < int64(r.frame.Width); x++ {
-			r.frame.SetWithCoord(common.Coord{X: x, Y: y}, common.Color{
+			r.frame.SetWithCoord(&common.Coord{X: x, Y: y}, &common.Color{
 				R: uint64(rand.Intn(255)),
 				G: uint64(rand.Intn(255)),
 				B: uint64(rand.Intn(255)),

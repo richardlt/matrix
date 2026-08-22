@@ -26,7 +26,7 @@ type clock struct {
 	caracterBig, caracterMedium *software.CaracterDriver
 	cancel                      func()
 	blink                       bool
-	colors                      []common.Color
+	colors                      []*common.Color
 	model, color                int
 }
 
@@ -37,11 +37,13 @@ func (c *clock) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("clock")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
-	})
+	}); err != nil {
+		return err
+	}
 
 	c.layer, err = c.api.NewLayer()
 	if err != nil {
@@ -60,7 +62,7 @@ func (c *clock) Init(a software.API) (err error) {
 		return err
 	}
 
-	c.colors = []common.Color{
+	c.colors = []*common.Color{
 		a.GetColorFromLocalThemeByName("flat", "green_2"),
 		a.GetColorFromLocalThemeByName("flat", "blue_2"),
 		a.GetColorFromLocalThemeByName("flat", "violet_2"),
@@ -127,7 +129,7 @@ func (c *clock) ActionReceived(slot uint64, cmd common.Command) {
 }
 
 func (c *clock) print() {
-	c.layer.Clean()
+	_ = c.layer.Clean()
 
 	now := time.Now()
 	h, m := now.Hour(), now.Minute()
@@ -142,47 +144,47 @@ func (c *clock) print() {
 		c.printModelMedium(h, m, color, true)
 	}
 
-	c.api.Print()
+	_ = c.api.Print()
 }
 
-func (c *clock) printModelBig(h, m int, color common.Color) {
+func (c *clock) printModelBig(h, m int, color *common.Color) {
 	if h >= 10 {
-		c.layer.SetWithCoord(common.Coord{X: 0, Y: 7}, color)
+		_ = c.layer.SetWithCoord(&common.Coord{X: 0, Y: 7}, color)
 	}
 	if h >= 20 {
-		c.layer.SetWithCoord(common.Coord{X: 0, Y: 6}, color)
+		_ = c.layer.SetWithCoord(&common.Coord{X: 0, Y: 6}, color)
 	}
 
-	c.caracterBig.Render([]rune(strconv.Itoa(h % 10))[0],
-		common.Coord{X: 4, Y: 4}, color, common.Color{})
+	_ = c.caracterBig.Render([]rune(strconv.Itoa(h % 10))[0],
+		&common.Coord{X: 4, Y: 4}, color, &common.Color{})
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
-		common.Coord{X: 10, Y: 5}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
+		&common.Coord{X: 10, Y: 5}, color, &common.Color{})
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
-		common.Coord{X: 14, Y: 5}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
+		&common.Coord{X: 14, Y: 5}, color, &common.Color{})
 
 	if c.blink {
-		c.layer.SetWithCoord(common.Coord{X: 7, Y: 4}, color)
-		c.layer.SetWithCoord(common.Coord{X: 7, Y: 6}, color)
+		_ = c.layer.SetWithCoord(&common.Coord{X: 7, Y: 4}, color)
+		_ = c.layer.SetWithCoord(&common.Coord{X: 7, Y: 6}, color)
 	}
 }
 
-func (c *clock) printModelMedium(h, m int, color common.Color, static bool) {
+func (c *clock) printModelMedium(h, m int, color *common.Color, static bool) {
 	var offset int64
 	if static || c.blink {
 		offset = 1
 	}
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(h / 10))[0],
-		common.Coord{X: 1, Y: 3 + offset}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(h / 10))[0],
+		&common.Coord{X: 1, Y: 3 + offset}, color, &common.Color{})
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(h % 10))[0],
-		common.Coord{X: 5, Y: 3 + offset}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(h % 10))[0],
+		&common.Coord{X: 5, Y: 3 + offset}, color, &common.Color{})
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
-		common.Coord{X: 10, Y: 5 - offset}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(m / 10))[0],
+		&common.Coord{X: 10, Y: 5 - offset}, color, &common.Color{})
 
-	c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
-		common.Coord{X: 14, Y: 5 - offset}, color, common.Color{})
+	_ = c.caracterMedium.Render([]rune(strconv.Itoa(m % 10))[0],
+		&common.Coord{X: 14, Y: 5 - offset}, color, &common.Color{})
 }

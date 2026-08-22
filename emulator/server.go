@@ -1,16 +1,28 @@
 package emulator
 
 import (
+	"embed"
 	"fmt"
+	"io/fs"
+	"net/http"
+	"sync"
+	"time"
 
-	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/display"
 	"github.com/richardlt/matrix/websocket"
 )
+
+// public holds the built web app, so the binary serves it without needing the files
+// next to it at runtime. `make build-all` runs the web build before the Go one, which
+// is the order this requires. The checked-in public/.gitkeep keeps this pattern
+// matching before any web build has run; the binary then starts and serves 404s.
+//
+//go:embed all:public
+var public embed.FS
 
 type frame struct {
 	Number int     `json:"number"`
@@ -30,26 +42,64 @@ func Start(port int, uri string) error {
 
 	s := websocket.NewServer()
 
+	// Core only sends frames when something changes, so a browser opened after startup
+	// would otherwise sit on a blank screen until a player pressed a button. Keep the
+	// most recent frame per screen and replay them to each new client.
+	var (
+		lastLock   sync.RWMutex
+		lastFrames = map[int]frame{}
+	)
+
+	s.OnConnect(func(c *websocket.Client) {
+		lastLock.RLock()
+		defer lastLock.RUnlock()
+		// Each frame carries the screen it belongs to, so the client sorts them out and
+		// the order they go over the socket in does not matter.
+		for i, f := range lastFrames {
+			if err := c.Send("frame", f); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("replaying frame %d to a new client: %w", i, err))
+			}
+		}
+	})
+
 	go func() {
 		for f := range frameChannel {
-			s.Broadcast("frame", f)
+			lastLock.Lock()
+			lastFrames[f.Number] = f
+			lastLock.Unlock()
+
+			if err := s.Broadcast("frame", f); err != nil {
+				logrus.Errorf("%+v", err)
+			}
 		}
 	}()
 
 	go func() {
 		if err := display.Connect(uri, emulator{frameChannel}, true); err != nil {
-			logrus.Errorf("%+v", errors.WithStack(err))
+			logrus.Errorf("%+v", errors.Errorf("connecting emulator display to %s: %w", uri, err))
 		}
 	}()
 
-	e := echo.New()
-	e.HideBanner = true
+	assets, err := fs.Sub(public, "public/app")
+	if err != nil {
+		return errors.Errorf("opening embedded assets: %w", err)
+	}
 
-	e.Any("/websocket", echo.WrapHandler(s))
-	e.Static("/", "./emulator/public")
+	mux := http.NewServeMux()
+	mux.Handle("/websocket", s)
+	mux.Handle("/", http.FileServer(http.FS(assets)))
+
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 
 	logrus.Infof("Start emulator on port %d\n", port)
-	return e.Start(fmt.Sprintf(":%d", port))
+	if err := srv.ListenAndServe(); err != nil {
+		return errors.Errorf("serving emulator on port %d: %w", port, err)
+	}
+	return nil
 }
 
 type emulator struct{ frameChannel chan frame }

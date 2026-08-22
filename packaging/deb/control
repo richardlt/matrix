@@ -1,0 +1,14 @@
+Package: matrix
+Version: @VERSION@
+Architecture: @ARCH@
+Section: games
+Priority: optional
+Maintainer: richardlt <richard.le.terrier@gmail.com>
+Homepage: https://github.com/richardlt/matrix
+Description: Video game console operating system for a 16x9 RGB LED matrix
+ Matrix runs the console: it drives the LED panel through an Arduino, reads USB
+ controllers, and hosts the games. The binary is statically linked and carries the
+ web apps, so the package depends on nothing.
+ .
+ Installing it starts matrix as a systemd service on boot. Edit
+ /etc/default/matrix to change which components it runs.

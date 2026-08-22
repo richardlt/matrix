@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package software;
 
-import "github.com/richardlt/matrix/sdk-go/common/types.proto";
+option go_package = "github.com/richardlt/matrix/sdk-go/software;software";
+
+import "common/types.proto";
 
 service Software {
   rpc Connect (stream ConnectRequest) returns (stream ConnectResponse);
@@ -28,6 +30,10 @@ message ConnectRequest {
       Image logo = 1;
       uint64 minPlayerCount = 2;
       uint64 maxPlayerCount = 3;
+      // A pausable software lets the core suspend play instead of forwarding the pause
+      // button to it. Softwares that run on their own clock are told, so they can hold
+      // it; the rest need only declare the flag.
+      bool pausable = 4;
     }
     Action action = 1;
     string UUID = 2;
@@ -73,16 +79,20 @@ message ConnectResponse {
   }
   message SoftwareData {
     enum Action {
-      INIT = 0; 
+      INIT = 0;
       START = 1;
       CLOSE = 2;
       PLAYER_COMMAND = 3;
+      // Play is suspended or resumed. The core holds the screen and stops forwarding
+      // player commands for as long as it lasts.
+      PAUSE = 4;
     }
     Action action = 1;
     string UUID = 2;
     uint64 playerCount = 3;
     uint64 slot = 4;
     common.Command command = 5;
+    bool paused = 6;
   }
   message DriverData {
     enum Action {

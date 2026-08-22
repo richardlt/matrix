@@ -1,0 +1,11 @@
+#!/bin/sh
+# Stop and disable before the unit file goes away; on an upgrade the service is left
+# running and postinst restarts it.
+set -e
+
+if [ "$1" = remove ] && [ -d /run/systemd/system ]; then
+    systemctl stop matrix.service || true
+    systemctl disable matrix.service >/dev/null 2>&1 || true
+fi
+
+exit 0

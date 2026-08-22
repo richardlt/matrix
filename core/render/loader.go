@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/richardlt/matrix/internal/errors"
 )
 
 // Init prepares rendering stuff.
@@ -29,7 +29,7 @@ func loadFiles(dir string) ([]file, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, errors.WithStack(err)
+		return nil, errors.Errorf("reading directory %s: %w", dir, err)
 	}
 
 	res := []file{}
@@ -41,7 +41,7 @@ func loadFiles(dir string) ([]file, error) {
 
 		data, err := os.ReadFile(fmt.Sprintf("./%s/%s", dir, f.Name()))
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.Errorf("reading %s/%s: %w", dir, f.Name(), err)
 		}
 
 		res = append(res, file{f.Name(), data})

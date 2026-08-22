@@ -7,23 +7,23 @@ import (
 )
 
 // NewCaracter returns a new caracter driver.
-func NewCaracter(fr *render.Frame, fo software.Font) *Caracter {
+func NewCaracter(fr *render.Frame, fo *software.Font) *Caracter {
 	return &Caracter{frame: fr, font: fo}
 }
 
 // Caracter driver allows to render a caracter with specific font.
 type Caracter struct {
 	frame       *render.Frame
-	font        software.Font
+	font        *software.Font
 	endCallback func()
 }
 
 // SetFont allows to set and change caracter font.
-func (c *Caracter) SetFont(f software.Font) { c.font = f }
+func (c *Caracter) SetFont(f *software.Font) { c.font = f }
 
 // Render prints the caracter in frame.
-func (c *Caracter) Render(value rune, center common.Coord,
-	color, background common.Color) {
+func (c *Caracter) Render(value rune, center *common.Coord,
+	color, background *common.Color) {
 	ca := render.GetFontCaracterByValue(c.font, value)
 
 	beginX, beginY := center.X-int64(ca.Width)/2, center.Y-int64(c.font.Height)/2
@@ -37,7 +37,7 @@ func (c *Caracter) Render(value rune, center common.Coord,
 				if ca.Mask[index] > 0 {
 					selectedColor = color
 				}
-				c.frame.SetWithCoord(common.Coord{X: j, Y: i}, selectedColor)
+				c.frame.SetWithCoord(&common.Coord{X: j, Y: i}, selectedColor)
 			}
 			index++
 		}

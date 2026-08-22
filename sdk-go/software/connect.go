@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/richardlt/matrix/internal/errors"
 	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
@@ -17,6 +17,14 @@ type Software interface {
 	Start(uint64)
 	Close()
 	ActionReceived(uint64, common.Command)
+}
+
+// Pausable is an optional companion to Software, for one that keeps a clock of its own.
+// The core owns the pause: it holds the screen and stops forwarding player commands, so
+// a software driven only by those commands has nothing to implement and just declares
+// itself pausable in its config. One with a game loop implements this to hold it.
+type Pausable interface {
+	Paused(bool)
 }
 
 func init() {
@@ -39,6 +47,9 @@ func Connect(uri string, s Software, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Software will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, s, true)
@@ -47,25 +58,25 @@ func Connect(uri string, s Software, reconnect bool) error {
 func connect(uri string, s Software) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewSoftwareClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening software stream to %s: %w", uri, err)
 	}
 
-	connectRequestChannel := make(chan ConnectRequest)
+	connectRequestChannel := make(chan *ConnectRequest)
 	defer close(connectRequestChannel)
 
 	// send event to the matrix core from channel
 	go func() {
 		for cr := range connectRequestChannel {
-			if err := st.Send(&cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+			if err := st.Send(cr); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("sending connect request: %w", err))
 			}
 		}
 	}()
@@ -77,17 +88,17 @@ func connect(uri string, s Software) error {
 			Action: ConnectRequest_SoftwareData_REGISTER,
 		},
 	}); err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("registering software: %w", err)
 	}
 
 	// wait for the first response to obtain software uuid
 	res, err := st.Recv()
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("receiving software init response: %w", err)
 	}
 	if res.Type != ConnectResponse_SOFTWARE ||
 		res.SoftwareData.Action != ConnectResponse_SoftwareData_INIT {
-		return errors.New("Error init software")
+		return errors.Errorf("unexpected response while initialising software: type %s", res.Type)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -102,7 +113,7 @@ func connect(uri string, s Software) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				connectRequestChannel <- ConnectRequest{Type: ConnectRequest_PING}
+				connectRequestChannel <- &ConnectRequest{Type: ConnectRequest_PING}
 			}
 		}
 	}()
@@ -118,13 +129,13 @@ func connect(uri string, s Software) error {
 	for {
 		res, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving software response: %w", err)
 		}
 
 		if res.Type == ConnectResponse_SOFTWARE {
 			processResponse(s, res)
 		} else {
-			ct.ReceiveConnectResponse(*res)
+			ct.ReceiveConnectResponse(res)
 		}
 	}
 }
@@ -139,6 +150,14 @@ func processResponse(s Software, res *ConnectResponse) {
 			go s.Close()
 		case ConnectResponse_SoftwareData_PLAYER_COMMAND:
 			go s.ActionReceived(res.SoftwareData.Slot, res.SoftwareData.Command)
+		case ConnectResponse_SoftwareData_PAUSE:
+			// Delivered on this goroutine, unlike the rest: pausing and resuming only
+			// mean anything in the order they were sent, and handing each to its own
+			// goroutine would let a resume overtake the pause it follows and leave the
+			// software stopped for good. Implementations are expected to return at once.
+			if p, ok := s.(Pausable); ok {
+				p.Paused(res.SoftwareData.Paused)
+			}
 		}
 	}
 }

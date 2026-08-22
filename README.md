@@ -43,42 +43,21 @@ There are 3 main types that exists in Matrix's sdk:
 | Gamepad | A web application that contains a virtual controller with display. |
 | Emulator | A web application built for development purpose. It displays Matrix main screen and player's screens. |
 
-## Production setup
+## Install
 
-Matrix is designed to run on a Raspberry Pi (at least model 3), it is composed by multiple softwares (core, device, gamepad...). All softwares can run on the Raspberry Pi but you can also start a software on your desk that will communicate remotely with the Matrix's core (with flag --core-uri).
+Matrix runs on a Raspberry Pi. On a Pi 2 or later there is a `.deb` in the
+[releases](https://github.com/richardlt/matrix/releases) that installs a service starting
+at boot; ARMv6 boards get an SD card staged by a script. Either way the Arduino has to be
+flashed first.
 
-Here are the few steps to install your own Matrix:
+- [Installing matrix](./docs/install.md)
+- [Installing on an ARMv6 board, with Alpine](./docs/install-alpine.md)
+- [Flashing the Arduino](./docs/arduino.md)
 
-1. Download Matrix latest release [here](https://github.com/richardlt/matrix/releases). If you want to install it on Raspbian or Debian there is a .deb file available that will create a service to start Matrix automatically at boot.
+All components can run on the Pi, but any software can equally run on your desk against a
+remote core with `--core-uri`.
 
-2. Extract/install and run Matrix package.
-```sh
-$ dpkg -i matrix.deb # for Raspbian/Debian users
-$ service matrix status
-```
-```sh
-$ unzip matrix.zip # for others
-$ cd matrix-package && ./matrix-[REPLACE_DEPENDING_OS] start --log-level info --gamepad-port 80 core device gamepad emulator demo zigzag yumyum clock draw blocks getout # select the right executable depending on your os 
-```
+## Contributing
 
-3. Install firmware on the Arduino from file in Matrix source code (inside folder at ./device/firmware/firmware.ino). Source code can be downloaded from [release](https://github.com/richardlt/matrix/releases).
-
-## Development setup (linux/darwin)
-
-1. Requirements.
-* [Go](https://golang.org/dl/) (version 1.17+)
-* [Node.js](https://nodejs.org/en/download/) (with npm, version 16+)
-
-2. Install JS projects dependencies.
-```sh
-$ make install-all
-```
-
-3. Run it.
-```sh
-$ go run main.go start --log-level info core gamepad emulator demo # you can start all other softwares by adding their names
-$ (cd emulator && npm start)
-$ (cd gamepad && npm start)
-```
-
-4. Open emulator at http://localhost:3001 and/or gamepad at http://localhost:4002.
+See [development.md](./docs/development.md) for the development setup, the checks and how
+the release artifacts are built.

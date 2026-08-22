@@ -31,7 +31,7 @@ func (r *RandomDriver) Step(total, current uint64) {
 }
 
 func (r *RandomDriver) Render() error {
-	return r.ctx.SendConnectRequest(ConnectRequest{
+	return r.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
 			Action: ConnectRequest_DriverData_RENDER,
@@ -64,16 +64,16 @@ func (c *CaracterDriver) Step(total, current uint64) {
 	}
 }
 
-func (c *CaracterDriver) Render(caracter rune, coord common.Coord, color, background common.Color) error {
-	return c.ctx.SendConnectRequest(ConnectRequest{
+func (c *CaracterDriver) Render(caracter rune, coord *common.Coord, color, background *common.Color) error {
+	return c.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
 			Action:     ConnectRequest_DriverData_RENDER,
 			UUID:       c.uuid,
 			Caracter:   string(caracter),
-			Coord:      &coord,
-			Color:      &color,
-			Background: &background,
+			Coord:      coord,
+			Color:      color,
+			Background: background,
 		},
 	})
 }
@@ -102,24 +102,24 @@ func (t *TextDriver) Step(total, current uint64) {
 	}
 }
 
-func (t *TextDriver) Render(text string, coord common.Coord,
-	color, background common.Color, repeat bool) error {
-	return t.ctx.SendConnectRequest(ConnectRequest{
+func (t *TextDriver) Render(text string, coord *common.Coord,
+	color, background *common.Color, repeat bool) error {
+	return t.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
 			Action:     ConnectRequest_DriverData_RENDER,
 			UUID:       t.uuid,
 			Text:       text,
-			Coord:      &coord,
-			Color:      &color,
-			Background: &background,
+			Coord:      coord,
+			Color:      color,
+			Background: background,
 			Repeat:     repeat,
 		},
 	})
 }
 
 func (t *TextDriver) Stop() error {
-	return t.ctx.SendConnectRequest(ConnectRequest{
+	return t.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
 			Action: ConnectRequest_DriverData_STOP,
@@ -152,14 +152,14 @@ func (i *ImageDriver) Step(total, current uint64) {
 	}
 }
 
-func (c *ImageDriver) Render(image Image, coord common.Coord) error {
-	return c.ctx.SendConnectRequest(ConnectRequest{
+func (c *ImageDriver) Render(image *Image, coord *common.Coord) error {
+	return c.ctx.SendConnectRequest(&ConnectRequest{
 		Type: ConnectRequest_DRIVER,
 		DriverData: &ConnectRequest_DriverData{
 			Action: ConnectRequest_DriverData_RENDER,
 			UUID:   c.uuid,
-			Image:  &image,
-			Coord:  &coord,
+			Image:  image,
+			Coord:  coord,
 		},
 	})
 }

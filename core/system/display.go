@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/core/render"
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	displaySDK "github.com/richardlt/matrix/sdk-go/display"
 )
@@ -19,14 +19,18 @@ func NewDisplayServer() *DisplayServer { return &DisplayServer{} }
 
 // DisplayServer expose RPC server for displays.
 type DisplayServer struct {
+	displaySDK.UnimplementedDisplayServer
 	displays    []display
 	displayLock sync.RWMutex
 	lastFrames  []render.Frame
+	// softwareRunning is replayed to each display as it connects, so one that joins
+	// mid-game is not left assuming a menu is showing.
+	softwareRunning bool
 }
 
 // Connect display action.
 func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
-	chRes := make(chan displaySDK.Response)
+	chRes := make(chan *displaySDK.Response)
 	defer close(chRes)
 
 	di := newDisplay(chRes)
@@ -49,25 +53,26 @@ func (d *DisplayServer) Connect(stream displaySDK.Display_ConnectServer) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				chRes <- displaySDK.Response{Type: displaySDK.Response_PING}
+				chRes <- &displaySDK.Response{Type: displaySDK.Response_PING}
 			}
 		}
 	}()
 
 	go func() {
 		for r := range chRes {
-			if err := stream.Send(&r); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+			if err := stream.Send(r); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("sending response to display %s: %w", di.UUID, err))
 			}
 		}
 	}()
 
-	// print last frames on connect
+	// bring the new display up to date on connect
 	di.Print(d.lastFrames)
+	di.SoftwareRunning(d.softwareRunning)
 
 	for {
 		if _, err := stream.Recv(); err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving from display %s: %w", di.UUID, err)
 		}
 	}
 }
@@ -103,17 +108,31 @@ func (d *DisplayServer) Print(fs []render.Frame) {
 	d.displayLock.RUnlock()
 }
 
-func newDisplay(chRes chan displaySDK.Response) display {
-	return display{uuid.NewV4().String(), chRes}
+// SetSoftwareRunning records whether a software is drawing rather than a menu being
+// shown, and tells every connected display. A display that drives hardware uses it to
+// keep housekeeping out of the way of the frames.
+func (d *DisplayServer) SetSoftwareRunning(running bool) {
+	d.displayLock.RLock()
+	defer d.displayLock.RUnlock()
+
+	d.softwareRunning = running
+	logrus.Debugf("Software running %t, notifying %d displays", running, len(d.displays))
+	for _, di := range d.displays {
+		di.SoftwareRunning(running)
+	}
+}
+
+func newDisplay(chRes chan *displaySDK.Response) display {
+	return display{uuid.NewString(), chRes}
 }
 
 type display struct {
 	UUID            string
-	responseChannel chan displaySDK.Response
+	responseChannel chan *displaySDK.Response
 }
 
 func (d *display) Print(fs []render.Frame) {
-	r := displaySDK.Response{
+	r := &displaySDK.Response{
 		Type: displaySDK.Response_DISPLAY,
 		DisplayData: &displaySDK.Response_DisplayData{
 			Action: displaySDK.Response_DisplayData_FRAMES,
@@ -133,4 +152,16 @@ func (d *display) Print(fs []render.Frame) {
 		r.DisplayData.Frames = append(r.DisplayData.Frames, frame)
 	}
 	d.responseChannel <- r
+}
+
+// SoftwareRunning forwards the core's state to this display.
+func (d *display) SoftwareRunning(running bool) {
+	state := displaySDK.Response_StateData_MENU
+	if running {
+		state = displaySDK.Response_StateData_SOFTWARE
+	}
+	d.responseChannel <- &displaySDK.Response{
+		Type:      displaySDK.Response_STATE,
+		StateData: &displaySDK.Response_StateData{State: state},
+	}
 }

@@ -4,15 +4,23 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
+	"github.com/richardlt/matrix/internal/errors"
 	common "github.com/richardlt/matrix/sdk-go/common"
 )
 
 type Display interface {
 	FramesReceived([]*common.Frame)
+}
+
+// StateAware is an optional companion to Display. A display that implements it is told
+// whether the core is showing a menu or running a software, which lets it hold off work
+// that would compete with the frames it is about to receive. Displays that do not
+// implement it are unaffected.
+type StateAware interface {
+	SoftwareRunning(bool)
 }
 
 // Connect initializes a new connection.
@@ -23,6 +31,9 @@ func Connect(uri string, d Display, reconnect bool) error {
 		return err
 	}
 
+	if err != nil {
+		logrus.Errorf("%+v", err)
+	}
 	logrus.Debug("Display will reconnect in 1 sec")
 	time.Sleep(time.Second)
 	return Connect(uri, d, true)
@@ -31,25 +42,25 @@ func Connect(uri string, d Display, reconnect bool) error {
 func connect(uri string, d Display) error {
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("dialing core at %s: %w", uri, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c := NewDisplayClient(conn)
 
 	st, err := c.Connect(context.Background())
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("opening display stream to %s: %w", uri, err)
 	}
 
-	requestChannel := make(chan Request)
+	requestChannel := make(chan *Request)
 	defer close(requestChannel)
 
 	// send event to the matrix core from channel
 	go func() {
 		for cr := range requestChannel {
-			if err := st.Send(&cr); err != nil {
-				logrus.Errorf("%+v", errors.WithStack(err))
+			if err := st.Send(cr); err != nil {
+				logrus.Errorf("%+v", errors.Errorf("sending display request: %w", err))
 			}
 		}
 	}()
@@ -66,7 +77,7 @@ func connect(uri string, d Display) error {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				requestChannel <- Request{Type: Request_PING}
+				requestChannel <- &Request{Type: Request_PING}
 			}
 		}
 	}()
@@ -74,7 +85,7 @@ func connect(uri string, d Display) error {
 	for {
 		res, err := st.Recv()
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Errorf("receiving display response: %w", err)
 		}
 
 		processResponse(d, res)
@@ -87,6 +98,10 @@ func processResponse(d Display, res *Response) {
 		switch res.DisplayData.Action {
 		case Response_DisplayData_FRAMES:
 			d.FramesReceived(res.DisplayData.Frames)
+		}
+	case Response_STATE:
+		if sa, ok := d.(StateAware); ok && res.StateData != nil {
+			sa.SoftwareRunning(res.StateData.State == Response_StateData_SOFTWARE)
 		}
 	}
 }

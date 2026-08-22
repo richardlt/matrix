@@ -2,7 +2,7 @@ package device
 
 import (
 	"context"
-	
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/richardlt/matrix/sdk-go/display"
@@ -15,14 +15,16 @@ func Start(uri string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := newMatrix()
+	a := new(coreState)
+
+	m := newMatrix(a)
 	go func() {
 		if err := m.OpenPorts(ctx); err != nil {
 			logrus.Errorf("%+v", err)
 		}
 	}()
 
-	g := newGamepad()
+	g := newGamepad(a)
 	go func() {
 		if err := g.OpenDevices(ctx); err != nil {
 			logrus.Errorf("%+v", err)

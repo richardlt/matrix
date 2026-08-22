@@ -3,6 +3,7 @@ package drivers
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/richardlt/matrix/core/render"
@@ -11,7 +12,7 @@ import (
 )
 
 // NewText returns a new text driver.
-func NewText(fr *render.Frame, fo software.Font) *Text {
+func NewText(fr *render.Frame, fo *software.Font) *Text {
 	return &Text{
 		frame: fr,
 		font:  fo,
@@ -21,17 +22,16 @@ func NewText(fr *render.Frame, fo software.Font) *Text {
 // Text allows to render a given text in frame.
 type Text struct {
 	frame        *render.Frame
-	font         software.Font
-	ticker       *time.Ticker
+	font         *software.Font
+	lock         sync.Mutex
+	done         chan struct{}
 	endCallback  func()
 	stepCallback func(total, current uint64)
 }
 
 // Render displays given text from left to right with scroll effect if too long.
-func (t *Text) Render(text string, center common.Coord, color, background common.Color, repeat bool) {
-	if t.ticker != nil {
-		t.ticker.Stop()
-	}
+func (t *Text) Render(text string, center *common.Coord, color, background *common.Color, repeat bool) {
+	t.Stop()
 
 	text = fmt.Sprintf(" %s ", strings.Join(strings.Split(text, ""), " "))
 	if repeat && 0 < center.X {
@@ -54,22 +54,37 @@ func (t *Text) Render(text string, center common.Coord, color, background common
 	offset := int64(0)
 	for _, c := range text {
 		caracterWidth := render.GetFontCaracterByValue(t.font, c).Width
-		cd.Render(c, common.Coord{
+		cd.Render(c, &common.Coord{
 			X: offset + int64(caracterWidth-caracterWidth/2) - 1,
 			Y: center.Y,
 		}, color, background)
 		offset += int64(caracterWidth)
 	}
 
+	// The ticker and its stop signal are set up here rather than in the goroutine below:
+	// a Stop landing before the goroutine got to run would otherwise leave a scroll
+	// running that nothing can reach any more.
+	ticker := time.NewTicker(100 * time.Millisecond)
+	done := make(chan struct{})
+
+	t.lock.Lock()
+	t.done = done
+	t.lock.Unlock()
+
 	step := 0
 	go func() {
-		t.ticker = time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
 
 		xStart := int(center.X)
 		offset := 0
-		for _ = range t.ticker.C {
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+			}
+
 			if step > stepCount && !repeat {
-				t.Stop()
 				break
 			}
 
@@ -112,8 +127,11 @@ func (t *Text) OnStep(c func(total, current uint64)) { t.stepCallback = c }
 
 // Stop the rendering process if not ended.
 func (t *Text) Stop() {
-	if t.ticker != nil {
-		t.ticker.Stop()
-		t.ticker = nil
+	t.lock.Lock()
+	defer t.lock.Unlock()
+
+	if t.done != nil {
+		close(t.done)
+		t.done = nil
 	}
 }

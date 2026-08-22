@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package common;
 
+option go_package = "github.com/richardlt/matrix/sdk-go/common;common";
+
 message Color {
   uint64 r = 1;
   uint64 g = 2;

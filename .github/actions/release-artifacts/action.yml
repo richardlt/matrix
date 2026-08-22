@@ -1,0 +1,98 @@
+name: Release artifacts
+description: >
+  Cross-build the ARMv6 tarball and the ARMv7 .deb, then check what came out. The version
+  comes from the tags, so check out with fetch-depth 0.
+
+outputs:
+  version:
+    description: Version the artifacts were built with.
+    value: ${{ steps.version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    # The cross toolchain is not an apt package. It is downloaded from a pinned release
+    # of musl-cross, whose checksum is repeated here rather than read from the release,
+    # so a replaced asset fails the build instead of being trusted.
+    #
+    # One compiler covers both artifacts: its libc targets ARMv5TE, which every ARMv6 and
+    # ARMv7 board runs, and the architecture of the code being built comes from the flags
+    # the Makefile passes.
+    - name: Install the ARM musl cross toolchain
+      shell: bash
+      env:
+        RELEASE: '20260515'
+        TRIPLE: arm-unknown-linux-musleabihf
+        SHA256: 80fc2984bff95cf3288fcba2b2107fccf29eefb07a29f497fc00dcdbfb952165
+      run: |
+        set -euo pipefail
+        curl -fsSL -o toolchain.tar.xz \
+          "https://github.com/musl-cross/musl-cross/releases/download/$RELEASE/$TRIPLE.tar.xz"
+        echo "$SHA256  toolchain.tar.xz" | sha256sum --check --quiet
+        sudo mkdir -p /opt/cross
+        sudo tar xf toolchain.tar.xz -C /opt/cross
+        rm toolchain.tar.xz
+        echo "/opt/cross/$TRIPLE/bin" >> "$GITHUB_PATH"
+        echo "CROSS_CC=$TRIPLE-gcc" >> "$GITHUB_ENV"
+
+    # The web apps are embedded in the binary, so they are built even though nothing here
+    # serves them.
+    - name: Install the web app dependencies
+      shell: bash
+      run: |
+        (cd emulator && make install)
+        (cd gamepad && make install)
+
+    # Read once and passed to both builds, so the two binaries and the .deb agree even if
+    # something in the tree changes under the build. On a tag this is the tag; anywhere
+    # else it says how far past the last tag the commit is.
+    - name: Work out the version
+      id: version
+      shell: bash
+      run: |
+        set -euo pipefail
+        version=$(make --silent print-version)
+        echo "building $version"
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Build the tarball and the .deb
+      shell: bash
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        make package ARMV6_CC="$CROSS_CC" VERSION="$VERSION"
+        make deb ARMV7_CC="$CROSS_CC" VERSION="$VERSION"
+
+    # A binary built for the wrong architecture, or one that expects a shared libc, runs
+    # fine on the runner that produced it and fails on the board. Nothing else would
+    # notice before someone writes a card.
+    - name: Check the binaries
+      shell: bash
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        for arch in v6 v7; do
+          binary="build/matrix-linux-arm$arch"
+          if ! readelf -A "$binary" | grep -q "Tag_CPU_arch: $arch"; then
+            echo "$binary was not built for ARM$arch:"
+            readelf -A "$binary"
+            exit 1
+          fi
+          if readelf -d "$binary" | grep -q NEEDED; then
+            echo "$binary is not statically linked:"
+            readelf -d "$binary"
+            exit 1
+          fi
+          # What `matrix --version` will print. Nothing here can run an ARM binary, so the
+          # stamped string is looked for where the linker put it.
+          if ! grep -qa "$VERSION" "$binary"; then
+            echo "$binary does not carry version $VERSION"
+            exit 1
+          fi
+        done
+        deb=target/matrix_${VERSION}_armhf.deb
+        if [ "$(dpkg-deb --field "$deb" Version)" != "$VERSION" ]; then
+          echo "$deb does not declare version $VERSION"
+          exit 1
+        fi

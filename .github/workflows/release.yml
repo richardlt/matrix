@@ -1,0 +1,48 @@
+name: release
+
+# Tagging is the release. Push a tag and this builds the two artifacts and publishes them;
+# there is nothing else to run and nothing to click. Both `1.2.3` and `v1.2.3` are
+# accepted, since the tags already on the repository carry no prefix.
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# To create the release and attach the artifacts to it.
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The version the artifacts carry comes from `git describe`, which needs the tag
+          # this run was started by, and the default checkout fetches no tags at all.
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - id: build
+        uses: ./.github/actions/release-artifacts
+
+      # The gh CLI is GitHub's own and is on the runner already, so the step that writes to
+      # the repository is not someone else's code.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # What was actually built, rather than the tag reworked into a file name.
+          VERSION: ${{ steps.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Both artifacts named rather than globbed: a name that matches nothing is a
+          # missing artifact, and gh refuses it, rather than publishing a release with half
+          # of what it promises.
+          gh release create "$GITHUB_REF_NAME" --generate-notes \
+            matrix.tar.gz "target/matrix_${VERSION}_armhf.deb"

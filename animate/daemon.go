@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/sdk-go/common"
 	"github.com/richardlt/matrix/sdk-go/software"
 )
@@ -27,19 +27,19 @@ func Start(uri string) error {
 		if !info.IsDir() && strings.HasSuffix(path, ".json") {
 			buf, err := os.ReadFile(path)
 			if err != nil {
-				return errors.WithStack(err)
+				return errors.Errorf("reading animation %s: %w", path, err)
 			}
 
 			var h header
 			if err := json.Unmarshal(buf, &h); err != nil {
-				return errors.WithStack(err)
+				return errors.Errorf("unmarshaling animation %s: %w", path, err)
 			}
 
 			a.headers = append(a.headers, h)
 		}
 		return nil
 	}); err != nil {
-		return errors.WithStack(err)
+		return errors.Errorf("walking the animations directory: %w", err)
 	}
 
 	return software.Connect(uri, a, true)
@@ -54,35 +54,38 @@ type header struct {
 
 type animation []byte
 
-func (a animation) readFrame(width, height, index int) software.Image {
+func (a animation) readFrame(width, height, index int) *software.Image {
 	pixels := 3 * width * height
 	start := index * pixels
 	end := start + pixels
 	buf := a[start:end]
 
-	var colors []*common.Color
-	mapColors := map[string]uint64{}
+	// The palette key packs the channels into one integer. Formatting it as a string
+	// instead costs a reflection-based format and an allocation for every pixel of every
+	// frame, which on this hardware is the bulk of the work of decoding one.
+	// Frames tend to reuse a handful of colours, so the palette is sized for that rather
+	// than grown from empty a pixel at a time.
+	colors := make([]*common.Color, 0, 32)
+	mapColors := make(map[uint64]uint64, 32)
 	mask := make([]uint64, width*height)
 	var cursor int
 	for i := range mask {
-		c := common.Color{
-			R: uint64(buf[cursor]),
-			G: uint64(buf[cursor+1]),
-			B: uint64(buf[cursor+2]),
-			A: 1,
-		}
-		key := fmt.Sprintf("%d%d%d", c.R, c.G, c.B)
-		if v, ok := mapColors[key]; !ok {
-			colors = append(colors, &c)
-			mask[i] = uint64(len(colors) - 1)
-			mapColors[key] = mask[i]
-		} else {
-			mask[i] = v
-		}
+		r, g, b := uint64(buf[cursor]), uint64(buf[cursor+1]), uint64(buf[cursor+2])
 		cursor += 3
+
+		key := r<<16 | g<<8 | b
+		if v, ok := mapColors[key]; ok {
+			mask[i] = v
+			continue
+		}
+
+		// Only a colour the frame has not used yet needs its own value.
+		colors = append(colors, &common.Color{R: r, G: g, B: b, A: 1})
+		mask[i] = uint64(len(colors) - 1)
+		mapColors[key] = mask[i]
 	}
 
-	return software.Image{
+	return &software.Image{
 		Width:  uint64(width),
 		Height: uint64(height),
 		Colors: colors,
@@ -106,11 +109,13 @@ func (a *animate) Init(api software.API) (err error) {
 
 	i := api.GetImageFromLocal("animate")
 
-	api.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &i,
+	if err := api.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           i,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 1,
-	})
+	}); err != nil {
+		return err
+	}
 
 	a.layer, err = api.NewLayer()
 	if err != nil {
@@ -121,7 +126,7 @@ func (a *animate) Init(api software.API) (err error) {
 	if err != nil {
 		return err
 	}
-	a.imageDriver.OnEnd(func() { a.api.Print() })
+	a.imageDriver.OnEnd(func() { _ = a.api.Print() })
 
 	return api.Ready()
 }
@@ -158,8 +163,8 @@ func (a *animate) reset() {
 func (a *animate) play() {
 	a.reset()
 
-	a.layer.Clean()
-	a.api.Print()
+	_ = a.layer.Clean()
+	_ = a.api.Print()
 
 	if len(a.headers) == 0 {
 		return
@@ -169,7 +174,7 @@ func (a *animate) play() {
 	var err error
 	anim, err = os.ReadFile(fmt.Sprintf("./animations/%s", a.headers[a.index].Name))
 	if err != nil {
-		logrus.Error(errors.WithStack(err))
+		logrus.Errorf("%+v", errors.Errorf("reading animation %s: %w", a.headers[a.index].Name, err))
 		return
 	}
 
@@ -187,9 +192,9 @@ func (a *animate) play() {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.imageDriver.Render(
+			_ = a.imageDriver.Render(
 				anim.readFrame(h.Width, h.Height, index),
-				common.Coord{X: 8, Y: 4}, // middle of the screen
+				&common.Coord{X: 8, Y: 4}, // middle of the screen
 			)
 			if index+1 == maxIndex {
 				index = 0

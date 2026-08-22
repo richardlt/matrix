@@ -6,6 +6,10 @@ import (
 
 type state interface {
 	Init(*Context)
+	// SoftwareRunning distinguishes a software drawing from a menu being shown. Displays
+	// are told, so one driving hardware can keep its own housekeeping out of the way of
+	// the frames it is about to receive.
+	SoftwareRunning() bool
 }
 
 // NewContext return a init os.
@@ -32,6 +36,7 @@ func StartContext(c *Context) { c.SetState(newSoftMenuState(c.GetSoftwareMeta())
 func (c *Context) SetState(s state) {
 	c.playerServer.ResetCallback()
 	c.softwareServer.ResetCallback()
+	c.displayServer.SetSoftwareRunning(s.SoftwareRunning())
 	s.Init(c)
 }
 

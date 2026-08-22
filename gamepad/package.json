@@ -1,20 +1,18 @@
 {
   "name": "matrix-gamepad",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "webpack-dev-server",
-    "build": "NODE_ENV=production webpack"
+    "start": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "lit": "2.8.0",
-    "redux": "4.2.1"
+    "lit": "3.3.3",
+    "redux": "5.0.1"
   },
   "devDependencies": {
-    "html-webpack-plugin": "5.5.3",
-    "terser-webpack-plugin": "5.3.9",
-    "ts-loader": "9.4.4",
-    "typescript": "5.2.2",
-    "webpack": "5.88.2",
-    "webpack-cli": "5.1.4",
-    "webpack-dev-server": "4.15.1"
+    "typescript": "5.9.3",
+    "vite": "7.3.6"
   }
 }

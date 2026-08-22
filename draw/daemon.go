@@ -19,7 +19,7 @@ func Start(uri string) error {
 type draw struct {
 	api                    software.API
 	layerDraw, layerPlayer software.Layer
-	colors                 []common.Color
+	colors                 []*common.Color
 	players                []*player
 	playerCount            uint64
 }
@@ -31,11 +31,14 @@ func (d *draw) Init(a software.API) (err error) {
 
 	l := a.GetImageFromLocal("draw")
 
-	a.SetConfig(software.ConnectRequest_SoftwareData_Config{
-		Logo:           &l,
+	if err := a.SetConfig(&software.ConnectRequest_SoftwareData_Config{
+		Logo:           l,
 		MinPlayerCount: 1,
 		MaxPlayerCount: 4,
-	})
+		Pausable:       true,
+	}); err != nil {
+		return err
+	}
 
 	d.layerDraw, err = d.api.NewLayer()
 	if err != nil {
@@ -46,7 +49,7 @@ func (d *draw) Init(a software.API) (err error) {
 		return err
 	}
 
-	d.colors = []common.Color{
+	d.colors = []*common.Color{
 		d.api.GetColorFromLocalThemeByName("flat", "turquoise_1"),
 		d.api.GetColorFromLocalThemeByName("flat", "green_1"),
 		d.api.GetColorFromLocalThemeByName("flat", "blue_1"),
@@ -80,12 +83,12 @@ func (d *draw) Start(playerCount uint64) {
 		}
 		d.players[i] = &player{
 			Color: 6,
-			Coord: common.Coord{X: x, Y: y},
+			Coord: &common.Coord{X: x, Y: y},
 		}
-		d.layerPlayer.SetWithCoord(d.players[i].Coord, d.colors[d.players[i].Color])
+		_ = d.layerPlayer.SetWithCoord(d.players[i].Coord, d.colors[d.players[i].Color])
 	}
 
-	d.api.Print()
+	_ = d.api.Print()
 }
 
 func (d draw) Close() {}
@@ -94,10 +97,10 @@ func (d *draw) ActionReceived(slot uint64, cmd common.Command) {
 	pSlot := int(slot)
 	switch cmd {
 	case common.Command_A_UP:
-		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, d.colors[d.players[pSlot].Color])
+		_ = d.layerDraw.SetWithCoord(d.players[pSlot].Coord, d.colors[d.players[pSlot].Color])
 		d.print()
 	case common.Command_B_UP:
-		d.layerDraw.SetWithCoord(d.players[pSlot].Coord, common.Color{})
+		_ = d.layerDraw.SetWithCoord(d.players[pSlot].Coord, &common.Color{})
 		d.print()
 	case common.Command_X_UP:
 		if d.players[pSlot].Color < len(d.colors)-1 {
@@ -131,16 +134,16 @@ func (d *draw) ActionReceived(slot uint64, cmd common.Command) {
 }
 
 func (d *draw) print() {
-	d.layerPlayer.Clean()
+	_ = d.layerPlayer.Clean()
 
 	for _, p := range d.players {
-		d.layerPlayer.SetWithCoord(p.Coord, d.colors[p.Color])
+		_ = d.layerPlayer.SetWithCoord(p.Coord, d.colors[p.Color])
 	}
 
-	d.api.Print()
+	_ = d.api.Print()
 }
 
 type player struct {
 	Color int
-	Coord common.Coord
+	Coord *common.Coord
 }
