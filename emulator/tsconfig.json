@@ -6,8 +6,6 @@
     "lib": ["es2020", "dom"],
     "strict": true,
     "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
     // Vite transpiles each file on its own with esbuild and never type-checks, so the
     // sources have to be safe to compile in isolation. Type checking is `npm run
     // typecheck`, which emits nothing.
