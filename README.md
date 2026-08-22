@@ -23,7 +23,7 @@ Video game console operating system that displays on a 16*9 RGB LED matrix.
 | <img src="./docs/device.png" width="60"/> | Device | The Device software allows you to change the luminosity of the LEDs. | <img src="./docs/device.gif" width="150"/> |
 | <img src="./docs/blocks.png" width="60"/> | Blocks | A puzzle game, score a maximum of points by clearing complete lines. | <img src="./docs/blocks.gif" width="150"/> |
 | <img src="./docs/getout.png" width="60"/> | Getout | A labyrinth game, try to get out if you can. | <img src="./docs/getout.gif" width="150"/> |
-| <img src="./docs/rollup-dice.png" width="60"/> | Rollup dice | Random dice generator (https://github.com/gwenker/matrix-rollup-dice). | <img src="./docs/rollup-dice.gif" width="150"/> |
+| <img src="./docs/rollup-dice.png" width="60"/> | Rollup dice | Roll two dice, press A for a new throw. | <img src="./docs/rollup-dice.gif" width="150"/> |
 | <img src="./docs/animate.png" width="60"/> | Animate | Player for animations generated with Glediator (http://www.solderlab.de/index.php/software/glediator). | <img src="./docs/animate.gif" width="150"/> |
 | <img src="./docs/light.png" width="60"/> | Light | Simple software to generate mood light. | <img src="./docs/light.gif" width="150"/> |
 

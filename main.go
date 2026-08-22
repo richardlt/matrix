@@ -19,6 +19,7 @@ import (
 	"github.com/richardlt/matrix/getout"
 	"github.com/richardlt/matrix/internal/errors"
 	"github.com/richardlt/matrix/light"
+	"github.com/richardlt/matrix/rollupdice"
 	"github.com/richardlt/matrix/yumyum"
 	"github.com/richardlt/matrix/zigzag"
 )
@@ -51,7 +52,7 @@ func main() {
 					Usage: "[panic fatal error warning info debug]",
 				},
 			},
-			ArgsUsage: "[core emulator gamepad device zigzag yumyum demo clock draw blocks]",
+			ArgsUsage: "[core emulator gamepad device zigzag yumyum demo clock draw blocks getout animate light rollupdice]",
 			Action:    startAction,
 		}},
 	}
@@ -112,6 +113,8 @@ func startAction(ctx context.Context, cmd *cli.Command) error {
 			cs = append(cs, component(func() error { return animate.Start(cmd.String("core-uri")) }))
 		case "light":
 			cs = append(cs, component(func() error { return light.Start(cmd.String("core-uri")) }))
+		case "rollupdice":
+			cs = append(cs, component(func() error { return rollupdice.Start(cmd.String("core-uri")) }))
 		default:
 			return errors.Errorf("invalid component name %q, expected one of %s", arg, cmd.ArgsUsage)
 		}
