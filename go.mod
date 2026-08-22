@@ -8,7 +8,7 @@ require (
 	github.com/karalabe/hid v1.0.0
 	github.com/sirupsen/logrus v1.10.0
 	github.com/stretchr/testify v1.11.1
-	github.com/urfave/cli/v3 v3.10.1
+	github.com/urfave/cli/v3 v3.11.0
 	go.bug.st/serial.v1 v0.0.0-20191202182710-24a6610f0541
 	golang.org/x/net v0.58.0
 	google.golang.org/grpc v1.83.0
