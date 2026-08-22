@@ -146,17 +146,25 @@ func (l *longPress) repeat(slot uint64, hold chan struct{}) {
 	case <-timer.C:
 	}
 
-	l.action(slot)
-
 	ticker := time.NewTicker(l.fireDelay)
 	defer ticker.Stop()
 
 	for {
+		// The end of the hold and the next tick can become ready together, and select
+		// picks either one at random: look at the hold on its own so that nothing fires
+		// once the button is up or the generator has been reset.
+		select {
+		case <-hold:
+			return
+		default:
+		}
+
+		l.action(slot)
+
 		select {
 		case <-hold:
 			return
 		case <-ticker.C:
-			l.action(slot)
 		}
 	}
 }

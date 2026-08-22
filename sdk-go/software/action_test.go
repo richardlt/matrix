@@ -85,23 +85,31 @@ func TestLongPressResetStopsRepeat(t *testing.T) {
 
 	var mutex sync.Mutex
 	var count int
-	lp := NewLongPress(common.Button_A, 50*time.Millisecond, 50*time.Millisecond)
+	lp := NewLongPress(common.Button_A, 100*time.Millisecond, 100*time.Millisecond)
 	lp.OnAction(func(uint64) {
 		mutex.Lock()
 		count++
 		mutex.Unlock()
 	})
 
+	// The reset falls between two fires -- at 100, 200 and 300ms -- so that it cannot be
+	// mistaken for one of them.
 	lp.SendAction(0, common.Command_A_DOWN)
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(320 * time.Millisecond)
 	lp.Reset()
+
+	// A fire is handed to the callback on its own goroutine, so the last one before the
+	// reset can still be on its way: give it time to arrive, but less than the fire delay
+	// so a repeat that kept running could not have fired again.
+	time.Sleep(50 * time.Millisecond)
 
 	mutex.Lock()
 	atReset := count
 	mutex.Unlock()
 	assert.True(atReset > 0, "the repeat should have started")
 
-	time.Sleep(200 * time.Millisecond)
+	// Long enough for three more fires.
+	time.Sleep(300 * time.Millisecond)
 
 	mutex.Lock()
 	assert.Equal(atReset, count, "the repeat should have stopped at reset")
