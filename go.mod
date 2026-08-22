@@ -11,7 +11,7 @@ require (
 	github.com/urfave/cli/v3 v3.10.1
 	go.bug.st/serial.v1 v0.0.0-20191202182710-24a6610f0541
 	golang.org/x/net v0.58.0
-	google.golang.org/grpc v1.83.0
+	google.golang.org/grpc v1.83.1
 	google.golang.org/protobuf v1.36.12
 )
 
